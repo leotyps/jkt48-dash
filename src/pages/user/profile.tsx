@@ -10,6 +10,8 @@ import {
   Image,
   useColorMode,
   Box,
+  Input,
+  useToast,
 } from '@chakra-ui/react';
 import { avatarUrl, bannerUrl } from '@/api/discord';
 import { SelectField } from '@/components/forms/SelectField';
@@ -22,6 +24,7 @@ import { NextPageWithLayout } from '@/pages/_app';
 import AppLayout from '@/components/layout/app';
 import { useLogoutMutation } from '@/utils/auth/hooks';
 import { useSelfUser } from '@/api/hooks';
+import { useState } from 'react';
 
 /**
  * User info and general settings here
@@ -30,10 +33,40 @@ const ProfilePage: NextPageWithLayout = () => {
   const user = useSelfUser();
   const logout = useLogoutMutation();
   const t = profile.useTranslations();
-
+  
   const { colorMode, setColorMode } = useColorMode();
   const { lang, setLang } = useLang();
   const [devMode, setDevMode] = useSettingsStore((s) => [s.devMode, s.setDevMode]);
+  const [apiKey, setApiKey] = useState('');
+  const [apiStatus, setApiStatus] = useState<string | null>(null);
+  const toast = useToast();
+
+  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setApiKey(e.target.value);
+  };
+
+  const saveApiKey = () => {
+    if (!apiKey) {
+      toast({
+        title: 'Error',
+        description: 'API Key tidak boleh kosong!',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    // Simulate saving API Key (you would integrate with your backend here)
+    localStorage.setItem('jkt48-api-key', apiKey);
+    setApiStatus('API Key berhasil disimpan');
+    toast({
+      title: 'Success',
+      description: 'API Key berhasil disimpan!',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  };
 
   return (
     <Grid templateColumns={{ base: '1fr', lg: 'minmax(0, 800px) auto' }} gap={{ base: 3, lg: 6 }}>
@@ -101,6 +134,27 @@ const ProfilePage: NextPageWithLayout = () => {
               }))}
             />
           </FormControl>
+
+          {/* API Key Settings */}
+          <FormControl>
+            <Box mb={2}>
+              <FormLabel fontSize="md" fontWeight="medium" m={0}>
+                {t['jkt48 api key']}
+              </FormLabel>
+              <Text color="TextSecondary">{t['jkt48 api key description']}</Text>
+            </Box>
+            <Input
+              value={apiKey}
+              onChange={handleApiKeyChange}
+              placeholder="Masukkan API Key JKT48"
+              size="lg"
+            />
+            {apiStatus && <Text mt={2}>{apiStatus}</Text>}
+          </FormControl>
+          <Button colorScheme="teal" onClick={saveApiKey}>
+            Simpan API Key
+          </Button>
+
           <Spacer />
           <Button
             leftIcon={<IoLogOut />}
