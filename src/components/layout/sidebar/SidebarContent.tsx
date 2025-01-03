@@ -5,6 +5,7 @@ import {
   Heading,
   Stack,
   Text,
+  Spacer,
   VStack,
 } from '@chakra-ui/react';
 import { useActiveSidebarItem, SidebarItemInfo } from '@/utils/router';
