@@ -11,7 +11,10 @@ import {
   CardBody,
   CardHeader,
   Icon,
+  Input,
+  useToast,
 } from '@chakra-ui/react';
+import { useState } from 'react';
 import { config } from '@/config/common';
 import { StyledChart } from '@/components/chart/StyledChart';
 import { dashboard } from '@/config/translations/dashboard';
@@ -95,7 +98,6 @@ export default function HomeView() {
             {t.vc['created channels']}
           </Text>
           <VoiceChannelItem />
-          <VoiceChannelItem />
         </Flex>
       </Grid>
     </Flex>
@@ -146,6 +148,36 @@ function TestChart() {
 }
 
 function VoiceChannelItem() {
+  const [apiKey, setApiKey] = useState('');
+  const [apiStatus, setApiStatus] = useState<string | null>(null);
+  const toast = useToast();
+
+  const checkApiKey = async () => {
+    if (!apiKey) {
+      toast({
+        title: 'Error',
+        description: 'API Key tidak boleh kosong!',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/${apiKey}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setApiStatus(`API Key valid hingga: ${data.expiry_date}`);
+      } else {
+        setApiStatus('API Key tidak valid.');
+      }
+    } catch (error) {
+      setApiStatus('Terjadi kesalahan saat memeriksa API Key.');
+    }
+  };
+
   return (
     <Card rounded="2xl" variant="primary">
       <CardHeader as={HStack}>
@@ -154,6 +186,16 @@ function VoiceChannelItem() {
       </CardHeader>
       <CardBody mt={3}>
         <Text color="TextSecondary">89 Members</Text>
+        <Input
+          mt={3}
+          placeholder="Masukkan API Key"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+        />
+        <Button mt={3} onClick={checkApiKey} colorScheme="blue">
+          Cek API Key
+        </Button>
+        {apiStatus && <Text mt={3}>{apiStatus}</Text>}
       </CardBody>
     </Card>
   );
