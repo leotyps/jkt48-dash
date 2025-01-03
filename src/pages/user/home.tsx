@@ -34,17 +34,20 @@ export function GuildSelect() {
           ?.filter((guild) => config.guild.filter(guild))
           .map((guild) => (
             <Card key={guild.id} variant="primary">
-              <CardHeader as={Flex} flexDirection="row" gap={3}>
+              <CardHeader as={Flex} flexDirection="row" gap={3} alignItems="center">
                 <Avatar src={iconUrl(guild)} name={guild.name} size="md" />
-                <Text>{guild.name}</Text>
+                <Text fontWeight="bold" fontSize="lg" isTruncated>
+                  {guild.name}
+                </Text>
               </CardHeader>
-              {/* Ganti Link dengan Button untuk invite bot ke server */}
+              {/* Tombol invite dengan margin lebih */}
               <Button
                 as="a"
-                href={`${config.inviteUrl}&guild_id=${guild.id}`} // Sesuaikan URL invite bot
+                href={`${config.inviteUrl}&guild_id=${guild.id}`} // URL invite bot
                 target="_blank"
                 w="full"
                 variant="action"
+                mt={3} // Menambahkan margin top untuk tombol
               >
                 Invite Bot to {guild.name}
               </Button>
