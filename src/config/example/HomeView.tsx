@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Center,
   Circle,
@@ -14,16 +15,13 @@ import {
   Input,
   useToast,
 } from '@chakra-ui/react';
-import { useState } from 'react';
-import { config } from '@/config/common';
-import { StyledChart } from '@/components/chart/StyledChart';
-import { dashboard } from '@/config/translations/dashboard';
-import Link from 'next/link';
 import { BsMusicNoteBeamed } from 'react-icons/bs';
 import { IoOpen, IoPricetag } from 'react-icons/io5';
 import { FaRobot } from 'react-icons/fa';
 import { MdVoiceChat } from 'react-icons/md';
-import { GuildSelect } from '@/pages/user/home';
+import { StyledChart } from '@/components/chart/StyledChart';
+import { dashboard } from '@/config/translations/dashboard';
+import Link from 'next/link';
 
 export default function HomeView() {
   const t = dashboard.useTranslations();
@@ -105,13 +103,54 @@ export default function HomeView() {
 }
 
 function TestChart() {
+  const [seriesData, setSeriesData] = useState([
+    {
+      name: 'Paid',
+      data: [50, 64, 48, 66, 49, 68],
+    },
+    {
+      name: 'Free Usage',
+      data: [30, 50, 13, 46, 26, 16],
+    },
+  ]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setSeriesData((prevData) => {
+        const newPaidData = [...prevData[0].data];
+        const newFreeUsageData = [...prevData[1].data];
+
+        // Simulate random changes to data
+        newPaidData.push(newPaidData[newPaidData.length - 1] + Math.floor(Math.random() * 5));
+        newFreeUsageData.push(newFreeUsageData[newFreeUsageData.length - 1] + Math.floor(Math.random() * 5));
+
+        // Ensure the data length remains 6
+        if (newPaidData.length > 6) newPaidData.shift();
+        if (newFreeUsageData.length > 6) newFreeUsageData.shift();
+
+        return [
+          { name: 'Paid', data: newPaidData },
+          { name: 'Free Usage', data: newFreeUsageData },
+        ];
+      });
+    }, 2000); // Update every 2 seconds
+
+    return () => clearInterval(intervalId); // Cleanup the interval when the component unmounts
+  }, []);
+
   return (
     <StyledChart
       options={{
         colors: ['#4318FF', '#39B8FF'],
         chart: {
           animations: {
-            enabled: false,
+            enabled: true,
+            easing: 'easeinout',
+            speed: 800,
+            animateGradually: {
+              enabled: true,
+              delay: 150,
+            },
           },
         },
         xaxis: {
@@ -131,16 +170,7 @@ function TestChart() {
           },
         ],
       }}
-      series={[
-        {
-          name: 'Paid',
-          data: [50, 64, 48, 66, 49, 68],
-        },
-        {
-          name: 'Free Usage',
-          data: [30, 50, 13, 46, 26, 16],
-        },
-      ]}
+      series={seriesData}
       height="300"
       type="line"
     />
@@ -182,10 +212,10 @@ function VoiceChannelItem() {
     <Card rounded="2xl" variant="primary">
       <CardHeader as={HStack}>
         <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: '2xl', md: '3xl' }} />
-        <Text>My Channel</Text>
+        <Text>Check Your ApiKey</Text>
       </CardHeader>
       <CardBody mt={3}>
-        <Text color="TextSecondary">89 Members</Text>
+        <Text color="TextSecondary"></Text>
         <Input
           mt={3}
           placeholder="Masukkan API Key"
