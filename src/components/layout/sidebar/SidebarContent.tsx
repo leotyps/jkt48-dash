@@ -62,13 +62,18 @@ export function SidebarContent() {
             <GuildItemsSkeleton />
           ) : (
             filteredGuilds?.map((guild) => (
-              <GuildItem
+              <a
                 key={guild.id}
-                guild={guild}
-                active={false} // Tidak ada state aktif karena sekarang mengarahkan ke URL invite
-                href={`${config.inviteUrl}&guild_id=${guild.id}`} // URL invite bot
-                isExternal // Tambahkan ini agar "a" menggunakan target=_blank
-              />
+                href={`${config.inviteUrl}&guild_id=${guild.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <GuildItem
+                  guild={guild}
+                  active={false} // Tidak ada state aktif
+                  href={`${config.inviteUrl}&guild_id=${guild.id}`}
+                />
+              </a>
             ))
           )}
         </Flex>
