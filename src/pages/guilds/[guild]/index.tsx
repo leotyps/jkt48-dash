@@ -16,26 +16,16 @@ import getGuildLayout from '@/components/layout/guild/get-guild-layout';
 
 const GuildPage: NextPageWithLayout = () => {
   const t = view.useTranslations();
-  const router = useRouter();
-  const guild = router.query.guild as string;
-
-  // Hook tetap dipanggil meskipun parameter guild mungkin belum valid
+  const guild = useRouter().query.guild as string;
   const query = useGuildInfoQuery(guild);
 
-  // Jika parameter guild belum ada, tampilkan pesan error
-  if (!guild) {
-    return (
-      <Center h="100vh">
-        <Text fontSize="xl" fontWeight="bold" color="red.500">
-          {t.error['invalid guild'] || 'Invalid guild ID provided'}
-        </Text>
-      </Center>
-    );
-  }
-
   return (
-    <QueryStatus query={query} loading={<LoadingPanel />} error={t.error['failed to load guild']}>
-      {query.data ? <GuildPanel guild={guild} info={query.data} /> : <NotJoined guild={guild} />}
+    <QueryStatus query={query} loading={<LoadingPanel />} error={t.error.load}>
+      {query.data != null ? (
+        <GuildPanel guild={guild} info={query.data} />
+      ) : (
+        <NotJoined guild={guild} />
+      )}
     </QueryStatus>
   );
 };
@@ -91,3 +81,4 @@ function NotJoined({ guild }: { guild: string }) {
 
 GuildPage.getLayout = (c) => getGuildLayout({ children: c });
 export default GuildPage;
+
