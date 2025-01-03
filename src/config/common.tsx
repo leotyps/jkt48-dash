@@ -23,7 +23,7 @@ export const config: AppConfig = {
   name: 'JKT48Connect',
   icon: BotIcon,
   inviteUrl:
-    'https://discord.com/oauth2/authorize?client_id=1305141693477027891&permissions=8&integration_type=0&scope=bot',
+    'https://discord.com/oauth2/authorize?client_id=1305141693477027891&permissions=19456&integration_type=0&scope=bot',
   guild: {
     //filter guilds that user has no permissions to manage it
     filter: (guild) => (Number(guild.permissions) & PermissionFlags.ADMINISTRATOR) !== 0,
