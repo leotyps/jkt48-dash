@@ -5,6 +5,7 @@ import { config } from '@/config/common';
 import { guild as view } from '@/config/translations/guild';
 import { BsMailbox } from 'react-icons/bs';
 import { FaRobot } from 'react-icons/fa';
+import { useGuildInfoQuery } from '@/api/hooks';
 import { useRouter } from 'next/router';
 import { getFeatures } from '@/utils/common';
 import { Banner } from '@/components/GuildBanner';
@@ -26,7 +27,7 @@ const GuildPage: NextPageWithLayout = () => {
     return (
       <Center h="100vh">
         <Text fontSize="xl" fontWeight="bold" color="red.500">
-          {t.error['invalid guild']}
+          {t.error['invalid guild'] || 'Invalid guild ID provided'}
         </Text>
       </Center>
     );
@@ -90,19 +91,3 @@ function NotJoined({ guild }: { guild: string }) {
 
 GuildPage.getLayout = (c) => getGuildLayout({ children: c });
 export default GuildPage;
-
-// Hook untuk fetching data guild
-export const useGuildInfoQuery = (guild?: string) => {
-  return useQuery(
-    ['guildInfo', guild],
-    async () => {
-      if (!guild) throw new Error('Guild ID is required');
-      const response = await fetch(`/api/guilds/${guild}`);
-      if (!response.ok) throw new Error('Failed to fetch guild data');
-      return response.json();
-    },
-    {
-      enabled: !!guild, // Hanya fetch jika guild tersedia
-    }
-  );
-};
