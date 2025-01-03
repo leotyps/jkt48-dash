@@ -147,9 +147,9 @@ const ProfilePage: NextPageWithLayout = () => {
           <FormControl>
             <Box mb={2}>
               <FormLabel fontSize="md" fontWeight="medium" m={0}>
-                {t['jkt48 api key']}
+                JKT48Connect Apikey
               </FormLabel>
-              <Text color="TextSecondary">{t['jkt48 api key description']}</Text>
+              <Text color="TextSecondary">Simpan Apikeymu disini</Text>
             </Box>
             <Input
               value={apiKey}
