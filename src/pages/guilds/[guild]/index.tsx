@@ -19,7 +19,10 @@ const GuildPage: NextPageWithLayout = () => {
   const router = useRouter();
   const guild = router.query.guild as string;
 
-  // Tambahkan validasi guild ID
+  // Hook tetap dipanggil meskipun parameter guild mungkin belum valid
+  const query = useGuildInfoQuery(guild);
+
+  // Jika parameter guild belum ada, tampilkan pesan error
   if (!guild) {
     return (
       <Center h="100vh">
@@ -29,8 +32,6 @@ const GuildPage: NextPageWithLayout = () => {
       </Center>
     );
   }
-
-  const query = useGuildInfoQuery(guild);
 
   return (
     <QueryStatus query={query} loading={<LoadingPanel />} error={t.error['failed to load guild']}>
@@ -65,16 +66,6 @@ function GuildPanel({ guild: id, info }: { guild: string; info: CustomGuildInfo 
 function NotJoined({ guild }: { guild: string }) {
   const t = view.useTranslations();
 
-  if (!guild) {
-    return (
-      <Center flexDirection="column" gap={3} h="full" p={5}>
-        <Text fontSize="xl" fontWeight="bold" color="red.500">
-          {t.error['invalid guild']}
-        </Text>
-      </Center>
-    );
-  }
-
   return (
     <Center flexDirection="column" gap={3} h="full" p={5}>
       <Icon as={BsMailbox} w={50} h={50} />
@@ -102,11 +93,17 @@ GuildPage.getLayout = (c) => getGuildLayout({ children: c });
 export default GuildPage;
 
 // Hook untuk fetching data guild
-export const useGuildInfoQuery = (guild: string) => {
-  return useQuery(['guildInfo', guild], async () => {
-    if (!guild) throw new Error('Guild ID is required');
-    const response = await fetch(`/api/guilds/${guild}`);
-    if (!response.ok) throw new Error('Failed to fetch guild data');
-    return response.json();
-  });
+export const useGuildInfoQuery = (guild?: string) => {
+  return useQuery(
+    ['guildInfo', guild],
+    async () => {
+      if (!guild) throw new Error('Guild ID is required');
+      const response = await fetch(`/api/guilds/${guild}`);
+      if (!response.ok) throw new Error('Failed to fetch guild data');
+      return response.json();
+    },
+    {
+      enabled: !!guild, // Hanya fetch jika guild tersedia
+    }
+  );
 };
