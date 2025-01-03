@@ -84,6 +84,8 @@ export default function HomeView() {
         </HStack>
       </Flex>
       <TestChart />
+          </CardBody>
+        </Card>
       <Flex direction="column" gap={3}>
           <Text fontSize="lg" fontWeight="600">
             JKT48Connect Section
