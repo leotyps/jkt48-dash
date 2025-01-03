@@ -182,6 +182,8 @@ function TestChart() {
 
 function VoiceChannelItem() {
   const [apiKey, setApiKey] = useState<string>('');
+  const [expiryDate, setExpiryDate] = useState<string | null>(null);
+  const [remainingRequests, setRemainingRequests] = useState<number | null>(null);
   const [apiStatus, setApiStatus] = useState<string | null>(null);
   const toast = useToast();
 
@@ -210,7 +212,9 @@ function VoiceChannelItem() {
       const data = await response.json();
 
       if (data.success) {
-        setApiStatus(`API Key valid. Expiry Date: ${data.expiry_date}. Remaining Requests: ${data.remaining_requests}`);
+        setExpiryDate(data.expiry_date);
+        setRemainingRequests(data.remaining_requests);
+        setApiStatus('API Key valid');
       } else {
         setApiStatus(data.message); // Show error message from API response
       }
@@ -223,7 +227,7 @@ function VoiceChannelItem() {
     <Card rounded="2xl" variant="primary">
       <CardHeader as={HStack}>
         <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: '2xl', md: '3xl' }} />
-        <Text>My Channel</Text>
+        <Text>Your Apikey Details</Text>
       </CardHeader>
       <CardBody mt={3}>
         {!apiKey ? (
@@ -239,6 +243,16 @@ function VoiceChannelItem() {
               <Text fontWeight="medium" lineHeight={1.6}>
                 {apiStatus}
               </Text>
+              {expiryDate && (
+                <Text fontWeight="medium" mt={2}>
+                  <strong>Expiry Date:</strong> {expiryDate}
+                </Text>
+              )}
+              {remainingRequests !== null && (
+                <Text fontWeight="medium" mt={2}>
+                  <strong>Remaining Requests:</strong> {remainingRequests}
+                </Text>
+              )}
             </Box>
           </>
         )}
