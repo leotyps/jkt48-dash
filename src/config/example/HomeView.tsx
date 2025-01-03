@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import {
   Center,
   Circle,
@@ -15,13 +14,16 @@ import {
   Input,
   useToast,
 } from '@chakra-ui/react';
+import { useState, useEffect } from 'react';
+import { config } from '@/config/common';
+import { StyledChart } from '@/components/chart/StyledChart';
+import { dashboard } from '@/config/translations/dashboard';
+import Link from 'next/link';
 import { BsMusicNoteBeamed } from 'react-icons/bs';
 import { IoOpen, IoPricetag } from 'react-icons/io5';
 import { FaRobot } from 'react-icons/fa';
 import { MdVoiceChat } from 'react-icons/md';
-import { StyledChart } from '@/components/chart/StyledChart';
-import { dashboard } from '@/config/translations/dashboard';
-import Link from 'next/link';
+import { GuildSelect } from '@/pages/user/home';
 
 export default function HomeView() {
   const t = dashboard.useTranslations();
@@ -116,15 +118,16 @@ function TestChart() {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
+      // Create new data based on the last value in the series
       setSeriesData((prevData) => {
         const newPaidData = [...prevData[0].data];
         const newFreeUsageData = [...prevData[1].data];
 
-        // Simulate random changes to data
+        // Simulate random change
         newPaidData.push(newPaidData[newPaidData.length - 1] + Math.floor(Math.random() * 5));
         newFreeUsageData.push(newFreeUsageData[newFreeUsageData.length - 1] + Math.floor(Math.random() * 5));
 
-        // Ensure the data length remains 6
+        // Keep the data length to 6, remove the first item if it exceeds
         if (newPaidData.length > 6) newPaidData.shift();
         if (newFreeUsageData.length > 6) newFreeUsageData.shift();
 
@@ -212,10 +215,10 @@ function VoiceChannelItem() {
     <Card rounded="2xl" variant="primary">
       <CardHeader as={HStack}>
         <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: '2xl', md: '3xl' }} />
-        <Text>Check Your ApiKey</Text>
+        <Text>My Channel</Text>
       </CardHeader>
       <CardBody mt={3}>
-        <Text color="TextSecondary"></Text>
+        <Text color="TextSecondary">89 Members</Text>
         <Input
           mt={3}
           placeholder="Masukkan API Key"
