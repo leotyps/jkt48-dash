@@ -12,7 +12,7 @@ export const dashboard = createI18n(provider, {
     },
     servers: {
       title: 'Select Server',
-      description: 'Select the server to configure',
+      description: 'Select the server to invite',
     },
     vc: {
       create: 'Create a voice channel',
