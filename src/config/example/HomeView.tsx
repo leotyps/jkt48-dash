@@ -84,18 +84,9 @@ export default function HomeView() {
         </HStack>
       </Flex>
       <TestChart />
-      <Grid templateColumns={{ base: '1fr', lg: '0.5fr 1fr' }} gap={3}>
-        <Card rounded="3xl" variant="primary">
-          <CardBody as={Center} p={4} flexDirection="column" gap={3}>
-            <Circle p={4} bg="brandAlpha.100" color="brand.500" _dark={{ color: 'brand.200' }}>
-              <Icon as={BsMusicNoteBeamed} w="80px" h="80px" />
-            </Circle>
-            <Text fontWeight="medium">{t.vc.create}</Text>
-          </CardBody>
-        </Card>
-        <Flex direction="column" gap={3}>
+      <Flex direction="column" gap={3}>
           <Text fontSize="lg" fontWeight="600">
-            {t.vc['created channels']}
+            JKT48Connect Section
           </Text>
           <VoiceChannelItem />
         </Flex>
