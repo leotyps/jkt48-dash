@@ -33,11 +33,21 @@ export function GuildSelect() {
         {guilds.data
           ?.filter((guild) => config.guild.filter(guild))
           .map((guild) => (
-            <Card key={guild.id} variant="primary" as={Link} href={`/guilds/${guild.id}`}>
+            <Card key={guild.id} variant="primary">
               <CardHeader as={Flex} flexDirection="row" gap={3}>
                 <Avatar src={iconUrl(guild)} name={guild.name} size="md" />
                 <Text>{guild.name}</Text>
               </CardHeader>
+              {/* Ganti Link dengan Button untuk invite bot ke server */}
+              <Button
+                as="a"
+                href={`${config.inviteUrl}&guild_id=${guild.id}`} // Sesuaikan URL invite bot
+                target="_blank"
+                w="full"
+                variant="action"
+              >
+                Invite Bot to {guild.name}
+              </Button>
             </Card>
           ))}
       </SimpleGrid>
