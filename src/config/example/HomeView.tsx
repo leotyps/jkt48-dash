@@ -11,8 +11,8 @@ import {
   CardBody,
   CardHeader,
   Icon,
-  Input,
   useToast,
+  Box,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { config } from '@/config/common';
@@ -230,11 +230,16 @@ function VoiceChannelItem() {
           <Text color="TextSecondary">Silakan masukkan API key di profile untuk menggunakan fitur ini.</Text>
         ) : (
           <>
-            <Text color="TextSecondary">API Key sudah terpasang.</Text>
-            <Button mt={3} onClick={() => checkApiKey(apiKey)} colorScheme="blue">
-              Cek API Key
-            </Button>
-            {apiStatus && <Text mt={3}>{apiStatus}</Text>}
+            <Box
+              p={4}
+              borderRadius="md"
+              bg={apiStatus?.includes('valid') ? 'green.100' : 'red.100'}
+              color={apiStatus?.includes('valid') ? 'green.800' : 'red.800'}
+            >
+              <Text fontWeight="medium" lineHeight={1.6}>
+                {apiStatus}
+              </Text>
+            </Box>
           </>
         )}
       </CardBody>
