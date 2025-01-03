@@ -20,7 +20,7 @@ const BotIcon = createIcon({
 });
 
 export const config: AppConfig = {
-  name: 'Demo Bot',
+  name: 'JKT48Connect',
   icon: BotIcon,
   inviteUrl:
     'https://discord.com/oauth2/authorize?client_id=1305141693477027891&permissions=8&integration_type=0&scope=bot',
