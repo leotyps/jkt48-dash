@@ -73,18 +73,6 @@ export function SidebarContent() {
           )}
         </Flex>
       </Stack>
-
-      {/* Menu Baru: Official Website JKT48Connect */}
-      <Box mt="5" px="10px">
-        <Card as="a" href="https://www.jkt48connect.my.id" target="_blank" rounded="md" bg="teal.500" p={4}>
-          <Flex align="center" gap={3}>
-            <Avatar size="sm" bg="white" name="JKT48Connect" />
-            <Text fontWeight="bold" color="white">
-              Official Website JKT48Connect
-            </Text>
-          </Flex>
-        </Card>
-      </Box>
     </>
   );
 }
