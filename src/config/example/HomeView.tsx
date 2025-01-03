@@ -181,12 +181,20 @@ function TestChart() {
 }
 
 function VoiceChannelItem() {
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKey] = useState<string>('');
   const [apiStatus, setApiStatus] = useState<string | null>(null);
   const toast = useToast();
 
-  const checkApiKey = async () => {
-    if (!apiKey) {
+  useEffect(() => {
+    const storedApiKey = localStorage.getItem('jkt48-api-key');
+    if (storedApiKey) {
+      setApiKey(storedApiKey);
+      checkApiKey(storedApiKey); // Check validity on mount if API key is already stored
+    }
+  }, []);
+
+  const checkApiKey = async (key: string) => {
+    if (!key) {
       toast({
         title: 'Error',
         description: 'API Key tidak boleh kosong!',
@@ -198,13 +206,13 @@ function VoiceChannelItem() {
     }
 
     try {
-      const response = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/${apiKey}`);
+      const response = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/${key}`);
       const data = await response.json();
 
       if (data.success) {
-        setApiStatus(`API Key valid hingga: ${data.expiry_date}`);
+        setApiStatus(`API Key valid. Expiry Date: ${data.expiry_date}. Remaining Requests: ${data.remaining_requests}`);
       } else {
-        setApiStatus('API Key tidak valid.');
+        setApiStatus(data.message); // Show error message from API response
       }
     } catch (error) {
       setApiStatus('Terjadi kesalahan saat memeriksa API Key.');
@@ -218,17 +226,17 @@ function VoiceChannelItem() {
         <Text>My Channel</Text>
       </CardHeader>
       <CardBody mt={3}>
-        <Text color="TextSecondary">89 Members</Text>
-        <Input
-          mt={3}
-          placeholder="Masukkan API Key"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-        />
-        <Button mt={3} onClick={checkApiKey} colorScheme="blue">
-          Cek API Key
-        </Button>
-        {apiStatus && <Text mt={3}>{apiStatus}</Text>}
+        {!apiKey ? (
+          <Text color="TextSecondary">Silakan masukkan API key di profile untuk menggunakan fitur ini.</Text>
+        ) : (
+          <>
+            <Text color="TextSecondary">API Key sudah terpasang.</Text>
+            <Button mt={3} onClick={() => checkApiKey(apiKey)} colorScheme="blue">
+              Cek API Key
+            </Button>
+            {apiStatus && <Text mt={3}>{apiStatus}</Text>}
+          </>
+        )}
       </CardBody>
     </Card>
   );
