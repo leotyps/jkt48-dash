@@ -12,6 +12,7 @@ export const guild = createI18n(provider, {
       'not found': 'Where is it?',
       'not found description': "The bot can't access the server, let's invite him!",
       load: 'Failed to load guild',
+      'invalid guild': 'Invalid guild ID provided', // Ditambahkan
     },
     bn: {
       'enable feature': 'Enable',
@@ -30,6 +31,7 @@ export const guild = createI18n(provider, {
       'not found': '它在哪裡？',
       'not found description': '機器人無法訪問服務器，我們邀請他吧！',
       load: '無法加載服務器',
+      'invalid guild': '提供的服務器 ID 無效', // Ditambahkan
     },
     bn: {
       'enable feature': '啟用功能',
