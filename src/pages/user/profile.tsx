@@ -24,7 +24,7 @@ import { NextPageWithLayout } from '@/pages/_app';
 import AppLayout from '@/components/layout/app';
 import { useLogoutMutation } from '@/utils/auth/hooks';
 import { useSelfUser } from '@/api/hooks';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 /**
  * User info and general settings here
@@ -37,9 +37,17 @@ const ProfilePage: NextPageWithLayout = () => {
   const { colorMode, setColorMode } = useColorMode();
   const { lang, setLang } = useLang();
   const [devMode, setDevMode] = useSettingsStore((s) => [s.devMode, s.setDevMode]);
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKey] = useState<string>('');
   const [apiStatus, setApiStatus] = useState<string | null>(null);
   const toast = useToast();
+
+  useEffect(() => {
+    // Cek apakah ada API key yang tersimpan di localStorage
+    const storedApiKey = localStorage.getItem('jkt48-api-key');
+    if (storedApiKey) {
+      setApiKey(storedApiKey);
+    }
+  }, []);
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setApiKey(e.target.value);
@@ -56,7 +64,7 @@ const ProfilePage: NextPageWithLayout = () => {
       });
       return;
     }
-    // Simulate saving API Key (you would integrate with your backend here)
+    // Simpan API Key ke localStorage
     localStorage.setItem('jkt48-api-key', apiKey);
     setApiStatus('API Key berhasil disimpan');
     toast({
@@ -139,9 +147,9 @@ const ProfilePage: NextPageWithLayout = () => {
           <FormControl>
             <Box mb={2}>
               <FormLabel fontSize="md" fontWeight="medium" m={0}>
-                JKT48Connect Apikey
+                {t['jkt48 api key']}
               </FormLabel>
-              <Text color="TextSecondary">Simpan apikeymu disini</Text>
+              <Text color="TextSecondary">{t['jkt48 api key description']}</Text>
             </Box>
             <Input
               value={apiKey}
