@@ -21,16 +21,12 @@ import { FiSettings as SettingsIcon } from 'react-icons/fi';
 import { avatarUrl } from '@/api/discord';
 import { GuildItem, GuildItemsSkeleton } from './GuildItem';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { SidebarItem } from './SidebarItem';
 import items from '@/config/sidebar-items';
 
 export function SidebarContent() {
   const [filter, setFilter] = useState('');
   const guilds = useGuilds();
-  const { guild: selectedGroup } = useRouter().query as {
-    guild: string;
-  };
 
   const filteredGuilds = useMemo(
     () =>
@@ -69,13 +65,26 @@ export function SidebarContent() {
               <GuildItem
                 key={guild.id}
                 guild={guild}
-                active={selectedGroup === guild.id}
-                href={`/guilds/${guild.id}`}
+                active={false} // Tidak ada state aktif karena sekarang mengarahkan ke URL invite
+                href={`${config.inviteUrl}&guild_id=${guild.id}`} // URL invite bot
+                isExternal // Tambahkan ini agar "a" menggunakan target=_blank
               />
             ))
           )}
         </Flex>
       </Stack>
+
+      {/* Menu Baru: Official Website JKT48Connect */}
+      <Box mt="5" px="10px">
+        <Card as="a" href="https://www.jkt48connect.my.id" target="_blank" rounded="md" bg="teal.500" p={4}>
+          <Flex align="center" gap={3}>
+            <Avatar size="sm" bg="white" name="JKT48Connect" />
+            <Text fontWeight="bold" color="white">
+              Official Website JKT48Connect
+            </Text>
+          </Flex>
+        </Card>
+      </Box>
     </>
   );
 }
