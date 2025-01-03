@@ -1,13 +1,8 @@
 import {
   Avatar,
   Box,
-  Card,
-  CardBody,
   Flex,
   Heading,
-  HStack,
-  IconButton,
-  Spacer,
   Stack,
   Text,
   VStack,
@@ -17,16 +12,19 @@ import { useGuilds, useSelfUserQuery } from '@/api/hooks';
 import { SearchBar } from '@/components/forms/SearchBar';
 import { useMemo, useState } from 'react';
 import { config } from '@/config/common';
-import { FiSettings as SettingsIcon } from 'react-icons/fi';
 import { avatarUrl } from '@/api/discord';
 import { GuildItem, GuildItemsSkeleton } from './GuildItem';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { SidebarItem } from './SidebarItem';
 import items from '@/config/sidebar-items';
 
 export function SidebarContent() {
   const [filter, setFilter] = useState('');
   const guilds = useGuilds();
+  const { guild: selectedGroup } = useRouter().query as {
+    guild: string;
+  };
 
   const filteredGuilds = useMemo(
     () =>
@@ -62,17 +60,48 @@ export function SidebarContent() {
             <GuildItemsSkeleton />
           ) : (
             filteredGuilds?.map((guild) => (
-              <GuildItem
+              <a
                 key={guild.id}
-                guild={guild}
-                active={false} // Tidak ada state aktif karena sekarang mengarahkan ke URL invite
                 href={`${config.inviteUrl}&guild_id=${guild.id}`} // URL invite bot
-                isExternal // Tambahkan ini agar "a" menggunakan target=_blank
-              />
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <GuildItem
+                  guild={guild}
+                  active={false} // Tidak ada state aktif
+                />
+              </a>
             ))
           )}
         </Flex>
       </Stack>
+
+      {/* Tambahkan Menu Official Website */}
+      <Box px="10px" mt="4">
+        <a
+          href="https://www.jkt48connect.my.id"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Flex
+            align="center"
+            bg="blue.600"
+            px="4"
+            py="2"
+            borderRadius="md"
+            _hover={{ bg: 'blue.500' }}
+          >
+            <Avatar
+              size="sm"
+              bg="blue.400"
+              icon={<Text fontWeight="bold" color="white">J</Text>}
+            />
+            <Text ml="3" color="white" fontWeight="bold">
+              Official Website JKT48Connect
+            </Text>
+          </Flex>
+        </a>
+      </Box>
     </>
   );
 }
@@ -82,16 +111,20 @@ export function BottomCard() {
   if (user == null) return <></>;
 
   return (
-    <Card pos="sticky" left={0} bottom={0} w="full" py={2}>
-      <CardBody as={HStack}>
+    <Box pos="sticky" left={0} bottom={0} w="full" py={2}>
+      <Flex align="center" px="4">
         <Avatar src={avatarUrl(user)} name={user.username} size="sm" />
-        <Text fontWeight="600">{user.username}</Text>
+        <Text fontWeight="600" ml="3">
+          {user.username}
+        </Text>
         <Spacer />
         <Link href="/user/profile">
-          <IconButton icon={<SettingsIcon />} aria-label="settings" />
+          <Text color="blue.500" fontWeight="bold" cursor="pointer">
+            Profile
+          </Text>
         </Link>
-      </CardBody>
-    </Card>
+      </Flex>
+    </Box>
   );
 }
 
