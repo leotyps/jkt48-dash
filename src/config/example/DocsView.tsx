@@ -1,6 +1,5 @@
 import {
   Box,
-  Button,
   Flex,
   Heading,
   HStack,
@@ -103,7 +102,7 @@ function CategorySection({ title, description, icon, features }: Category) {
       <Text color="gray.600" mb={6}>
         {description}
       </Text>
-      <Flex direction="column" gap={6}>
+      <Flex direction="column" gap={4}>
         {features.map((feature, index) => (
           <FeatureDetail key={index} {...feature} />
         ))}
@@ -114,42 +113,38 @@ function CategorySection({ title, description, icon, features }: Category) {
 
 function FeatureDetail({ name, link, parameters, method, status }: FeatureItem) {
   return (
-    <Box
+    <Flex
+      align="center"
+      justify="space-between"
+      p={4}
       borderWidth="1px"
-      borderRadius="lg"
-      p={5}
+      borderRadius="md"
       bg="gray.50"
       _dark={{ bg: 'gray.800' }}
+      direction={{ base: 'column', md: 'row' }}
     >
-      <HStack justifyContent="space-between" mb={4}>
-        <Flex direction="column">
-          <Link href={link}>
-            <Heading size="sm" color="blue.500" mb={2}>
-              {name}
-            </Heading>
-          </Link>
-          <HStack>
-            <Tag colorScheme={method === 'GET' ? 'blue' : 'green'}>{method}</Tag>
-            <Tag
-              colorScheme={status === 'active' ? 'teal' : 'red'}
-              textTransform="capitalize"
-            >
-              {status}
-            </Tag>
-          </HStack>
-        </Flex>
-      </HStack>
-      <Flex direction="column" gap={2}>
-        <Heading size="xs" color="gray.600" mb={2}>
-          Parameters
-        </Heading>
-        {parameters.map((param, index) => (
-          <Text key={index} fontSize="sm">
-            - <strong>{param.name}</strong>: {param.type}
-          </Text>
-        ))}
+      <Flex direction="column" flex="1" mr={4}>
+        <Link href={link}>
+          <Heading size="sm" color="blue.500" mb={1}>
+            {name}
+          </Heading>
+        </Link>
+        <Text fontSize="sm" color="gray.600">
+          {parameters
+            .map((param) => `${param.name} (${param.type})`)
+            .join(', ')}
+        </Text>
       </Flex>
-    </Box>
+      <HStack spacing={4}>
+        <Tag colorScheme={method === 'GET' ? 'blue' : 'green'}>{method}</Tag>
+        <Tag
+          colorScheme={status === 'active' ? 'teal' : 'red'}
+          textTransform="capitalize"
+        >
+          {status}
+        </Tag>
+      </HStack>
+    </Flex>
   );
 }
 
