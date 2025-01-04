@@ -78,11 +78,11 @@ function DocsView() {
   ];
 
   return (
-    <Flex direction="column" gap={8} p={6}>
+    <Flex direction="column" gap={6} p={6}>
       <Heading size="lg" fontWeight="bold">
         API Documentation
       </Heading>
-      <Text color="gray.600">
+      <Text color="gray.600" mb={4}>
         Browse through our API categories to learn how to use various endpoints.
       </Text>
       {categories.map((category, index) => (
@@ -94,15 +94,15 @@ function DocsView() {
 
 function CategorySection({ title, description, icon, features }: Category) {
   return (
-    <Box as="section" mb={8}>
-      <HStack mb={4}>
-        <Icon as={icon} w={8} h={8} color="Brand" />
+    <Box as="section" mb={6}>
+      <HStack mb={2} spacing={4} align="center">
+        <Icon as={icon} w={6} h={6} color="blue.500" />
         <Heading size="md">{title}</Heading>
       </HStack>
-      <Text color="gray.600" mb={6}>
+      <Text fontSize="sm" color="gray.500" mb={4}>
         {description}
       </Text>
-      <Flex direction="column" gap={4}>
+      <Flex direction="column" gap={3}>
         {features.map((feature, index) => (
           <FeatureDetail key={index} {...feature} />
         ))}
@@ -115,27 +115,31 @@ function FeatureDetail({ name, link, parameters, method, status }: FeatureItem) 
   return (
     <Flex
       align="center"
-      justify="space-between"
-      p={4}
       borderWidth="1px"
       borderRadius="md"
-      bg="gray.50"
+      p={3}
+      bg="white"
       _dark={{ bg: 'gray.800' }}
-      direction={{ base: 'column', md: 'row' }}
+      shadow="sm"
+      direction="row"
+      justify="space-between"
+      _hover={{ shadow: 'md' }}
     >
-      <Flex direction="column" flex="1" mr={4}>
-        <Link href={link}>
-          <Heading size="sm" color="blue.500" mb={1}>
-            {name}
-          </Heading>
-        </Link>
-        <Text fontSize="sm" color="gray.600">
-          {parameters
-            .map((param) => `${param.name} (${param.type})`)
-            .join(', ')}
-        </Text>
+      <Flex direction="row" flex="1" align="center" gap={4}>
+        <Box>
+          <Link href={link}>
+            <Heading size="sm" color="blue.500">
+              {name}
+            </Heading>
+          </Link>
+          <Text fontSize="xs" color="gray.500">
+            {parameters
+              .map((param) => `${param.name} (${param.type})`)
+              .join(', ')}
+          </Text>
+        </Box>
       </Flex>
-      <HStack spacing={4}>
+      <HStack spacing={3}>
         <Tag colorScheme={method === 'GET' ? 'blue' : 'green'}>{method}</Tag>
         <Tag
           colorScheme={status === 'active' ? 'teal' : 'red'}
