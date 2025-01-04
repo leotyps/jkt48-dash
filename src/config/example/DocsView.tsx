@@ -1,6 +1,5 @@
 import {
   Box,
-  Flex,
   Heading,
   HStack,
   Icon,
@@ -12,6 +11,9 @@ import {
   Tr,
   Tag,
   Text,
+  Card,
+  CardBody,
+  Stack,
 } from '@chakra-ui/react';
 import Link from 'next/link';
 import { FaDownload, FaMusic } from 'react-icons/fa';
@@ -84,41 +86,36 @@ function DocsView() {
   ];
 
   return (
-    <Flex direction="column" gap={6} p={6}>
-      <Heading size="lg" fontWeight="bold">
+    <Box p={6}>
+      <Heading size="lg" fontWeight="bold" mb={4}>
         API Documentation
       </Heading>
-      <Text color="gray.600" mb={4}>
+      <Text color="gray.600" mb={6}>
         Browse through our API categories to learn how to use various endpoints.
       </Text>
       {categories.map((category, index) => (
         <CategorySection key={index} {...category} />
       ))}
-    </Flex>
+    </Box>
   );
 }
 
 function CategorySection({ title, description, icon, features }: Category) {
   return (
-    <Box
-      as="section"
-      mb={6}
-      borderWidth="1px"
-      borderRadius="md"
-      p={4}
-      bg="white"
-      _dark={{ bg: 'gray.800' }}
-      shadow="sm"
-    >
-      <HStack mb={4} spacing={4} align="center">
-        <Icon as={icon} w={6} h={6} color="blue.500" />
-        <Heading size="md">{title}</Heading>
-      </HStack>
-      <Text fontSize="sm" color="gray.500" mb={6}>
-        {description}
-      </Text>
-      <FeatureTable features={features} />
-    </Box>
+    <Card mb={6} borderWidth="1px" borderRadius="md" shadow="md">
+      <CardBody>
+        <Stack spacing={4}>
+          <HStack spacing={4} align="center">
+            <Icon as={icon} w={6} h={6} color="blue.500" />
+            <Heading size="md">{title}</Heading>
+          </HStack>
+          <Text fontSize="sm" color="gray.500">
+            {description}
+          </Text>
+          <FeatureTable features={features} />
+        </Stack>
+      </CardBody>
+    </Card>
   );
 }
 
