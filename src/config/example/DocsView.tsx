@@ -4,6 +4,12 @@ import {
   Heading,
   HStack,
   Icon,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
   Tag,
   Text,
 } from '@chakra-ui/react';
@@ -94,61 +100,73 @@ function DocsView() {
 
 function CategorySection({ title, description, icon, features }: Category) {
   return (
-    <Box as="section" mb={6}>
-      <HStack mb={2} spacing={4} align="center">
+    <Box
+      as="section"
+      mb={6}
+      borderWidth="1px"
+      borderRadius="md"
+      p={4}
+      bg="white"
+      _dark={{ bg: 'gray.800' }}
+      shadow="sm"
+    >
+      <HStack mb={4} spacing={4} align="center">
         <Icon as={icon} w={6} h={6} color="blue.500" />
         <Heading size="md">{title}</Heading>
       </HStack>
-      <Text fontSize="sm" color="gray.500" mb={4}>
+      <Text fontSize="sm" color="gray.500" mb={6}>
         {description}
       </Text>
-      <Flex direction="column" gap={3}>
-        {features.map((feature, index) => (
-          <FeatureDetail key={index} {...feature} />
-        ))}
-      </Flex>
+      <FeatureTable features={features} />
     </Box>
   );
 }
 
-function FeatureDetail({ name, link, parameters, method, status }: FeatureItem) {
+function FeatureTable({ features }: { features: FeatureItem[] }) {
   return (
-    <Flex
-      align="center"
-      borderWidth="1px"
-      borderRadius="md"
-      p={3}
-      bg="white"
-      _dark={{ bg: 'gray.800' }}
-      shadow="sm"
-      direction="row"
-      justify="space-between"
-      _hover={{ shadow: 'md' }}
-    >
-      <Flex direction="row" flex="1" align="center" gap={4}>
-        <Box>
-          <Link href={link}>
-            <Heading size="sm" color="blue.500">
-              {name}
-            </Heading>
-          </Link>
-          <Text fontSize="xs" color="gray.500">
-            {parameters
-              .map((param) => `${param.name} (${param.type})`)
-              .join(', ')}
-          </Text>
-        </Box>
-      </Flex>
-      <HStack spacing={3}>
-        <Tag colorScheme={method === 'GET' ? 'blue' : 'green'}>{method}</Tag>
-        <Tag
-          colorScheme={status === 'active' ? 'teal' : 'red'}
-          textTransform="capitalize"
-        >
-          {status}
-        </Tag>
-      </HStack>
-    </Flex>
+    <Table variant="simple" size="sm">
+      <Thead>
+        <Tr>
+          <Th>Name</Th>
+          <Th>Parameters</Th>
+          <Th>Method</Th>
+          <Th>Status</Th>
+        </Tr>
+      </Thead>
+      <Tbody>
+        {features.map((feature, index) => (
+          <Tr key={index}>
+            <Td>
+              <Link href={feature.link}>
+                <Text color="blue.500" fontWeight="bold" fontSize="sm">
+                  {feature.name}
+                </Text>
+              </Link>
+            </Td>
+            <Td>
+              <Text fontSize="sm">
+                {feature.parameters
+                  .map((param) => `${param.name} (${param.type})`)
+                  .join(', ')}
+              </Text>
+            </Td>
+            <Td>
+              <Tag colorScheme={feature.method === 'GET' ? 'blue' : 'green'}>
+                {feature.method}
+              </Tag>
+            </Td>
+            <Td>
+              <Tag
+                colorScheme={feature.status === 'active' ? 'teal' : 'red'}
+                textTransform="capitalize"
+              >
+                {feature.status}
+              </Tag>
+            </Td>
+          </Tr>
+        ))}
+      </Tbody>
+    </Table>
   );
 }
 
