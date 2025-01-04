@@ -87,10 +87,10 @@ function DocsView() {
 
   return (
     <Box p={6}>
-      <Heading size="lg" fontWeight="bold" mb={4}>
+      <Heading size="lg" fontWeight="bold" mb={4} color="gray.800">
         API Documentation
       </Heading>
-      <Text color="gray.600" mb={6}>
+      <Text color="gray.500" mb={6} fontSize="lg">
         Browse through our API categories to learn how to use various endpoints.
       </Text>
       {categories.map((category, index) => (
@@ -102,14 +102,14 @@ function DocsView() {
 
 function CategorySection({ title, description, icon, features }: Category) {
   return (
-    <Card mb={6} borderWidth="1px" borderRadius="md" shadow="md">
-      <CardBody>
+    <Card mb={6} borderWidth="1px" borderRadius="md" overflow="hidden">
+      <CardBody bg="gray.50" p={4}>
         <Stack spacing={4}>
           <HStack spacing={4} align="center">
-            <Icon as={icon} w={6} h={6} color="blue.500" />
-            <Heading size="md">{title}</Heading>
+            <Icon as={icon} w={6} h={6} color="gray.600" />
+            <Heading size="md" color="gray.700">{title}</Heading>
           </HStack>
-          <Text fontSize="sm" color="gray.500">
+          <Text fontSize="sm" color="gray.600" mb={4}>
             {description}
           </Text>
           <FeatureTable features={features} />
@@ -124,10 +124,10 @@ function FeatureTable({ features }: { features: FeatureItem[] }) {
     <Table variant="simple" size="sm">
       <Thead>
         <Tr>
-          <Th>Name</Th>
-          <Th>Parameters</Th>
-          <Th>Method</Th>
-          <Th>Status</Th>
+          <Th color="gray.600">Name</Th>
+          <Th color="gray.600">Parameters</Th>
+          <Th color="gray.600">Method</Th>
+          <Th color="gray.600">Status</Th>
         </Tr>
       </Thead>
       <Tbody>
@@ -141,14 +141,14 @@ function FeatureTable({ features }: { features: FeatureItem[] }) {
               </Link>
             </Td>
             <Td>
-              <Text fontSize="sm">
+              <Text fontSize="sm" color="gray.600">
                 {feature.parameters
                   .map((param) => `${param.name} (${param.type})`)
                   .join(', ')}
               </Text>
             </Td>
             <Td>
-              <Tag colorScheme={feature.method === 'GET' ? 'blue' : 'green'}>
+              <Tag colorScheme={feature.method === 'GET' ? 'blue' : 'green'} size="sm">
                 {feature.method}
               </Tag>
             </Td>
@@ -156,6 +156,7 @@ function FeatureTable({ features }: { features: FeatureItem[] }) {
               <Tag
                 colorScheme={feature.status === 'active' ? 'teal' : 'red'}
                 textTransform="capitalize"
+                size="sm"
               >
                 {feature.status}
               </Tag>
