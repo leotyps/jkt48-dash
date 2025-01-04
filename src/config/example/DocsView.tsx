@@ -1,5 +1,5 @@
 import { Box, Heading, Text, Divider } from '@chakra-ui/react';
-import SwaggerUI from 'swagger-ui-react';
+const SwaggerUI = require('swagger-ui-react').default;
 import 'swagger-ui-react/swagger-ui.css';
 
 function DocsView() {
