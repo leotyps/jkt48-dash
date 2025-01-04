@@ -1,72 +1,103 @@
-import { Icon } from '@chakra-ui/react';
-import { Center, Heading, Text } from '@chakra-ui/layout';
-import { Button } from '@chakra-ui/react';
-import { LoadingPanel } from '@/components/panel/LoadingPanel';
-import { features } from '@/config/features';
-import { CustomFeatures, FeatureConfig } from '@/config/types';
-import { BsSearch } from 'react-icons/bs';
-import { useEnableFeatureMutation, useFeatureQuery } from '@/api/hooks';
-import { UpdateFeaturePanel } from '@/components/feature/UpdateFeaturePanel';
-import { feature as view } from '@/config/translations/feature';
-import { useRouter } from 'next/router';
+import {
+  Heading,
+  Button,
+  Card,
+  CardHeader,
+  Avatar,
+  Flex,
+  SimpleGrid,
+  Skeleton,
+  Text,
+} from '@chakra-ui/react';
+import { config } from '@/config/common';
+import { useGuilds } from '@/api/hooks';
+import HomeView from '@/config/example/DocsView';
 import { NextPageWithLayout } from '@/pages/_app';
-import getGuildLayout from '@/components/layout/guild/get-guild-layout';
+import AppLayout from '@/components/layout/app';
+import { iconUrl } from '@/api/discord';
+import Link from 'next/link';
+import Head from 'next/head'; // Import Head untuk menambahkan script ke <head>
 
-export type Params = {
-  guild: string;
-  feature: keyof CustomFeatures;
+const HomePage: NextPageWithLayout = () => {
+  //used for example only, you should remove it
+  return <DocsView />;
+
+  return <GuildSelect />;
 };
 
-export type UpdateFeatureValue<K extends keyof CustomFeatures> = Partial<CustomFeatures[K]>;
+export function GuildSelect() {
+  const guilds = useGuilds();
 
-const FeaturePage: NextPageWithLayout = () => {
-  const { feature, guild } = useRouter().query as Params;
+  if (guilds.status === 'success')
+    return (
+      <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap={3}>
+        {guilds.data
+          ?.filter((guild) => config.guild.filter(guild))
+          .map((guild) => (
+            <Card key={guild.id} variant="primary">
+              <CardHeader as={Flex} flexDirection="row" gap={3}>
+                <Avatar src={iconUrl(guild)} name={guild.name} size="md" />
+                <Text>{guild.name}</Text>
+              </CardHeader>
+              {/* Ganti Link dengan Button untuk invite bot ke server */}
+              <Button
+                as="a"
+                href={`${config.inviteUrl}&guild_id=${guild.id}`} // Sesuaikan URL invite bot
+                target="_blank"
+                w="full"
+                variant="action"
+              >
+                Invite Bot to {guild.name}
+              </Button>
+            </Card>
+          ))}
+      </SimpleGrid>
+    );
 
-  const query = useFeatureQuery(guild, feature);
-  const featureConfig = features[feature] as FeatureConfig<typeof feature>;
-  const skeleton = featureConfig?.useSkeleton?.();
-
-  if (featureConfig == null) return <NotFound />;
-  if (query.isError) return <NotEnabled />;
-  if (query.isLoading) return skeleton != null ? <>{skeleton}</> : <LoadingPanel />;
-  return <UpdateFeaturePanel key={feature} feature={query.data} config={featureConfig} />;
-};
-
-function NotEnabled() {
-  const t = view.useTranslations();
-  const { guild, feature } = useRouter().query as Params;
-  const enable = useEnableFeatureMutation();
-
-  return (
-    <Center flexDirection="column" h="full" gap={1}>
-      <Text fontSize="xl" fontWeight="600">
-        {t.error['not enabled']}
-      </Text>
-      <Text color="TextSecondary">{t.error['not enabled description']}</Text>
-      <Button
-        mt={3}
-        isLoading={enable.isLoading}
-        onClick={() => enable.mutate({ enabled: true, guild, feature })}
-        variant="action"
-        px={6}
-      >
-        {t.bn.enable}
+  if (guilds.status === 'error')
+    return (
+      <Button w="fit-content" variant="danger" onClick={() => guilds.refetch()}>
+        Try Again
       </Button>
-    </Center>
-  );
+    );
+
+  if (guilds.status === 'loading')
+    return (
+      <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap={3}>
+        <Skeleton minH="88px" rounded="2xl" />
+        <Skeleton minH="88px" rounded="2xl" />
+        <Skeleton minH="88px" rounded="2xl" />
+        <Skeleton minH="88px" rounded="2xl" />
+        <Skeleton minH="88px" rounded="2xl" />
+      </SimpleGrid>
+    );
+
+  return <></>;
 }
 
-function NotFound() {
-  const t = view.useTranslations();
+HomePage.getLayout = (c) => (
+  <AppLayout>
+    <Head>
+      {/* Script untuk Crisp Chat */}
+      <script
+        type="text/javascript"
+        dangerouslySetInnerHTML={{
+          __html: `
+          window.$crisp=[];
+          window.CRISP_WEBSITE_ID="46ffdd69-59a5-4db2-bdf6-dd7f72ccafd6";
+          (function(){
+            d=document;
+            s=d.createElement("script");
+            s.src="https://client.crisp.chat/l.js";
+            s.async=1;
+            d.getElementsByTagName("head")[0].appendChild(s);
+          })();
+          `,
+        }}
+      ></script>
+    </Head>
+    {c}
+  </AppLayout>
+);
 
-  return (
-    <Center flexDirection="column" gap={2} h="full">
-      <Icon as={BsSearch} w="50px" h="50px" />
-      <Heading size="lg">{t.error['not found']}</Heading>
-      <Text color="TextSecondary">{t.error['not found description']}</Text>
-    </Center>
-  );
-}
-
-FeaturePage.getLayout = (c) => getGuildLayout({ children: c, back: true });
-export default FeaturePage;
+export default HomePage;
