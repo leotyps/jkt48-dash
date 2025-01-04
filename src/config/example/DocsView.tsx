@@ -1,67 +1,74 @@
 import {
-  Center,
+  Box,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
   Circle,
   Flex,
   Grid,
   Heading,
   HStack,
-  Text,
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
   Icon,
-  Box,
+  Text,
 } from '@chakra-ui/react';
 import Link from 'next/link';
-import { BsDownload } from 'react-icons/bs';
-import { FaMusic, FaRobot } from 'react-icons/fa';
 import { MdVoiceChat } from 'react-icons/md';
+import { FaDownload, FaMusic } from 'react-icons/fa';
 
-export default function HomeView() {
+interface CategoryCardProps {
+  title: string;
+  description: string;
+  icon: React.ElementType;
+  items: { name: string; link: string }[];
+}
+
+function DocsView() {
+  const categories = [
+    {
+      title: 'Downloader',
+      description: 'Explore API endpoints for downloading various content.',
+      icon: FaDownload,
+      items: [
+        { name: 'YouTube Downloader', link: '/docs/youtube-downloader' },
+        { name: 'Instagram Downloader', link: '/docs/instagram-downloader' },
+      ],
+    },
+    {
+      title: 'JKT48',
+      description: 'Access APIs related to JKT48 content.',
+      icon: FaMusic,
+      items: [
+        { name: 'Member List', link: '/docs/member-list' },
+        { name: 'Showroom Schedule', link: '/docs/showroom-schedule' },
+      ],
+    },
+  ];
+
   return (
-    <Flex direction="column" gap={6} p={5}>
-      {/* Header Section */}
-      <Flex direction="column" align="start" gap={2}>
-        <Heading fontSize="3xl" fontWeight="bold" color="Brand">
-          API Categories
-        </Heading>
-        <Text color="TextSecondary">
-          Explore different API categories and their features.
-        </Text>
-      </Flex>
-
-      {/* Categories */}
-      <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={5}>
-        {/* Downloader Category */}
-        <CategoryCard
-          title="Downloader"
-          description="Access various downloader APIs to retrieve media."
-          icon={BsDownload}
-          items={[
-            { name: 'YouTube Downloader', link: '/api/downloader/youtube' },
-            { name: 'TikTok Downloader', link: '/api/downloader/tiktok' },
-            { name: 'Instagram Downloader', link: '/api/downloader/instagram' },
-          ]}
-        />
-
-        {/* JKT48 Category */}
-        <CategoryCard
-          title="JKT48"
-          description="APIs related to JKT48 content and utilities."
-          icon={FaMusic}
-          items={[
-            { name: 'Showroom Data', link: '/api/jkt48/showroom' },
-            { name: 'Theater Schedule', link: '/api/jkt48/theater' },
-            { name: 'Member Details', link: '/api/jkt48/members' },
-          ]}
-        />
+    <Flex direction="column" gap={6} p={6}>
+      <Heading size="lg" fontWeight="bold">
+        API Documentation
+      </Heading>
+      <Text color="TextSecondary">
+        Browse through our API categories to learn how to use various endpoints.
+      </Text>
+      <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6}>
+        {categories.map((category, index) => (
+          <CategoryCard
+            key={index}
+            title={category.title}
+            description={category.description}
+            icon={category.icon}
+            items={category.items}
+          />
+        ))}
       </Grid>
     </Flex>
   );
 }
 
-function CategoryCard({ title, description, icon, items }) {
+function CategoryCard({ title, description, icon, items }: CategoryCardProps) {
   return (
     <Card rounded="2xl" variant="outline" p={5}>
       <CardHeader as={HStack} gap={3}>
@@ -94,3 +101,5 @@ function CategoryCard({ title, description, icon, items }) {
     </Card>
   );
 }
+
+export default DocsView;
