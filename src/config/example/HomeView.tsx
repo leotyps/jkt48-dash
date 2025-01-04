@@ -19,16 +19,44 @@ import { config } from '@/config/common';
 import { StyledChart } from '@/components/chart/StyledChart';
 import { dashboard } from '@/config/translations/dashboard';
 import Link from 'next/link';
+import { BsMusicNoteBeamed } from 'react-icons/bs';
+import { IoOpen, IoPricetag } from 'react-icons/io5';
 import { FaRobot } from 'react-icons/fa';
 import { MdVoiceChat } from 'react-icons/md';
+import { GuildSelect } from '@/pages/user/home';
 
 export default function HomeView() {
   const t = dashboard.useTranslations();
+  const [apiKey, setApiKey] = useState<string>('');
+  const [expiryDate, setExpiryDate] = useState<string | null>(null);
+  const [remainingRequests, setRemainingRequests] = useState<number | null>(null);
+
+  useEffect(() => {
+    const storedApiKey = localStorage.getItem('jkt48-api-key');
+    if (storedApiKey) {
+      setApiKey(storedApiKey);
+      checkApiKey(storedApiKey);
+    }
+  }, []);
+
+  const checkApiKey = async (key: string) => {
+    try {
+      const response = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/${key}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setExpiryDate(data.expiry_date);
+        setRemainingRequests(data.remaining_requests);
+      }
+    } catch (error) {
+      console.error('Error checking API key:', error);
+    }
+  };
 
   return (
     <Flex direction="column" gap={5}>
-      {/* API Key Details */}
-      <Flex direction="column" alignItems="start" rounded="2xl" bg="Brand" gap={4} p={5}>
+      {/* Section Invite */}
+      <Flex direction="row" alignItems="center" rounded="2xl" bg="Brand" gap={4} p={5}>
         <Circle
           color="white"
           bgGradient="linear(to right bottom, transparent, blackAlpha.600)"
@@ -39,109 +67,175 @@ export default function HomeView() {
           <Icon as={FaRobot} w="60px" h="60px" />
         </Circle>
 
-        <ApiKeyDetails />
+        <Flex direction="column" align="start" gap={1} w="full">
+          <Heading color="white" fontSize="2xl" fontWeight="bold">
+            {t.invite.title}
+          </Heading>
+
+          <Grid templateColumns="repeat(3, 1fr)" gap={4} w="full" mt={3}>
+            {/* Card untuk Nama API Key */}
+            <Card rounded="xl" variant="primary">
+              <CardBody>
+                <Text fontWeight="bold" color="whiteAlpha.900">
+                  API Key Name
+                </Text>
+                <Text color="whiteAlpha.700">
+                  {apiKey ? 'JKT48 User API' : 'API Key not available'}
+                </Text>
+              </CardBody>
+            </Card>
+
+            {/* Card untuk Expiry Date */}
+            <Card rounded="xl" variant="primary">
+              <CardBody>
+                <Text fontWeight="bold" color="whiteAlpha.900">
+                  Expiry Date
+                </Text>
+                <Text color="whiteAlpha.700">
+                  {expiryDate ? expiryDate : 'Unknown'}
+                </Text>
+              </CardBody>
+            </Card>
+
+            {/* Card untuk Remaining Requests */}
+            <Card rounded="xl" variant="primary">
+              <CardBody>
+                <Text fontWeight="bold" color="whiteAlpha.900">
+                  Remaining Requests
+                </Text>
+                <Text color="whiteAlpha.700">
+                  {remainingRequests !== null ? remainingRequests : 'Unknown'}
+                </Text>
+              </CardBody>
+            </Card>
+          </Grid>
+        </Flex>
       </Flex>
 
+      {/* Section Servers */}
       <Flex direction="column" gap={1} mt={3}>
         <Heading size="md">{t.servers.title}</Heading>
         <Text color="TextSecondary">{t.servers.description}</Text>
       </Flex>
       <GuildSelect />
 
+      {/* Section Commands */}
       <Flex direction="column" gap={1}>
         <Heading size="md">{t.command.title}</Heading>
         <Text color="TextSecondary">{t.command.description}</Text>
+        <HStack mt={3}>
+          <Button leftIcon={<IoPricetag />} variant="action">
+            {t.pricing}
+          </Button>
+          <Button px={6} rounded="xl" variant="secondary">
+            {t.learn_more}
+          </Button>
+        </HStack>
       </Flex>
       <TestChart />
+      <Grid templateColumns={{ base: '1fr', lg: '0.5fr 1fr' }} gap={3}>
+        <Card rounded="3xl" variant="primary">
+          <CardBody as={Center} p={4} flexDirection="column" gap={3}>
+            <Circle p={4} bg="brandAlpha.100" color="brand.500" _dark={{ color: 'brand.200' }}>
+              <Icon as={BsMusicNoteBeamed} w="80px" h="80px" />
+            </Circle>
+            <Text fontWeight="medium">{t.vc.create}</Text>
+          </CardBody>
+        </Card>
+        <Flex direction="column" gap={3}>
+          <Text fontSize="lg" fontWeight="600">
+            JKT48Connect Section
+          </Text>
+          <VoiceChannelItem />
+        </Flex>
+      </Grid>
     </Flex>
   );
 }
 
-function ApiKeyDetails() {
-  const [apiKey, setApiKey] = useState<string>('Loading...');
-  const [expiryDate, setExpiryDate] = useState<string>('Loading...');
-  const [remainingRequests, setRemainingRequests] = useState<number | string>('Loading...');
-  const toast = useToast();
+function TestChart() {
+  const [seriesData, setSeriesData] = useState([
+    {
+      name: 'Paid',
+      data: [50, 64, 48, 66, 49, 68],
+    },
+    {
+      name: 'Free Usage',
+      data: [30, 50, 13, 46, 26, 16],
+    },
+  ]);
 
   useEffect(() => {
-    const storedApiKey = localStorage.getItem('jkt48-api-key');
-    if (storedApiKey) {
-      setApiKey(storedApiKey);
-      checkApiKey(storedApiKey);
-    } else {
-      setApiKey('No API key found');
-    }
+    const intervalId = setInterval(() => {
+      setSeriesData((prevData) => {
+        const newPaidData = [...prevData[0].data];
+        const newFreeUsageData = [...prevData[1].data];
+
+        newPaidData.push(newPaidData[newPaidData.length - 1] + Math.floor(Math.random() * 5));
+        newFreeUsageData.push(newFreeUsageData[newFreeUsageData.length - 1] + Math.floor(Math.random() * 5));
+
+        if (newPaidData.length > 6) newPaidData.shift();
+        if (newFreeUsageData.length > 6) newFreeUsageData.shift();
+
+        return [
+          { name: 'Paid', data: newPaidData },
+          { name: 'Free Usage', data: newFreeUsageData },
+        ];
+      });
+    }, 2000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
-  const checkApiKey = async (key: string) => {
-    try {
-      const response = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/${key}`);
-      const data = await response.json();
-
-      if (data.success) {
-        setExpiryDate(data.expiry_date || 'Unknown');
-        setRemainingRequests(data.remaining_requests ?? 'Unlimited');
-      } else {
-        setExpiryDate('Invalid');
-        setRemainingRequests('Invalid');
-        toast({
-          title: 'Invalid API Key',
-          description: data.message,
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
-      setExpiryDate('Error');
-      setRemainingRequests('Error');
-      toast({
-        title: 'Error',
-        description: 'Terjadi kesalahan saat memeriksa API Key.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
   return (
-    <Grid templateColumns={{ base: '1fr', md: '1fr 1fr 1fr' }} gap={4} w="full">
-      {/* Card Nama API Key */}
-      <Card rounded="xl" variant="primary">
-        <CardBody>
-          <Text fontWeight="bold" fontSize="lg">
-            API Key
-          </Text>
-          <Text mt={2} color="TextSecondary">
-            {apiKey}
-          </Text>
-        </CardBody>
-      </Card>
+    <StyledChart
+      options={{
+        colors: ['#4318FF', '#39B8FF'],
+        chart: {
+          animations: {
+            enabled: true,
+            easing: 'easeinout',
+            speed: 800,
+            animateGradually: {
+              enabled: true,
+              delay: 150,
+            },
+          },
+        },
+        xaxis: {
+          categories: ['SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB'],
+        },
+        legend: {
+          position: 'right',
+        },
+        responsive: [
+          {
+            breakpoint: 650,
+            options: {
+              legend: {
+                position: 'bottom',
+              },
+            },
+          },
+        ],
+      }}
+      series={seriesData}
+      height="300"
+      type="line"
+    />
+  );
+}
 
-      {/* Card Expiry Date */}
-      <Card rounded="xl" variant="primary">
-        <CardBody>
-          <Text fontWeight="bold" fontSize="lg">
-            Expiry Date
-          </Text>
-          <Text mt={2} color="TextSecondary">
-            {expiryDate}
-          </Text>
-        </CardBody>
-      </Card>
-
-      {/* Card Remaining Requests */}
-      <Card rounded="xl" variant="primary">
-        <CardBody>
-          <Text fontWeight="bold" fontSize="lg">
-            Remaining Requests
-          </Text>
-          <Text mt={2} color="TextSecondary">
-            {remainingRequests}
-          </Text>
-        </CardBody>
-      </Card>
-    </Grid>
+function VoiceChannelItem() {
+  return (
+    <Card rounded="2xl" variant="primary">
+      <CardHeader as={HStack}>
+        <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: '2xl', md: '3xl' }} />
+        <Text>Your Apikey Details</Text>
+      </CardHeader>
+      <CardBody mt={3}>
+        <Text color="TextSecondary">Masukkan API Key di profile untuk menggunakan fitur ini.</Text>
+      </CardBody>
+    </Card>
   );
 }
