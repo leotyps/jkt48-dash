@@ -1,6 +1,6 @@
 import { Icon } from '@chakra-ui/react';
 import { common } from '@/config/translations/common';
-import { MdPerson, MdDashboard } from 'react-icons/md';
+import { MdPerson, MdDashboard, MdBook } from 'react-icons/md'; // Tambahkan MdBook untuk ikon dokumentasi
 import { SidebarItemInfo } from '@/utils/router';
 
 const items: SidebarItemInfo[] = [
@@ -13,6 +13,11 @@ const items: SidebarItemInfo[] = [
     name: <common.T text="profile" />,
     path: '/user/profile',
     icon: <Icon as={MdPerson} />,
+  },
+  {
+    name: <common.T text="documentation" />, // Tambahkan item Documentation
+    path: '/user/docs',
+    icon: <Icon as={MdBook} />,
   },
 ];
 
