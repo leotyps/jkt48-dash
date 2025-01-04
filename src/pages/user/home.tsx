@@ -16,6 +16,7 @@ import { NextPageWithLayout } from '@/pages/_app';
 import AppLayout from '@/components/layout/app';
 import { iconUrl } from '@/api/discord';
 import Link from 'next/link';
+import Head from 'next/head'; // Import Head untuk menambahkan script ke <head>
 
 const HomePage: NextPageWithLayout = () => {
   //used for example only, you should remove it
@@ -74,5 +75,29 @@ export function GuildSelect() {
   return <></>;
 }
 
-HomePage.getLayout = (c) => <AppLayout>{c}</AppLayout>;
+HomePage.getLayout = (c) => (
+  <AppLayout>
+    <Head>
+      {/* Script untuk Crisp Chat */}
+      <script
+        type="text/javascript"
+        dangerouslySetInnerHTML={{
+          __html: `
+          window.$crisp=[];
+          window.CRISP_WEBSITE_ID="46ffdd69-59a5-4db2-bdf6-dd7f72ccafd6";
+          (function(){
+            d=document;
+            s=d.createElement("script");
+            s.src="https://client.crisp.chat/l.js";
+            s.async=1;
+            d.getElementsByTagName("head")[0].appendChild(s);
+          })();
+          `,
+        }}
+      ></script>
+    </Head>
+    {c}
+  </AppLayout>
+);
+
 export default HomePage;
