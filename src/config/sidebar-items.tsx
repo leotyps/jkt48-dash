@@ -15,7 +15,7 @@ const items: SidebarItemInfo[] = [
     icon: <Icon as={MdPerson} />,
   },
   {
-    name: Documentation, // Tambahkan item Documentation
+    name: "Documentation", // Tambahkan item Documentation
     path: '/user/docs',
     icon: <Icon as={MdBook} />,
   },
