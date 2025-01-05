@@ -6,7 +6,7 @@ import AuthLayout from '@/components/layout/auth';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth as firebaseAuth } from '@/config/firebaseConfig';
+import { auth as firebaseAuth } from '../firebaseConfig';
 
 const LoginPage: NextPageWithLayout = () => {
   const t = auth.useTranslations();
