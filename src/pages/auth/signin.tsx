@@ -105,7 +105,7 @@ LoginPage.getLayout = (c) => <AuthLayout>{c}</AuthLayout>;
 export default LoginPage;
 
 export const getServerSideProps = async ({ req }: GetServerSidePropsContext) => {
-  const session = getServerSession(req);
+  const session = getServerSession(req as any); // Casting req ke any untuk menghindari kesalahan tipe
 
   // Periksa apakah sesi sudah valid
   if (session.success) {
