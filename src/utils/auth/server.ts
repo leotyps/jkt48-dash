@@ -3,6 +3,15 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { setCookie, deleteCookie } from 'cookies-next'; // Pastikan menggunakan cookies-next
 import { z } from 'zod';
 import type { OptionsType } from 'cookies-next/lib/types';
+// utils/auth/server.ts
+import { IncomingMessage } from 'http';
+import { NextApiRequestCookies } from 'next/dist/server/api-utils';
+
+export const getServerSession = (req: IncomingMessage & { cookies: NextApiRequestCookies }) => {
+  const raw = req.cookies['ts-token'];
+
+  return tokenSchema.safeParse(raw == null ? raw : JSON.parse(raw));
+};
 
 export const API_ENDPOINT = 'https://discord.com/api/v10';
 export const CLIENT_ID = process.env.BOT_CLIENT_ID ?? '';
