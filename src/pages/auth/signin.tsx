@@ -1,3 +1,4 @@
+import { GetServerSidePropsContext } from 'next'; // Import GetServerSidePropsContext
 import { Button, Flex, Heading, Icon, Text } from '@chakra-ui/react';
 import { BsDiscord } from 'react-icons/bs';
 import { auth } from '@/config/translations/auth';
@@ -75,7 +76,8 @@ const LoginPage: NextPageWithLayout = () => {
 LoginPage.getLayout = (c) => <AuthLayout>{c}</AuthLayout>;
 export default LoginPage;
 
-export const getServerSideProps = async ({ req }) => {
+// Menambahkan tipe untuk getServerSidePropsContext
+export const getServerSideProps = async ({ req }: GetServerSidePropsContext) => {
   const loggedin = getServerSession(req).success;
 
   if (loggedin) {
