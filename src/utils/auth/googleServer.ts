@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { OptionsType } from 'cookies-next/lib/types';
 import { NextRequest } from 'next/server';
 
-// Definisikan token session untuk Google
+// Token session untuk Google
 const TokenCookie = 'google-token';
 
 const tokenSchema = z.object({
@@ -14,6 +14,14 @@ const tokenSchema = z.object({
   refresh_token: z.string(),
   scope: z.string(),
 });
+
+// Fungsi untuk memeriksa apakah ada sesi Google
+export function middleware_hasGoogleServerSession(req: NextRequest) {
+  const raw = req.cookies.get('google-token')?.value;
+
+  // Proses token sesuai dengan skema yang Anda butuhkan
+  return raw != null && tokenSchema.safeParse(JSON.parse(raw)).success;
+}
 
 const options: OptionsType = {
   httpOnly: true,
@@ -33,12 +41,7 @@ export function setServerSession(req: NextApiRequest, res: NextApiResponse, data
   setCookie(TokenCookie, JSON.stringify(data), { req, res, ...options });
 }
 
- function middleware_hasGoogleServerSession(req: NextRequest) {
-  const raw = req.cookies.get('google-token')?.value;  // Misalnya, menggunakan cookie untuk token Google
-
-  // Proses token sesuai dengan skema yang Anda butuhkan
-  return raw != null && tokenSchema.safeParse(JSON.parse(raw)).success;
-}
+ 
 
 // Fungsi untuk menghapus sesi
 export async function removeSession(req: NextApiRequest, res: NextApiResponse) {
