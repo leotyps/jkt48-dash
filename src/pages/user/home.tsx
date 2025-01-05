@@ -15,6 +15,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import AppLayout from '@/components/layout/app';
 import Head from 'next/head';
+import { ReactElement } from 'react'; // Tambahkan import ini
+
+
 
 const HomePage = () => {
   const [session, setSession] = useState(null);
@@ -107,7 +110,7 @@ export function GuildSelect() {
   return <></>;
 }
 
-HomePage.getLayout = (c) => (
+HomePage.getLayout = (c: ReactElement) => (
   <AppLayout>
     <Head>
       <script
@@ -130,5 +133,3 @@ HomePage.getLayout = (c) => (
     {c}
   </AppLayout>
 );
-
-export default HomePage;
