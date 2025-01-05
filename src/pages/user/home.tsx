@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import AppLayout from '@/components/layout/app';
 import Head from 'next/head';
-import { ReactElement } from 'react'; // Tambahkan import ini
+import { ReactNode } from 'react'; // Tambahkan import ini
 
 
 
@@ -110,7 +110,7 @@ export function GuildSelect() {
   return <></>;
 }
 
-HomePage.getLayout = (c: ReactElement) => (
+HomePage.getLayout = (c: ReactNode) => (
   <AppLayout>
     <Head>
       <script
