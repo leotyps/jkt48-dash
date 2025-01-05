@@ -8,7 +8,7 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth as firebaseAuth } from '@/config/firebaseConfig';
-import { getServerSession } from '@/utils/auth/server'; // Import getServerSession
+import { setServerSession } from '@/utils/auth/server'; // Import setServerSession
 
 const LoginPage: NextPageWithLayout = () => {
   const t = auth.useTranslations();
@@ -21,8 +21,21 @@ const LoginPage: NextPageWithLayout = () => {
       const result = await signInWithPopup(firebaseAuth, new GoogleAuthProvider());
       const user = result.user;
       console.log('Logged in user:', user);
-      // Redirect or set session as needed
-      window.location.href = '/user/home'; // Contoh redirect setelah login sukses
+
+      // Menyimpan token atau informasi sesi dalam cookie
+      const userSession = {
+        access_token: user.accessToken,
+        token_type: 'Bearer',
+        expires_in: 3600,
+        refresh_token: user.refreshToken,
+        scope: 'email', // atau scope lain yang diperlukan
+      };
+
+      // Setel sesi di server
+      setServerSession(userSession, { req: window.document, res: window.document }); // Sesuaikan req dan res jika perlu
+
+      // Redirect ke halaman dashboard setelah login berhasil
+      window.location.href = '/user/home';
     } catch (error) {
       console.error('Error logging in with Google:', error);
     } finally {
@@ -77,11 +90,11 @@ const LoginPage: NextPageWithLayout = () => {
 LoginPage.getLayout = (c) => <AuthLayout>{c}</AuthLayout>;
 export default LoginPage;
 
-// Menambahkan tipe untuk getServerSidePropsContext
 export const getServerSideProps = async ({ req }: GetServerSidePropsContext) => {
-  const loggedin = getServerSession(req).success; // Pastikan getServerSession diimpor dengan benar
+  const session = getServerSession(req);
 
-  if (loggedin) {
+  // Periksa apakah sesi sudah valid
+  if (session.success) {
     return {
       redirect: {
         destination: '/user/home',
