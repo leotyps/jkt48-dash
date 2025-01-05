@@ -1,4 +1,5 @@
-import { GetServerSidePropsContext } from 'next'; 
+// ./pages/login.tsx
+import { GetServerSidePropsContext } from 'next';
 import { Button, Flex, Heading, Icon, Text } from '@chakra-ui/react';
 import { BsDiscord } from 'react-icons/bs';
 import { auth } from '@/config/translations/auth';
@@ -8,7 +9,8 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { signInWithRedirect, GoogleAuthProvider, getRedirectResult } from 'firebase/auth';
 import { auth as firebaseAuth } from '@/config/firebaseConfig';
-import { getServerSession } from '@/utils/auth/server';
+import { getServerSession as getServerSessionFromServer } from '@/utils/auth/server';  // Impor dari server
+import { getServerSession as getServerSessionFromGoogle } from '@/utils/auth/googleServer';  // Impor dari googleServer
 
 const LoginPage: NextPageWithLayout = () => {
   const t = auth.useTranslations();
@@ -123,9 +125,10 @@ LoginPage.getLayout = (c) => <AuthLayout>{c}</AuthLayout>;
 export default LoginPage;
 
 export const getServerSideProps = async ({ req }: GetServerSidePropsContext) => {
-  const session = getServerSession(req as any);
+  const sessionFromServer = getServerSessionFromServer(req as any);
+  const sessionFromGoogle = getServerSessionFromGoogle(req as any);
 
-  if (session.success) {
+  if (sessionFromServer.success || sessionFromGoogle.success) {
     return {
       redirect: {
         destination: '/user/home', // Pastikan halaman ini adalah halaman yang ingin dituju setelah login
