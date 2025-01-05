@@ -7,9 +7,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const userSession = req.body;
     
     // Simpan sesi menggunakan setServerSession
-    // Periksa bahwa setServerSession menerima dua argumen (req dan res)
-    // dan disesuaikan dengan tipe yang benar
-    setServerSession(userSession, req, res);  // Pastikan fungsi ini menerima req dan res dari API route
+    setServerSession(userSession, req, res);  // Pastikan fungsi ini menerima req dan res yang sesuai
 
     return res.status(200).json({ success: true });
   } else {
