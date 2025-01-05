@@ -35,12 +35,11 @@ const options: OptionsType = {
 export type AccessToken = z.infer<typeof tokenSchema>;
 
 
-export const setServerSession = async (req: NextApiRequest, res: NextApiResponse, token: AccessToken) => {
-  // Menyimpan sesi di cookie atau session sesuai kebutuhan
-  // Misalnya menggunakan cookie
-  res.setHeader('Set-Cookie', `token=${token.access_token}; Path=/; HttpOnly; Max-Age=${token.expires_in}`);
-};
 
+// Fungsi untuk menyimpan sesi di cookie
+export function setServerSession(req: NextApiRequest, res: NextApiResponse, data: AccessToken) {
+  setCookie(TokenCookie, JSON.stringify(data), { req, res, ...options });
+}
 export function middleware_hasServerSession(req: NextRequest) {
   const raw = req.cookies.get(TokenCookie)?.value;
 
