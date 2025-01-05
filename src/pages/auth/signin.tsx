@@ -8,6 +8,7 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth as firebaseAuth } from '@/config/firebaseConfig';
+import { getServerSession } from '@/utils/auth/server'; // Import getServerSession
 
 const LoginPage: NextPageWithLayout = () => {
   const t = auth.useTranslations();
@@ -78,7 +79,7 @@ export default LoginPage;
 
 // Menambahkan tipe untuk getServerSidePropsContext
 export const getServerSideProps = async ({ req }: GetServerSidePropsContext) => {
-  const loggedin = getServerSession(req).success;
+  const loggedin = getServerSession(req).success; // Pastikan getServerSession diimpor dengan benar
 
   if (loggedin) {
     return {
