@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const idToken = await user.getIdToken();
       const userSession = {
         access_token: idToken,
-        token_type: 'Bearer',
+        token_type: 'Bearer' as const,  // Pastikan ini adalah string literal 'Bearer'
         expires_in: 3600,
         refresh_token: user.refreshToken,
         scope: 'email',
