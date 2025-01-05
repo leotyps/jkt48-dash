@@ -63,7 +63,7 @@ const LoginPage: NextPageWithLayout = () => {
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({
-        redirect_uri: 'https://dash.jkt48connect.my.id/api/auth/callback', // URL callback Anda
+        redirect_uri: 'https://dash.jkt48connect.my.id/api/auth/gcallback', // URL callback Anda
       });
 
       await signInWithRedirect(firebaseAuth, provider);
