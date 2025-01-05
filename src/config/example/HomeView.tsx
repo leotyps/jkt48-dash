@@ -12,7 +12,6 @@ import {
   CardHeader,
   Icon,
   useToast,
-  Box,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { config } from '@/config/common';
@@ -107,6 +106,19 @@ export default function HomeView() {
 
       {/* Chart Section */}
       <TestChart />
+
+      {/* Create a Voice Channel Section */}
+      <Flex direction="column" gap={3} mt={5}>
+        <Heading size="md">Create a Voice Channel</Heading>
+        <Card rounded="3xl" variant="primary">
+          <CardBody as={Center} p={4} flexDirection="column" gap={3}>
+            <Circle p={4} bg="brandAlpha.100" color="brand.500" _dark={{ color: 'brand.200' }}>
+              <Icon as={MdVoiceChat} w="80px" h="80px" />
+            </Circle>
+            <Text fontWeight="medium">Silakan buat voice channel baru untuk diskusi</Text>
+          </CardBody>
+        </Card>
+      </Flex>
     </Flex>
   );
 }
@@ -254,29 +266,16 @@ function VoiceChannelItem() {
           <Text fontWeight="bold">API Key</Text>
         </CardHeader>
         <CardBody>
-          {apiKey ? (
-            <Text fontSize="sm" color="TextSecondary" wordBreak="break-word">
-              {apiKey}
-            </Text>
-          ) : (
-            <Text color="TextSecondary">
-              API Key belum tersedia. Silakan tambahkan API Key di profil.
-            </Text>
-          )}
-        </CardBody>
-      </Card>
-
-      {/* Remaining Requests Card */}
-      <Card rounded="2xl" variant="primary">
-        <CardHeader>
-          <Text fontWeight="bold">Remaining Requests</Text>
-        </CardHeader>
-        <CardBody>
-          {remainingRequests !== null ? (
-            <Text>{remainingRequests}</Text>
-          ) : (
-            <Text>Data tidak tersedia.</Text>
-          )}
+          <Text>Masukkan API Key di bawah untuk memeriksa status:</Text>
+          <Input
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="Masukkan API Key"
+            mt={3}
+          />
+          <Button mt={3} colorScheme="blue" onClick={() => checkApiKey(apiKey)}>
+            Periksa API Key
+          </Button>
         </CardBody>
       </Card>
     </Flex>
