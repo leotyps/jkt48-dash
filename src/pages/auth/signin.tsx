@@ -22,9 +22,12 @@ const LoginPage: NextPageWithLayout = () => {
       const user = result.user;
       console.log('Logged in user:', user);
 
+      // Ambil token ID menggunakan getIdToken()
+      const idToken = await user.getIdToken();
+
       // Menyimpan token atau informasi sesi dalam cookie
       const userSession = {
-        access_token: user.accessToken,
+        access_token: idToken, // Menggunakan token yang didapat dari getIdToken()
         token_type: 'Bearer',
         expires_in: 3600,
         refresh_token: user.refreshToken,
