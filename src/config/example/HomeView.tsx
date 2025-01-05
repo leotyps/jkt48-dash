@@ -279,9 +279,27 @@ function VoiceChannelItem() {
         </CardHeader>
         <CardBody>
           {remainingRequests !== null ? (
-            <Text>{remainingRequests}</Text>
+            <Text fontSize="lg" fontWeight="bold" color="blue.500">
+              {remainingRequests}
+            </Text>
           ) : (
-            <Text>Data tidak tersedia.</Text>
+            <Text color="TextSecondary">Data tidak tersedia.</Text>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* Expiry Date Card */}
+      <Card rounded="2xl" variant="primary">
+        <CardHeader>
+          <Text fontWeight="bold">Expiry Date</Text>
+        </CardHeader>
+        <CardBody>
+          {expiryDate ? (
+            <Text fontSize="lg" fontWeight="bold" color="teal.500">
+              {expiryDate}
+            </Text>
+          ) : (
+            <Text color="TextSecondary">Data tidak tersedia.</Text>
           )}
         </CardBody>
       </Card>
