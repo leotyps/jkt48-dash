@@ -8,6 +8,8 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth as firebaseAuth } from '@/config/firebaseConfig';
+import { getServerSession } from '@/utils/auth/server'; // Tambahkan impor untuk getServerSession
+
 
 const LoginPage: NextPageWithLayout = () => {
   const t = auth.useTranslations();
