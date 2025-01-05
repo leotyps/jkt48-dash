@@ -6,11 +6,10 @@ import { auth } from '@/config/translations/auth';
 import { NextPageWithLayout } from '@/pages/_app';
 import AuthLayout from '@/components/layout/auth';
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
-import { signInWithRedirect, GoogleAuthProvider, getRedirectResult } from 'firebase/auth';
+import { useState } from 'react';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth as firebaseAuth } from '@/config/firebaseConfig';
-import { getServerSession as getServerSessionFromServer } from '@/utils/auth/server';  // Impor dari server
-import { getServerSession as getServerSessionFromGoogle } from '@/utils/auth/googleServer';  // Impor dari googleServer
+import { getServerSession } from '@/utils/auth/server';
 
 const LoginPage: NextPageWithLayout = () => {
   const t = auth.useTranslations();
@@ -18,57 +17,40 @@ const LoginPage: NextPageWithLayout = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // Handle Google login redirect results
-  useEffect(() => {
-    const handleRedirect = async () => {
-      try {
-        const result = await getRedirectResult(firebaseAuth);
-        if (result) {
-          const user = result.user;
-
-          // Get token and create session
-          const idToken = await user.getIdToken();
-          const userSession = {
-            access_token: idToken,
-            token_type: 'Bearer',
-            expires_in: 3600,
-            refresh_token: user.refreshToken,
-            scope: 'email',
-          };
-
-          // Save session
-          const response = await fetch('/api/auth/setSession', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(userSession),
-          });
-
-          if (response.ok) {
-            // Redirect to home after login success
-            router.push('/user/home');
-          } else {
-            console.error('Failed to save session');
-          }
-        }
-      } catch (error) {
-        console.error('Error handling Google login redirect:', error);
-      }
-    };
-
-    handleRedirect();
-  }, [router]);
-
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({
-        redirect_uri: 'https://dash.jkt48connect.my.id/api/auth/gcallback', // URL callback Anda
+      
+      // Login dengan popup
+      const result = await signInWithPopup(firebaseAuth, provider);
+      const user = result.user;
+
+      // Dapatkan token ID
+      const idToken = await user.getIdToken();
+      const userSession = {
+        access_token: idToken,
+        token_type: 'Bearer',
+        expires_in: 3600,
+        refresh_token: user.refreshToken,
+        scope: 'email',
+      };
+
+      // Kirim token ke server untuk disimpan sebagai sesi
+      const response = await fetch('/api/auth/setSession', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userSession),
       });
 
-      await signInWithRedirect(firebaseAuth, provider);
+      if (response.ok) {
+        // Redirect ke halaman home setelah login berhasil
+        router.push('/user/home');
+      } else {
+        console.error('Failed to save session');
+      }
     } catch (error) {
       console.error('Error logging in with Google:', error);
     } finally {
@@ -125,13 +107,12 @@ LoginPage.getLayout = (c) => <AuthLayout>{c}</AuthLayout>;
 export default LoginPage;
 
 export const getServerSideProps = async ({ req }: GetServerSidePropsContext) => {
-  const sessionFromServer = getServerSessionFromServer(req as any);
-  const sessionFromGoogle = getServerSessionFromGoogle(req as any);
+  const session = getServerSession(req as any);
 
-  if (sessionFromServer.success || sessionFromGoogle.success) {
+  if (session.success) {
     return {
       redirect: {
-        destination: '/user/home', // Pastikan halaman ini adalah halaman yang ingin dituju setelah login
+        destination: '/user/home',
         permanent: false,
       },
       props: {},
