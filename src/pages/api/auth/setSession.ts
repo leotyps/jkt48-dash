@@ -8,18 +8,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { access_token, refresh_token, expires_in } = req.body;
+    const { access_token, refresh_token, expires_in, scope = 'email' } = req.body;
 
     if (!access_token) {
       return res.status(400).json({ error: 'Access token is required' });
     }
 
-    // Simpan sesi
+    // Simpan sesi dengan properti lengkap
     const session = {
       access_token,
       refresh_token,
-      expires_in,
-      token_type: 'Bearer',
+      expires_in: Number(expires_in), // Pastikan tipe data sesuai
+      token_type: 'Bearer' as const, // Tetapkan tipe tetap 'Bearer'
+      scope, // Tambahkan scope (default ke 'email' jika tidak ada)
     };
 
     await setServerSession(req, res, session);
