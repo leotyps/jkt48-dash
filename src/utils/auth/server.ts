@@ -32,7 +32,7 @@ const options: OptionsType = {
   maxAge: 60 * 60 * 24 * 30, // Cookie expired after 30 days
 };
 
-export type AccessToken = z.infer<typeof tokenSchema>;
+//export type AccessToken = z.infer<typeof tokenSchema>;
 
 export interface AccessToken {
   access_token: string;
