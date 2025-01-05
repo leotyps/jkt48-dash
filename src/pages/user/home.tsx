@@ -29,8 +29,10 @@ const HomePage: NextPageWithLayout = () => {
     const fetchSession = async () => {
       try {
         const response = await fetch('/api/auth/getSession'); // Endpoint untuk mendapatkan session
+        console.log('Fetching session...', response); // Log response untuk debug
         if (response.ok) {
           const data = await response.json();
+          console.log('Session data:', data); // Log data session untuk debug
           setSession(data); // Simpan session ke state
         } else {
           setSession(null);
@@ -38,9 +40,9 @@ const HomePage: NextPageWithLayout = () => {
         }
       } catch (error) {
         console.error('Error fetching session:', error);
-        router.push('/login');
+        router.push('/login'); // Redirect jika ada error
       } finally {
-        setLoadingSession(false);
+        setLoadingSession(false); // Set loading selesai setelah fetch
       }
     };
 
