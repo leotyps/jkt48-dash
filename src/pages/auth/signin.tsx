@@ -6,10 +6,9 @@ import { NextPageWithLayout } from '@/pages/_app';
 import AuthLayout from '@/components/layout/auth';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithRedirect } from 'firebase/auth'; // Gunakan signInWithRedirect
 import { auth as firebaseAuth } from '@/config/firebaseConfig';
-import { getServerSession } from '@/utils/auth/server'; // Tambahkan impor untuk getServerSession
-
+import { getServerSession } from '@/utils/auth/server';
 
 const LoginPage: NextPageWithLayout = () => {
   const t = auth.useTranslations();
@@ -19,40 +18,17 @@ const LoginPage: NextPageWithLayout = () => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const result = await signInWithPopup(firebaseAuth, new GoogleAuthProvider());
-      const user = result.user;
-      console.log('Logged in user:', user);
+      const provider = new GoogleAuthProvider();
 
-      // Ambil token ID menggunakan getIdToken()
-      const idToken = await user.getIdToken();
-
-      // Menyimpan token atau informasi sesi dalam objek userSession
-      const userSession = {
-        access_token: idToken, // Menggunakan token yang didapat dari getIdToken()
-        token_type: 'Bearer',
-        expires_in: 3600,
-        refresh_token: user.refreshToken,
-        scope: 'email', // atau scope lain yang diperlukan
-      };
-
-      // Kirim data sesi ke API route untuk disimpan di server
-      const response = await fetch('/api/auth/setSession', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userSession),
+      // Tambahkan callback URL ke provider
+      provider.setCustomParameters({
+        redirect_uri: 'https://dash.jkt48connect.my.id/api/auth/callback', // URL callback
       });
 
-      if (response.ok) {
-        // Redirect ke halaman dashboard setelah login berhasil
-        window.location.href = '/user/home';
-      } else {
-        console.error('Error saving session');
-      }
+      // Gunakan signInWithRedirect
+      await signInWithRedirect(firebaseAuth, provider);
     } catch (error) {
       console.error('Error logging in with Google:', error);
-    } finally {
       setLoading(false);
     }
   };
@@ -105,9 +81,8 @@ LoginPage.getLayout = (c) => <AuthLayout>{c}</AuthLayout>;
 export default LoginPage;
 
 export const getServerSideProps = async ({ req }: GetServerSidePropsContext) => {
-  const session = getServerSession(req as any); // Casting req ke any untuk menghindari kesalahan tipe
+  const session = getServerSession(req as any);
 
-  // Periksa apakah sesi sudah valid
   if (session.success) {
     return {
       redirect: {
