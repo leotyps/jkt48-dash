@@ -41,10 +41,8 @@ const querySchema = z.object({
   state: z
     .string()
     .optional()
-    //Handle unsupported locales
     .transform((v) => {
-      if (i18n == null || v == null) return undefined;
-
+      if (!i18n || !v) return undefined;
       return i18n.locales.find((locale) => locale === v);
     }),
 });
