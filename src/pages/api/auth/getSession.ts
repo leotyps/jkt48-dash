@@ -1,28 +1,15 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { adminAuth } from '@/config/firebaseAdmin'; // Pastikan Firebase Admin SDK dikonfigurasi
+import { getServerSession } from '@/utils/auth/googleServer'; // Pastikan ini sudah diimplementasi
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const authorization = req.headers.authorization;
-
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-      return res.status(400).json({ error: 'Authorization token missing or invalid' });
+    const session = await getServerSession(req, res); // Dapatkan session dari server
+    if (!session) {
+      return res.status(401).json({ error: 'Session not found' });
     }
-
-    const idToken = authorization.split('Bearer ')[1];
-
-    // Verifikasi ID Token menggunakan Firebase Admin
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
-    console.log('Decoded Token:', decodedToken); // Log decoded token untuk debugging
-
-    // Jika valid, kirimkan data session ke klien
-    res.status(200).json({ user: decodedToken });
+    res.status(200).json(session);
   } catch (error) {
-    console.error('Error verifying token:', error);
-    // Cek jenis error yang dilempar oleh Firebase
-    if (error.code === 'auth/argument-error') {
-      return res.status(400).json({ error: 'Invalid token format' });
-    }
-    return res.status(401).json({ error: 'Invalid session or token' });
+    console.error('Error fetching session:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 }
