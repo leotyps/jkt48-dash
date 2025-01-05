@@ -30,6 +30,7 @@ export default function HomeView() {
 
   return (
     <Flex direction="column" gap={5}>
+      {/* Invite Section */}
       <Flex direction="row" alignItems="center" rounded="2xl" bg="Brand" gap={4} p={5}>
         <Circle
           color="white"
@@ -65,26 +66,8 @@ export default function HomeView() {
         </Flex>
       </Flex>
 
-      <Flex direction="column" gap={1} mt={3}>
-        <Heading size="md">{t.servers.title}</Heading>
-        <Text color="TextSecondary">{t.servers.description}</Text>
-      </Flex>
-      <GuildSelect />
-
-      <Flex direction="column" gap={1}>
-        <Heading size="md">{t.command.title}</Heading>
-        <Text color="TextSecondary">{t.command.description}</Text>
-        <HStack mt={3}>
-          <Button leftIcon={<IoPricetag />} variant="action">
-            {t.pricing}
-          </Button>
-          <Button px={6} rounded="xl" variant="secondary">
-            {t.learn_more}
-          </Button>
-        </HStack>
-      </Flex>
-      <TestChart />
-          <Grid templateColumns={{ base: '1fr', lg: '0.5fr 1fr' }} gap={3}>
+      {/* JKT48Connect Section */}
+      <Grid templateColumns={{ base: '1fr', lg: '0.5fr 1fr' }} gap={3}>
         <Card rounded="3xl" variant="primary">
           <CardBody as={Center} p={4} flexDirection="column" gap={3}>
             <Circle p={4} bg="brandAlpha.100" color="brand.500" _dark={{ color: 'brand.200' }}>
@@ -100,6 +83,30 @@ export default function HomeView() {
           <VoiceChannelItem />
         </Flex>
       </Grid>
+
+      {/* Servers Section */}
+      <Flex direction="column" gap={1} mt={3}>
+        <Heading size="md">{t.servers.title}</Heading>
+        <Text color="TextSecondary">{t.servers.description}</Text>
+      </Flex>
+      <GuildSelect />
+
+      {/* Commands Section */}
+      <Flex direction="column" gap={1}>
+        <Heading size="md">{t.command.title}</Heading>
+        <Text color="TextSecondary">{t.command.description}</Text>
+        <HStack mt={3}>
+          <Button leftIcon={<IoPricetag />} variant="action">
+            {t.pricing}
+          </Button>
+          <Button px={6} rounded="xl" variant="secondary">
+            {t.learn_more}
+          </Button>
+        </HStack>
+      </Flex>
+
+      {/* Chart Section */}
+      <TestChart />
     </Flex>
   );
 }
@@ -266,27 +273,9 @@ function VoiceChannelItem() {
         </CardHeader>
         <CardBody>
           {remainingRequests !== null ? (
-            <Text fontSize="lg" fontWeight="bold" color="blue.500">
-              {remainingRequests}
-            </Text>
+            <Text>{remainingRequests}</Text>
           ) : (
-            <Text color="TextSecondary">Data tidak tersedia.</Text>
-          )}
-        </CardBody>
-      </Card>
-
-      {/* Expiry Date Card */}
-      <Card rounded="2xl" variant="primary">
-        <CardHeader>
-          <Text fontWeight="bold">Expiry Date</Text>
-        </CardHeader>
-        <CardBody>
-          {expiryDate ? (
-            <Text fontSize="lg" fontWeight="bold" color="teal.500">
-              {expiryDate}
-            </Text>
-          ) : (
-            <Text color="TextSecondary">Data tidak tersedia.</Text>
+            <Text>Data tidak tersedia.</Text>
           )}
         </CardBody>
       </Card>
