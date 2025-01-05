@@ -3,7 +3,8 @@ import { getServerSession } from '@/utils/auth/googleServer'; // Pastikan ini su
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const session = await getServerSession(req, res); // Dapatkan session dari server
+    // Memanggil getServerSession dengan hanya req
+    const session = await getServerSession(req); // Pastikan hanya memberikan 1 argumen
     if (!session) {
       return res.status(401).json({ error: 'Session not found' });
     }
