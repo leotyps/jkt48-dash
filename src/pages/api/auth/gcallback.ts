@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { auth as firebaseAuth } from '@/config/firebaseConfig'; // Pastikan Firebase sudah dikonfigurasi dengan benar
-import { setServerSession } from '@/utils/auth/server';
+import { setServerSession } from '@/utils/auth/googleServer';
 import { getRedirectResult } from 'firebase/auth'; // Import Firebase Auth SDK untuk redirect result
 import { getAbsoluteUrl } from '@/utils/get-absolute-url';
 
