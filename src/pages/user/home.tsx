@@ -11,15 +11,16 @@ import {
 } from '@chakra-ui/react';
 import { config } from '@/config/common';
 import { useGuilds } from '@/api/hooks';
+import HomeView from '@/config/example/HomeView';
+import { NextPageWithLayout } from '@/pages/_app';
+import AppLayout from '@/components/layout/app';
+import { iconUrl } from '@/api/discord';
+import Link from 'next/link';
+import Head from 'next/head';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import AppLayout from '@/components/layout/app';
-import Head from 'next/head';
-import { ReactNode } from 'react'; // Tambahkan import ini
 
-
-
-const HomePage = () => {
+const HomePage: NextPageWithLayout = () => {
   const [session, setSession] = useState(null);
   const [loadingSession, setLoadingSession] = useState(true);
   const router = useRouter();
@@ -27,17 +28,17 @@ const HomePage = () => {
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const response = await fetch('/api/auth/getSession');
+        const response = await fetch('/api/auth/getSession'); // Endpoint untuk mendapatkan session
         if (response.ok) {
           const data = await response.json();
-          setSession(data);
+          setSession(data); // Simpan session ke state
         } else {
           setSession(null);
-          router.push('/login'); // Redirect jika session tidak valid
+          router.push('/login'); // Redirect ke login jika session tidak valid
         }
       } catch (error) {
         console.error('Error fetching session:', error);
-        router.push('/login'); // Redirect jika error
+        router.push('/login');
       } finally {
         setLoadingSession(false);
       }
@@ -55,7 +56,7 @@ const HomePage = () => {
   }
 
   if (!session) {
-    return null; // Tidak render apa pun jika tidak ada session
+    return null; // Jika tidak ada session, jangan render apa pun
   }
 
   return <GuildSelect />;
@@ -72,7 +73,7 @@ export function GuildSelect() {
           .map((guild) => (
             <Card key={guild.id} variant="primary">
               <CardHeader as={Flex} flexDirection="row" gap={3}>
-                <Avatar src={guild.icon} name={guild.name} size="md" />
+                <Avatar src={iconUrl(guild)} name={guild.name} size="md" />
                 <Text>{guild.name}</Text>
               </CardHeader>
               <Button
@@ -110,9 +111,10 @@ export function GuildSelect() {
   return <></>;
 }
 
-HomePage.getLayout = (c: ReactNode) => (
+HomePage.getLayout = (c) => (
   <AppLayout>
     <Head>
+      {/* Script untuk Crisp Chat */}
       <script
         type="text/javascript"
         dangerouslySetInnerHTML={{
@@ -133,3 +135,5 @@ HomePage.getLayout = (c: ReactNode) => (
     {c}
   </AppLayout>
 );
+
+export default HomePage;
