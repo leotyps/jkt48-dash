@@ -39,6 +39,12 @@ export function setServerSession(req: NextApiRequest, res: NextApiResponse, data
   setCookie(TokenCookie, JSON.stringify(data), { req, res, ...options });
 }
 
+export function middleware_hasServerSession(req: NextRequest) {
+  const raw = req.cookies.get(TokenCookie)?.value;
+
+  return raw != null && tokenSchema.safeParse(JSON.parse(raw)).success;
+}
+
 // Fungsi untuk mendapatkan sesi
 export function getServerSession(req: NextApiRequest) {
   const raw = req.cookies[TokenCookie];
