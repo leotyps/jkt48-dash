@@ -5,6 +5,14 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import type { OptionsType } from 'cookies-next/lib/types';
 import type { IncomingMessage } from 'http';
+// utils/auth/server.ts
+import { NextApiRequest, NextApiResponse } from 'next';
+
+// Fungsi setServerSession yang sesuai
+export const setServerSession = (session: any, req: NextApiRequest, res: NextApiResponse) => {
+  // Implementasikan penyimpanan sesi, misalnya melalui cookie atau database
+  res.setHeader('Set-Cookie', `session_token=${session.access_token}; HttpOnly; Path=/; Max-Age=3600`);
+};
 
 export const API_ENDPOINT = 'https://discord.com/api/v10';
 export const CLIENT_ID = process.env.BOT_CLIENT_ID ?? '';
