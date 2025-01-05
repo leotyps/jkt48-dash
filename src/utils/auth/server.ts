@@ -44,7 +44,7 @@ export function getServerSession(
 }
 
 export function setServerSession(req: NextApiRequest, res: NextApiResponse, data: AccessToken) {
-  setCookie(TokenCookie, data, { req, res, ...options });
+  setCookie(TokenCookie, JSON.stringify(data), { req, res, ...options }); // Setel data sesi ke cookie
 }
 
 export async function removeSession(req: NextApiRequest, res: NextApiResponse) {
