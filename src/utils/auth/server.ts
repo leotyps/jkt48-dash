@@ -7,12 +7,12 @@ import type { OptionsType } from 'cookies-next/lib/types';
 import { IncomingMessage } from 'http';
 import { NextApiRequestCookies } from 'next/dist/server/api-utils';
 
+// Update getServerSession to handle IncomingMessage
 export const getServerSession = (req: IncomingMessage & { cookies: NextApiRequestCookies }) => {
-  const raw = req.cookies['ts-token'];
+  const raw = req.cookies[TokenCookie];
 
   return tokenSchema.safeParse(raw == null ? raw : JSON.parse(raw));
 };
-
 export const API_ENDPOINT = 'https://discord.com/api/v10';
 export const CLIENT_ID = process.env.BOT_CLIENT_ID ?? '';
 export const CLIENT_SECRET = process.env.BOT_CLIENT_SECRET ?? '';
