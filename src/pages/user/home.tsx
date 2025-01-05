@@ -16,11 +16,48 @@ import { NextPageWithLayout } from '@/pages/_app';
 import AppLayout from '@/components/layout/app';
 import { iconUrl } from '@/api/discord';
 import Link from 'next/link';
-import Head from 'next/head'; // Import Head untuk menambahkan script ke <head>
+import Head from 'next/head';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 
 const HomePage: NextPageWithLayout = () => {
-  //used for example only, you should remove it
-  return <HomeView />;
+  const [session, setSession] = useState(null);
+  const [loadingSession, setLoadingSession] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const response = await fetch('/api/auth/getSession'); // Endpoint untuk mendapatkan session
+        if (response.ok) {
+          const data = await response.json();
+          setSession(data); // Simpan session ke state
+        } else {
+          setSession(null);
+          router.push('/login'); // Redirect ke login jika session tidak valid
+        }
+      } catch (error) {
+        console.error('Error fetching session:', error);
+        router.push('/login');
+      } finally {
+        setLoadingSession(false);
+      }
+    };
+
+    fetchSession();
+  }, [router]);
+
+  if (loadingSession) {
+    return (
+      <Flex justify="center" align="center" h="100vh">
+        <Text>Loading...</Text>
+      </Flex>
+    );
+  }
+
+  if (!session) {
+    return null; // Jika tidak ada session, jangan render apa pun
+  }
 
   return <GuildSelect />;
 };
@@ -39,10 +76,9 @@ export function GuildSelect() {
                 <Avatar src={iconUrl(guild)} name={guild.name} size="md" />
                 <Text>{guild.name}</Text>
               </CardHeader>
-              {/* Ganti Link dengan Button untuk invite bot ke server */}
               <Button
                 as="a"
-                href={`${config.inviteUrl}&guild_id=${guild.id}`} // Sesuaikan URL invite bot
+                href={`${config.inviteUrl}&guild_id=${guild.id}`}
                 target="_blank"
                 w="full"
                 variant="action"
