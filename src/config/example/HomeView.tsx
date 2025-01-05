@@ -12,6 +12,8 @@ import {
   CardHeader,
   Icon,
   useToast,
+  Box,
+  Input,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { config } from '@/config/common';
