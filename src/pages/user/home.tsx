@@ -16,50 +16,11 @@ import { NextPageWithLayout } from '@/pages/_app';
 import AppLayout from '@/components/layout/app';
 import { iconUrl } from '@/api/discord';
 import Link from 'next/link';
-import Head from 'next/head';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import Head from 'next/head'; // Import Head untuk menambahkan script ke <head>
 
 const HomePage: NextPageWithLayout = () => {
-  const [session, setSession] = useState(null);
-  const [loadingSession, setLoadingSession] = useState(true);
-  const router = useRouter();
-
-  useEffect(() => {
-    const fetchSession = async () => {
-      try {
-        const response = await fetch('/api/auth/getSession'); // Endpoint untuk mendapatkan session
-        console.log('Fetching session...', response); // Log response untuk debug
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Session data:', data); // Log data session untuk debug
-          setSession(data); // Simpan session ke state
-        } else {
-          setSession(null);
-          router.push('/login'); // Redirect ke login jika session tidak valid
-        }
-      } catch (error) {
-        console.error('Error fetching session:', error);
-        router.push('/login'); // Redirect jika ada error
-      } finally {
-        setLoadingSession(false); // Set loading selesai setelah fetch
-      }
-    };
-
-    fetchSession();
-  }, [router]);
-
-  if (loadingSession) {
-    return (
-      <Flex justify="center" align="center" h="100vh">
-        <Text>Loading...</Text>
-      </Flex>
-    );
-  }
-
-  if (!session) {
-    return null; // Jika tidak ada session, jangan render apa pun
-  }
+  //used for example only, you should remove it
+  return <HomeView />;
 
   return <GuildSelect />;
 };
@@ -78,9 +39,10 @@ export function GuildSelect() {
                 <Avatar src={iconUrl(guild)} name={guild.name} size="md" />
                 <Text>{guild.name}</Text>
               </CardHeader>
+              {/* Ganti Link dengan Button untuk invite bot ke server */}
               <Button
                 as="a"
-                href={`${config.inviteUrl}&guild_id=${guild.id}`}
+                href={`${config.inviteUrl}&guild_id=${guild.id}`} // Sesuaikan URL invite bot
                 target="_blank"
                 w="full"
                 variant="action"
@@ -139,3 +101,4 @@ HomePage.getLayout = (c) => (
 );
 
 export default HomePage;
+
