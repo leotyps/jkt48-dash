@@ -4,12 +4,31 @@ import { auth } from '@/config/translations/auth';
 import { NextPageWithLayout } from '@/pages/_app';
 import AuthLayout from '@/components/layout/auth';
 import { useRouter } from 'next/router';
-import { GetServerSideProps } from 'next';
+import { getServerSideProps } from 'next';
 import { getServerSession } from '@/utils/auth/server';
+import { useState } from 'react';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth as firebaseAuth } from '../firebaseConfig';
 
 const LoginPage: NextPageWithLayout = () => {
   const t = auth.useTranslations();
   const locale = useRouter().locale;
+  const [loading, setLoading] = useState(false);
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      const result = await signInWithPopup(firebaseAuth, new GoogleAuthProvider());
+      const user = result.user;
+      console.log('Logged in user:', user);
+      // Redirect or set session as needed
+      window.location.href = '/user/home'; // Contoh redirect setelah login sukses
+    } catch (error) {
+      console.error('Error logging in with Google:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Flex
@@ -39,6 +58,18 @@ const LoginPage: NextPageWithLayout = () => {
       >
         {t.login_bn}
       </Button>
+      <Button
+        mt={3}
+        leftIcon={<Icon as={BsDiscord} fontSize="2xl" />}
+        variant="action"
+        size="lg"
+        width="350px"
+        maxW="full"
+        onClick={handleGoogleLogin}
+        isLoading={loading}
+      >
+        Login with Google
+      </Button>
     </Flex>
   );
 };
@@ -46,7 +77,6 @@ const LoginPage: NextPageWithLayout = () => {
 LoginPage.getLayout = (c) => <AuthLayout>{c}</AuthLayout>;
 export default LoginPage;
 
-//Redirect the user back to home if they have been logged in
 export const getServerSideProps: GetServerSideProps<{}> = async ({ req }) => {
   const loggedin = getServerSession(req).success;
 
