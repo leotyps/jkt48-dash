@@ -16,7 +16,7 @@ async function exchangeToken(code: string): Promise<AccessToken> {
     client_secret: CLIENT_SECRET,
     grant_type: 'authorization_code',
     code: code,
-    redirect_uri: `${getAbsoluteUrl()}/api/auth/callback`,
+    redirect_uri: `${getAbsoluteUrl()}/api/auth/callback`, // pastikan URL callback sesuai
   };
 
   const headers = {
