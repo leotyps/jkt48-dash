@@ -33,7 +33,7 @@ export function setServerSession(req: NextApiRequest, res: NextApiResponse, data
 }
 
 // Fungsi untuk memeriksa apakah sesi tersedia
-export function middleware_hasServerSession(req: NextApiRequest) {
+export function middleware_hasGoogleServerSession(req: NextApiRequest) {
   const raw = req.cookies[TokenCookie];
 
   return raw != null && tokenSchema.safeParse(JSON.parse(raw)).success;
