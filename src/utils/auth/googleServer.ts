@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { setCookie, deleteCookie } from 'cookies-next'; // Pastikan menggunakan cookies-next
 import { z } from 'zod';
 import type { OptionsType } from 'cookies-next/lib/types';
+import { NextRequest } from 'next/server';
 
 // Definisikan token session untuk Google
 const TokenCookie = 'google-token';
@@ -32,11 +33,11 @@ export function setServerSession(req: NextApiRequest, res: NextApiResponse, data
   setCookie(TokenCookie, JSON.stringify(data), { req, res, ...options });
 }
 
-// Fungsi untuk memeriksa apakah sesi tersedia
-export function middleware_hasGoogleServerSession(req: NextApiRequest) {
-  const raw = req.cookies[TokenCookie];
+ function middleware_hasGoogleServerSession(req: NextRequest) {
+  const raw = req.cookies.get('google-token')?.value;  // Misalnya, menggunakan cookie untuk token Google
 
-  return raw != null && tokenSchema.safeParse(JSON.parse(raw)).success;
+  // Proses token sesuai dengan skema yang Anda butuhkan
+  return raw != null && googleTokenSchema.safeParse(JSON.parse(raw)).success;
 }
 
 // Fungsi untuk menghapus sesi
