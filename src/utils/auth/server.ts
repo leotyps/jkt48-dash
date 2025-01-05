@@ -32,15 +32,8 @@ const options: OptionsType = {
   maxAge: 60 * 60 * 24 * 30, // Cookie expired after 30 days
 };
 
-//export type AccessToken = z.infer<typeof tokenSchema>;
+export type AccessToken = z.infer<typeof tokenSchema>;
 
-export interface AccessToken {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  refresh_token: string;
-  scope: string;
-}
 
 export const setServerSession = async (req: NextApiRequest, res: NextApiResponse, token: AccessToken) => {
   // Menyimpan sesi di cookie atau session sesuai kebutuhan
