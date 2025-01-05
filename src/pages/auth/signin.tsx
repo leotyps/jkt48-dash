@@ -8,7 +8,6 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth as firebaseAuth } from '@/config/firebaseConfig';
-import { setServerSession } from '@/utils/auth/server'; // Import setServerSession
 
 const LoginPage: NextPageWithLayout = () => {
   const t = auth.useTranslations();
@@ -25,7 +24,7 @@ const LoginPage: NextPageWithLayout = () => {
       // Ambil token ID menggunakan getIdToken()
       const idToken = await user.getIdToken();
 
-      // Menyimpan token atau informasi sesi dalam cookie
+      // Menyimpan token atau informasi sesi dalam objek userSession
       const userSession = {
         access_token: idToken, // Menggunakan token yang didapat dari getIdToken()
         token_type: 'Bearer',
@@ -34,11 +33,21 @@ const LoginPage: NextPageWithLayout = () => {
         scope: 'email', // atau scope lain yang diperlukan
       };
 
-      // Setel sesi di server
-      setServerSession(userSession, { req: window.document, res: window.document }); // Sesuaikan req dan res jika perlu
+      // Kirim data sesi ke API route untuk disimpan di server
+      const response = await fetch('/api/auth/setSession', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userSession),
+      });
 
-      // Redirect ke halaman dashboard setelah login berhasil
-      window.location.href = '/user/home';
+      if (response.ok) {
+        // Redirect ke halaman dashboard setelah login berhasil
+        window.location.href = '/user/home';
+      } else {
+        console.error('Error saving session');
+      }
     } catch (error) {
       console.error('Error logging in with Google:', error);
     } finally {
