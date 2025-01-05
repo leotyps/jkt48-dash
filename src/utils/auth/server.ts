@@ -4,6 +4,7 @@ import { setCookie, deleteCookie } from 'cookies-next'; // Pastikan menggunakan 
 import { z } from 'zod';
 import type { OptionsType } from 'cookies-next/lib/types';
 // utils/auth/server.ts
+import { NextRequest } from 'next/server';
 import { IncomingMessage } from 'http';
 import { NextApiRequestCookies } from 'next/dist/server/api-utils';
 
