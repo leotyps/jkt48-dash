@@ -37,7 +37,7 @@ export function setServerSession(req: NextApiRequest, res: NextApiResponse, data
   const raw = req.cookies.get('google-token')?.value;  // Misalnya, menggunakan cookie untuk token Google
 
   // Proses token sesuai dengan skema yang Anda butuhkan
-  return raw != null && googleTokenSchema.safeParse(JSON.parse(raw)).success;
+  return raw != null && tokenSchema.safeParse(JSON.parse(raw)).success;
 }
 
 // Fungsi untuk menghapus sesi
