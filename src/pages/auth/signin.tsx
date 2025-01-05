@@ -1,4 +1,4 @@
-import { GetServerSidePropsContext } from 'next'; // Import GetServerSidePropsContext
+import { GetServerSidePropsContext } from 'next'; 
 import { Button, Flex, Heading, Icon, Text } from '@chakra-ui/react';
 import { BsDiscord } from 'react-icons/bs';
 import { auth } from '@/config/translations/auth';
@@ -6,7 +6,7 @@ import { NextPageWithLayout } from '@/pages/_app';
 import AuthLayout from '@/components/layout/auth';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
-import { GoogleAuthProvider, signInWithRedirect } from 'firebase/auth'; // Gunakan signInWithRedirect
+import { signInWithPopup, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth as firebaseAuth } from '@/config/firebaseConfig';
 import { getServerSession } from '@/utils/auth/server';
 
@@ -19,16 +19,44 @@ const LoginPage: NextPageWithLayout = () => {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-
-      // Tambahkan callback URL ke provider
       provider.setCustomParameters({
-        redirect_uri: 'https://dash.jkt48connect.my.id/api/auth/callback', // URL callback
+        redirect_uri: `https://dash.jkt48connect.my.id/api/auth/callback`, // Callback URL
       });
 
-      // Gunakan signInWithRedirect
       await signInWithRedirect(firebaseAuth, provider);
+
+      const result = await getRedirectResult(firebaseAuth);
+      if (result) {
+        const user = result.user;
+
+        // Dapatkan token ID untuk disimpan ke sesi
+        const idToken = await user.getIdToken();
+        const userSession = {
+          access_token: idToken,
+          token_type: 'Bearer',
+          expires_in: 3600,
+          refresh_token: user.refreshToken,
+          scope: 'email',
+        };
+
+        // Kirim data ke API
+        const response = await fetch('/api/auth/setSession', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(userSession),
+        });
+
+        if (response.ok) {
+          window.location.href = '/user/home';
+        } else {
+          console.error('Error saving session');
+        }
+      }
     } catch (error) {
       console.error('Error logging in with Google:', error);
+    } finally {
       setLoading(false);
     }
   };
@@ -49,18 +77,6 @@ const LoginPage: NextPageWithLayout = () => {
       <Text color="TextSecondary" fontSize="lg">
         {t['login description']}
       </Text>
-      <Button
-        mt={3}
-        leftIcon={<Icon as={BsDiscord} fontSize="2xl" />}
-        variant="action"
-        size="lg"
-        width="350px"
-        maxW="full"
-        as="a"
-        href={`/api/auth/login?locale=${locale}`}
-      >
-        {t.login_bn}
-      </Button>
       <Button
         mt={3}
         leftIcon={<Icon as={BsDiscord} fontSize="2xl" />}
