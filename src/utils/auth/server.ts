@@ -4,6 +4,10 @@ import { setCookie, deleteCookie } from 'cookies-next'; // Pastikan menggunakan 
 import { z } from 'zod';
 import type { OptionsType } from 'cookies-next/lib/types';
 
+export const API_ENDPOINT = 'https://discord.com/api/v10';
+export const CLIENT_ID = process.env.BOT_CLIENT_ID ?? '';
+export const CLIENT_SECRET = process.env.BOT_CLIENT_SECRET ?? '';
+
 const TokenCookie = 'ts-token';
 
 const tokenSchema = z.object({
