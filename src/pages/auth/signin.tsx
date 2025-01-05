@@ -4,11 +4,9 @@ import { auth } from '@/config/translations/auth';
 import { NextPageWithLayout } from '@/pages/_app';
 import AuthLayout from '@/components/layout/auth';
 import { useRouter } from 'next/router';
-import { getServerSideProps } from 'next';
-import { getServerSession } from '@/utils/auth/server';
 import { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth as firebaseAuth } from '../firebaseConfig';
+import { auth as firebaseAuth } from '@/config/firebaseConfig';
 
 const LoginPage: NextPageWithLayout = () => {
   const t = auth.useTranslations();
@@ -77,7 +75,7 @@ const LoginPage: NextPageWithLayout = () => {
 LoginPage.getLayout = (c) => <AuthLayout>{c}</AuthLayout>;
 export default LoginPage;
 
-export const getServerSideProps: GetServerSideProps<{}> = async ({ req }) => {
+export const getServerSideProps = async ({ req }) => {
   const loggedin = getServerSession(req).success;
 
   if (loggedin) {
