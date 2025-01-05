@@ -45,11 +45,6 @@ export function middleware_hasServerSession(req: NextRequest) {
   return raw != null && tokenSchema.safeParse(JSON.parse(raw)).success;
 }
 
-// Fungsi untuk mendapatkan sesi
-export function getServerSession(req: NextApiRequest) {
-  const raw = req.cookies[TokenCookie];
-  return tokenSchema.safeParse(raw == null ? raw : JSON.parse(raw));
-}
 
 // Fungsi untuk menghapus sesi
 export async function removeSession(req: NextApiRequest, res: NextApiResponse) {
