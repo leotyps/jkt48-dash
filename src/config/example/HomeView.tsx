@@ -268,16 +268,29 @@ function VoiceChannelItem() {
           <Text fontWeight="bold">API Key</Text>
         </CardHeader>
         <CardBody>
-          <Text>Masukkan API Key di bawah untuk memeriksa status:</Text>
-          <Input
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Masukkan API Key"
-            mt={3}
-          />
-          <Button mt={3} colorScheme="blue" onClick={() => checkApiKey(apiKey)}>
-            Periksa API Key
-          </Button>
+          {apiKey ? (
+            <Text fontSize="sm" color="TextSecondary" wordBreak="break-word">
+              {apiKey}
+            </Text>
+          ) : (
+            <Text color="TextSecondary">
+              API Key belum tersedia. Silakan tambahkan API Key di profil.
+            </Text>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* Remaining Requests Card */}
+      <Card rounded="2xl" variant="primary">
+        <CardHeader>
+          <Text fontWeight="bold">Remaining Requests</Text>
+        </CardHeader>
+        <CardBody>
+          {remainingRequests !== null ? (
+            <Text>{remainingRequests}</Text>
+          ) : (
+            <Text>Data tidak tersedia.</Text>
+          )}
         </CardBody>
       </Card>
     </Flex>
