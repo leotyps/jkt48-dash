@@ -34,6 +34,7 @@ const LoginPage: NextPageWithLayout = () => {
             scope: 'email',
           };
 
+          // Save session
           const response = await fetch('/api/auth/setSession', {
             method: 'POST',
             headers: {
@@ -43,8 +44,8 @@ const LoginPage: NextPageWithLayout = () => {
           });
 
           if (response.ok) {
-            // Redirect to dashboard
-            router.push('/user/dashboard');
+            // Redirect to home after login success
+            router.push('/user/home');
           } else {
             console.error('Failed to save session');
           }
@@ -127,7 +128,7 @@ export const getServerSideProps = async ({ req }: GetServerSidePropsContext) => 
   if (session.success) {
     return {
       redirect: {
-        destination: '/user/dashboard',
+        destination: '/user/home', // Pastikan halaman ini adalah halaman yang ingin dituju setelah login
         permanent: false,
       },
       props: {},
