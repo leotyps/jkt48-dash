@@ -87,18 +87,6 @@ const LoginPage: NextPageWithLayout = () => {
       >
         {t.login_bn}
       </Button>
-      {/* Login using Google */}
-      <Button
-        mt={3}
-        variant="action"
-        size="lg"
-        width="350px"
-        maxW="full"
-        onClick={handleGoogleLogin}
-        isLoading={loading}
-      >
-        Login with Google
-      </Button>
     </Flex>
   );
 };
