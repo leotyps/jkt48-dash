@@ -39,6 +39,7 @@ export function StyledChart(props: ChartProps) {
       strokeDashArray: 0,
       fillOpacity: 1,
       discrete: [],
+      radius: 2,
       shape: 'circle',
       offsetX: 0,
       offsetY: 0,
