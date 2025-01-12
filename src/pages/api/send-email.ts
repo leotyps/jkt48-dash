@@ -41,7 +41,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     res.status(200).json({ message: "Pesan berhasil dikirim ke Discord." });
-  } catch (error) {
-    res.status(500).json({ message: "Gagal mengirim pesan ke Discord.", error: error.message });
+  } catch (error: unknown) {
+    if (typeof error === "object" && error !== null && "message" in error) {
+      res.status(500).json({
+        message: "Gagal mengirim pesan ke Discord.",
+        error: (error as Error).message,
+      });
+    } else {
+      res.status(500).json({
+        message: "Gagal mengirim pesan ke Discord.",
+        error: "Unknown error",
+      });
+    }
   }
 }
