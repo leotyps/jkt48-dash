@@ -151,7 +151,7 @@ export default function HomeView() {
       >
         <Heading color="red.500">Akses Ditolak</Heading>
         <Text>Anda bukan pengguna <strong>seller</strong>. Silakan upgrade akun Anda untuk mengakses halaman ini.</Text>
-        <Button colorScheme="blue" onClick={() => window.location.href = "/upgrade"}>
+        <Button colorScheme="blue" onClick={() => window.location.href = "https://wa.me/6285701479245"}>
           Upgrade Sekarang
         </Button>
       </Flex>
