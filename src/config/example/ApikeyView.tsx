@@ -147,8 +147,7 @@ export default function HomeView() {
         align="center"
         justify="center"
         direction="column"
-        gap={4}
-        bg="red.50"
+        gap={5}
       >
         <Heading color="red.500">Akses Ditolak</Heading>
         <Text>Anda bukan pengguna <strong>seller</strong>. Silakan upgrade akun Anda untuk mengakses halaman ini.</Text>
