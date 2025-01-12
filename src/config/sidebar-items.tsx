@@ -19,6 +19,11 @@ const items: SidebarItemInfo[] = [
     path: '/user/docs',
     icon: <Icon as={MdBook} />,
   },
+  {
+    name: "Create Apikey", // Tambahkan item Documentation
+    path: '/user/create',
+    icon: <Icon as={MdKey} />,
+  },
 ];
 
 export default items;
