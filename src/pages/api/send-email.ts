@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import nodemailer from "nodemailer";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -14,29 +13,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return;
   }
 
-  const transporter = nodemailer.createTransport({
-    service: "Gmail",
-    auth: {
-      user: "support@jkt48connect.my.id", // Replace with your email
-      pass: "your-password", // Replace with your password or app password
-    },
-  });
+  const webhookUrl = "https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C"; // Ganti dengan URL webhook Discord Anda
+
+  const payload = {
+    content: "**Permintaan API Key Baru**",
+    embeds: [
+      {
+        color: 3447003, // Warna embed (opsional)
+        fields: [
+          { name: "API Key", value: apiKey, inline: true },
+          { name: "Limit", value: limit.toString(), inline: true },
+          { name: "Masa Aktif", value: expiryDate, inline: true },
+        ],
+      },
+    ],
+  };
 
   try {
-    await transporter.sendMail({
-      from: "support@jkt48connect.my.id",
-      to: "support@jkt48connect.my.id",
-      subject: "Permintaan API Key Baru",
-      text: `
-        Permintaan API Key Baru:
-        - API Key: ${apiKey}
-        - Limit: ${limit}
-        - Masa Aktif: ${expiryDate}
-      `,
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
-    res.status(200).json({ message: "Email berhasil dikirim." });
+    if (!response.ok) {
+      throw new Error(`Failed to send message: ${response.statusText}`);
+    }
+
+    res.status(200).json({ message: "Pesan berhasil dikirim ke Discord." });
   } catch (error) {
-    res.status(500).json({ message: "Gagal mengirim email." });
+    res.status(500).json({ message: "Gagal mengirim pesan ke Discord.", error: error.message });
   }
 }
