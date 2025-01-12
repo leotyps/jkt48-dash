@@ -1,6 +1,7 @@
 import { Icon } from '@chakra-ui/react';
 import { common } from '@/config/translations/common';
-import { MdPerson, MdDashboard, MdBook, MdKey } from 'react-icons/md'; // Tambahkan MdBook untuk ikon dokumentasi
+import { MdPerson, MdDashboard, MdBook } from 'react-icons/md'; // Tambahkan MdBook untuk ikon dokumentasi
+import { FaKey } from 'react-icons/fa';
 import { SidebarItemInfo } from '@/utils/router';
 
 const items: SidebarItemInfo[] = [
@@ -22,7 +23,7 @@ const items: SidebarItemInfo[] = [
   {
     name: "Create Apikey", // Tambahkan item Documentation
     path: '/user/create',
-    icon: <Icon as={MdKey} />,
+    icon: <Icon as={FaKey} />,
   },
 ];
 
