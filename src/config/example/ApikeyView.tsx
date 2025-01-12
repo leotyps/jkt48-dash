@@ -14,20 +14,40 @@ import {
   Td,
   Box,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function HomeView() {
   const [apiKey, setApiKey] = useState<string>("");
-  const [limit, setLimit] = useState<number>(0);
+  const [limit, setLimit] = useState<string>(""); // String untuk placeholder dinamis
   const [expiryDate, setExpiryDate] = useState<string>("");
   const [requests, setRequests] = useState<any[]>([]);
   const toast = useToast();
 
   // Load notes from local storage
-  useState(() => {
+  useEffect(() => {
     const savedRequests = localStorage.getItem("apikey-requests");
     if (savedRequests) setRequests(JSON.parse(savedRequests));
-  });
+  }, []);
+
+  // Update status to "Aktif" after 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const updatedRequests = requests.map((request) => {
+        const createdTime = new Date(request.createdAt).getTime();
+        const now = Date.now();
+
+        if (request.status === "Menunggu Aktivasi" && now - createdTime >= 5 * 60 * 1000) {
+          return { ...request, status: "Aktif" };
+        }
+        return request;
+      });
+
+      setRequests(updatedRequests);
+      localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [requests]);
 
   // Submit function
   const handleSubmit = async () => {
@@ -42,18 +62,18 @@ export default function HomeView() {
       return;
     }
 
-    // Save to localStorage
     const newRequest = {
       apiKey,
-      limit,
+      limit: Number(limit),
       expiryDate,
       status: "Menunggu Aktivasi",
+      createdAt: new Date().toISOString(),
     };
+
     const updatedRequests = [newRequest, ...requests];
     setRequests(updatedRequests);
     localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
 
-    // Send email (Call backend API for email sending)
     try {
       const response = await fetch("/api/send-email", {
         method: "POST",
@@ -62,7 +82,7 @@ export default function HomeView() {
         },
         body: JSON.stringify({
           apiKey,
-          limit,
+          limit: Number(limit),
           expiryDate,
         }),
       });
@@ -89,7 +109,7 @@ export default function HomeView() {
     }
 
     setApiKey("");
-    setLimit(0);
+    setLimit("");
     setExpiryDate("");
   };
 
@@ -100,19 +120,19 @@ export default function HomeView() {
       {/* Form Input */}
       <VStack spacing={4} align="stretch">
         <Input
-          placeholder="Masukkan API Key"
+          placeholder="Masukkan API Key (contoh: 12345-ABCDE)"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
         />
         <Input
           type="number"
-          placeholder="Limit API Key"
+          placeholder={limit ? "" : "Masukkan Limit API Key (contoh: 1000)"}
           value={limit}
-          onChange={(e) => setLimit(Number(e.target.value))}
+          onChange={(e) => setLimit(e.target.value)}
         />
         <Input
           type="date"
-          placeholder="Masa Aktif API Key"
+          placeholder="Pilih Masa Aktif API Key"
           value={expiryDate}
           onChange={(e) => setExpiryDate(e.target.value)}
         />
@@ -121,7 +141,7 @@ export default function HomeView() {
         </Button>
       </VStack>
 
-      {/* Table to Display Notes */}
+      {/* Table to Display Requests */}
       <Box>
         <Heading size="md">Riwayat Pengajuan</Heading>
         <Table variant="simple" mt={4}>
@@ -139,7 +159,18 @@ export default function HomeView() {
                 <Td>{request.apiKey}</Td>
                 <Td>{request.limit}</Td>
                 <Td>{request.expiryDate}</Td>
-                <Td>{request.status}</Td>
+                <Td>
+                  <Text
+                    color={
+                      request.status === "Menunggu Aktivasi"
+                        ? "yellow.500"
+                        : "green.500"
+                    }
+                    fontWeight="bold"
+                  >
+                    {request.status}
+                  </Text>
+                </Td>
               </Tr>
             ))}
           </Tbody>
