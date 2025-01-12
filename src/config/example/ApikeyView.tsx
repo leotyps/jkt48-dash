@@ -167,7 +167,7 @@ export default function HomeView() {
     setRequests(updatedRequests);
     localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
 
-    // Send webhook notification
+    // Send webhook notification with embed
     try {
       await fetch(webhookUrl, {
         method: "POST",
@@ -175,7 +175,21 @@ export default function HomeView() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          content: `API Key "${selectedApiKey}" telah dihapus.\nAlasan: ${deleteReason}`,
+          embeds: [
+            {
+              title: "API Key Dihapus",
+              description: `API Key "${selectedApiKey}" telah dihapus.`,
+              fields: [
+                {
+                  name: "Alasan Penghapusan",
+                  value: deleteReason,
+                  inline: true,
+                },
+              ],
+              color: 0xff0000, // Warna merah
+              timestamp: new Date().toISOString(),
+            },
+          ],
         }),
       });
 
@@ -275,7 +289,18 @@ export default function HomeView() {
                 <Td>{request.apiKey}</Td>
                 <Td>{request.limit}</Td>
                 <Td>{request.expiryDate}</Td>
-                <Td>{request.status}</Td>
+                <Td>
+                  <Text
+                    color={
+                      request.status === "Menunggu Aktivasi"
+                        ? "yellow.500"
+                        : "green.500"
+                    }
+                    fontWeight="bold"
+                  >
+                    {request.status}
+                  </Text>
+                </Td>
               </Tr>
             ))}
           </Tbody>
