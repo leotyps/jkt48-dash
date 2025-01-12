@@ -14,14 +14,40 @@ import {
   Td,
   Box,
 } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function HomeView() {
-  const [apiKey, setApiKey] = useState<string>("");
-  const [limit, setLimit] = useState<string>(""); // String untuk placeholder dinamis
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [limit, setLimit] = useState<string>("");
   const [expiryDate, setExpiryDate] = useState<string>("");
   const [requests, setRequests] = useState<any[]>([]);
   const toast = useToast();
+
+  const webhookUrl = "https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C"; // Ganti dengan URL webhook Anda
+
+  // Check API Key validity
+  useEffect(() => {
+    const storedApiKey = localStorage.getItem("apikey");
+    setApiKey(storedApiKey);
+
+    if (storedApiKey) {
+      fetch(`https://api.jkt48connect.my.id/api/check-apikey/${storedApiKey}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.seller) {
+            setIsAuthorized(true);
+          } else {
+            setIsAuthorized(false);
+          }
+        })
+        .catch(() => {
+          setIsAuthorized(false);
+        });
+    } else {
+      setIsAuthorized(false);
+    }
+  }, []);
 
   // Load notes from local storage
   useEffect(() => {
@@ -113,6 +139,36 @@ export default function HomeView() {
     setExpiryDate("");
   };
 
+  // Render rejection page if not authorized
+  if (isAuthorized === false) {
+    return (
+      <Flex
+        height="100vh"
+        align="center"
+        justify="center"
+        direction="column"
+        gap={4}
+        bg="red.50"
+      >
+        <Heading color="red.500">Akses Ditolak</Heading>
+        <Text>Anda bukan pengguna <strong>seller</strong>. Silakan upgrade akun Anda untuk mengakses halaman ini.</Text>
+        <Button colorScheme="blue" onClick={() => window.location.href = "/upgrade"}>
+          Upgrade Sekarang
+        </Button>
+      </Flex>
+    );
+  }
+
+  // Wait until API Key is validated
+  if (isAuthorized === null) {
+    return (
+      <Flex height="100vh" align="center" justify="center">
+        <Text>Memeriksa validitas API Key Anda...</Text>
+      </Flex>
+    );
+  }
+
+  // Authorized content
   return (
     <Flex direction="column" gap={5}>
       <Heading>Permintaan API Key</Heading>
@@ -121,7 +177,7 @@ export default function HomeView() {
       <VStack spacing={4} align="stretch">
         <Input
           placeholder="Masukkan API Key (contoh: 12345-ABCDE)"
-          value={apiKey}
+          value={apiKey || ""}
           onChange={(e) => setApiKey(e.target.value)}
         />
         <Input
