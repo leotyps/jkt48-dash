@@ -28,7 +28,7 @@ export default function HomeView() {
 
   // Check API Key validity
   useEffect(() => {
-    const storedApiKey = localStorage.getItem("apikey");
+    const storedApiKey = localStorage.getItem("jkt48-api-key");
     setApiKey(storedApiKey);
 
     if (storedApiKey) {
