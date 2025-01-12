@@ -13,6 +13,8 @@ import {
   Tbody,
   Td,
   Box,
+  Select,
+  Textarea,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
@@ -22,9 +24,12 @@ export default function HomeView() {
   const [limit, setLimit] = useState<string>("");
   const [expiryDate, setExpiryDate] = useState<string>("");
   const [requests, setRequests] = useState<any[]>([]);
+  const [selectedApiKey, setSelectedApiKey] = useState<string | null>(null);
+  const [deleteReason, setDeleteReason] = useState<string>("");
   const toast = useToast();
 
-  const webhookUrl = "https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C"; // Ganti dengan URL webhook Anda
+  const webhookUrl =
+    "https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C"; // Ganti dengan URL webhook Anda
 
   // Check API Key validity
   useEffect(() => {
@@ -62,7 +67,10 @@ export default function HomeView() {
         const createdTime = new Date(request.createdAt).getTime();
         const now = Date.now();
 
-        if (request.status === "Menunggu Aktivasi" && now - createdTime >= 5 * 60 * 1000) {
+        if (
+          request.status === "Menunggu Aktivasi" &&
+          now - createdTime >= 5 * 60 * 1000
+        ) {
           return { ...request, status: "Aktif" };
         }
         return request;
@@ -116,7 +124,8 @@ export default function HomeView() {
       if (response.ok) {
         toast({
           title: "Success",
-          description: "Permintaan API Key berhasil diajukan. Tunggu 5 menit untuk aktivasi.",
+          description:
+            "Permintaan API Key berhasil diajukan. Tunggu 5 menit untuk aktivasi.",
           status: "success",
           duration: 3000,
           isClosable: true,
@@ -139,19 +148,71 @@ export default function HomeView() {
     setExpiryDate("");
   };
 
+  // Handle delete API Key
+  const handleDeleteApiKey = async () => {
+    if (!selectedApiKey || !deleteReason) {
+      toast({
+        title: "Error",
+        description: "Pilih API Key dan masukkan alasan penghapusan!",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const updatedRequests = requests.filter(
+      (request) => request.apiKey !== selectedApiKey
+    );
+    setRequests(updatedRequests);
+    localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
+
+    // Send webhook notification
+    try {
+      await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: `API Key "${selectedApiKey}" telah dihapus.\nAlasan: ${deleteReason}`,
+        }),
+      });
+
+      toast({
+        title: "Success",
+        description: "API Key berhasil dihapus dan pemberitahuan dikirim.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Gagal mengirim pemberitahuan ke webhook.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+
+    setSelectedApiKey(null);
+    setDeleteReason("");
+  };
+
   // Render rejection page if not authorized
   if (isAuthorized === false) {
     return (
-      <Flex
-        height="100vh"
-        align="center"
-        justify="center"
-        direction="column"
-        gap={5}
-      >
+      <Flex height="100vh" align="center" justify="center" direction="column">
         <Heading color="red.500">Akses Ditolak</Heading>
-        <Text>Anda bukan pengguna <strong>seller</strong>. Silakan upgrade akun Anda untuk mengakses halaman ini.</Text>
-        <Button colorScheme="blue" onClick={() => window.location.href = "https://wa.me/6285701479245"}>
+        <Text>
+          Anda bukan pengguna <strong>seller</strong>. Silakan upgrade akun Anda
+          untuk mengakses halaman ini.
+        </Text>
+        <Button
+          colorScheme="blue"
+          onClick={() => window.location.href = "https://wa.me/6285701479245"}
+        >
           Upgrade Sekarang
         </Button>
       </Flex>
@@ -175,13 +236,13 @@ export default function HomeView() {
       {/* Form Input */}
       <VStack spacing={4} align="stretch">
         <Input
-          placeholder="Masukkan API Key (contoh: 12345-ABCDE)"
+          placeholder="Masukkan API Key"
           value={apiKey || ""}
           onChange={(e) => setApiKey(e.target.value)}
         />
         <Input
           type="number"
-          placeholder={limit ? "" : "Masukkan Limit API Key (contoh: 1000)"}
+          placeholder="Masukkan Limit API Key"
           value={limit}
           onChange={(e) => setLimit(e.target.value)}
         />
@@ -214,22 +275,37 @@ export default function HomeView() {
                 <Td>{request.apiKey}</Td>
                 <Td>{request.limit}</Td>
                 <Td>{request.expiryDate}</Td>
-                <Td>
-                  <Text
-                    color={
-                      request.status === "Menunggu Aktivasi"
-                        ? "yellow.500"
-                        : "green.500"
-                    }
-                    fontWeight="bold"
-                  >
-                    {request.status}
-                  </Text>
-                </Td>
+                <Td>{request.status}</Td>
               </Tr>
             ))}
           </Tbody>
         </Table>
+      </Box>
+
+      {/* Form to Delete API Key */}
+      <Box>
+        <Heading size="md">Hapus API Key</Heading>
+        <VStack spacing={4} align="stretch">
+          <Select
+            placeholder="Pilih API Key yang ingin dihapus"
+            value={selectedApiKey || ""}
+            onChange={(e) => setSelectedApiKey(e.target.value)}
+          >
+            {requests.map((request, index) => (
+              <option key={index} value={request.apiKey}>
+                {request.apiKey}
+              </option>
+            ))}
+          </Select>
+          <Textarea
+            placeholder="Masukkan alasan penghapusan"
+            value={deleteReason}
+            onChange={(e) => setDeleteReason(e.target.value)}
+          />
+          <Button colorScheme="red" onClick={handleDeleteApiKey}>
+            Hapus API Key
+          </Button>
+        </VStack>
       </Box>
     </Flex>
   );
