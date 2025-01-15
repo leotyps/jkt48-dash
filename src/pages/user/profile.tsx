@@ -16,7 +16,7 @@ import {
 import { avatarUrl, bannerUrl } from '@/api/discord';
 import { SelectField } from '@/components/forms/SelectField';
 import { SwitchField } from '@/components/forms/SwitchField';
-import { languages, names, useLang } from '@/config/translations/provider'; // Ensure this is correctly imported
+import { languages, names, useLang } from '@/config/translations/provider';
 import { profile } from '@/config/translations/profile';
 import { IoLogOut } from 'react-icons/io5';
 import { useSettingsStore } from '@/stores';
@@ -33,35 +33,27 @@ const ProfilePage: NextPageWithLayout = () => {
   const user = useSelfUser();
   const logout = useLogoutMutation();
   const t = profile.useTranslations();
+  
   const { colorMode, setColorMode } = useColorMode();
-  const { lang, setLang } = useLang(); // Make sure useLang is working here
+  const { lang, setLang } = useLang();
   const [devMode, setDevMode] = useSettingsStore((s) => [s.devMode, s.setDevMode]);
   const [apiKey, setApiKey] = useState<string>('');
   const [apiStatus, setApiStatus] = useState<string | null>(null);
   const toast = useToast();
 
-  // Fetch API Key from server after login
   useEffect(() => {
-    // Fetch from CockroachDB
-    const fetchApiKey = async () => {
-      try {
-        const response = await fetch('/api/auth/getApiKey'); // Replace with actual API endpoint
-        const data = await response.json();
-        if (data.apiKey) {
-          setApiKey(data.apiKey); // Set the API key to state if available
-        }
-      } catch (error) {
-        console.error('Error fetching API key:', error);
-      }
-    };
-    fetchApiKey();
+    // Cek apakah ada API key yang tersimpan di localStorage
+    const storedApiKey = localStorage.getItem('jkt48-api-key');
+    if (storedApiKey) {
+      setApiKey(storedApiKey);
+    }
   }, []);
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setApiKey(e.target.value);
   };
 
-  const saveApiKey = async () => {
+  const saveApiKey = () => {
     if (!apiKey) {
       toast({
         title: 'Error',
@@ -72,40 +64,16 @@ const ProfilePage: NextPageWithLayout = () => {
       });
       return;
     }
-    try {
-      const response = await fetch('/api/auth/updateApiKey', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ apiKey }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setApiStatus('API Key berhasil disimpan');
-        toast({
-          title: 'Success',
-          description: 'API Key berhasil disimpan!',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      } else {
-        setApiStatus('Failed to update API key');
-        toast({
-          title: 'Error',
-          description: 'Gagal memperbarui API Key!',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
-      console.error('Error saving API key:', error);
-      setApiStatus('Error saving API Key');
-    }
+    // Simpan API Key ke localStorage
+    localStorage.setItem('jkt48-api-key', apiKey);
+    setApiStatus('API Key berhasil disimpan');
+    toast({
+      title: 'Success',
+      description: 'API Key berhasil disimpan!',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
   };
 
   return (
