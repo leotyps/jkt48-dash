@@ -68,7 +68,7 @@ const handleSubmit = async () => {
 
   try {
     // Call the API to save the API key to the database
-    const response = await fetch("/api/saveApiKey", {
+    const response = await fetch("/api/auth/saveApiKey", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
