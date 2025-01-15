@@ -40,7 +40,7 @@ const saveApiKey = async (req: NextApiRequest, res: NextApiResponse) => {
 
       client.release();
 
-      if (result && result.rowCount > 0) {
+      if (result && result.rowCount !== null && result.rowCount > 0) {
   return res.status(200).json({
     message: "API Key successfully created",
     apiKey: result.rows[0].api_key,
@@ -48,6 +48,7 @@ const saveApiKey = async (req: NextApiRequest, res: NextApiResponse) => {
 } else {
   return res.status(500).json({ message: "Failed to create API Key" });
 }
+
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error("Error saving API Key:", error); // Log error details
