@@ -21,7 +21,7 @@ import { useEffect, useState } from "react";
 export default function HomeView() {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [apiKey, setApiKey] = useState<string | null>(null);
-  const [limit, setLimit] = useState<string>("");
+  const [maxRequests, setMaxRequests] = useState<string>("");
   const [expiryDate, setExpiryDate] = useState<string>("");
   const [requests, setRequests] = useState<any[]>([]);
   const [selectedApiKey, setSelectedApiKey] = useState<string | null>(null);
@@ -29,7 +29,7 @@ export default function HomeView() {
   const toast = useToast();
 
   const webhookUrl =
-    "https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C"; // Ganti dengan URL webhook Anda
+    "https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C"; // Replace with your actual webhook URL
 
   // Check API Key validity
   useEffect(() => {
@@ -54,13 +54,13 @@ export default function HomeView() {
     }
   }, []);
 
-  // Load notes from local storage
+  // Load requests from local storage
   useEffect(() => {
     const savedRequests = localStorage.getItem("apikey-requests");
     if (savedRequests) setRequests(JSON.parse(savedRequests));
   }, []);
 
-  // Update status to "Aktif" after 5 minutes
+  // Update request status to "Aktif" after 5 minutes
   useEffect(() => {
     const interval = setInterval(() => {
       const updatedRequests = requests.map((request) => {
@@ -83,86 +83,91 @@ export default function HomeView() {
     return () => clearInterval(interval);
   }, [requests]);
 
-  // Submit function
- const handleSubmit = async () => {
-  if (!apiKey || !limit || !expiryDate) {
-    toast({
-      title: "Error",
-      description: "Semua input wajib diisi!",
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
-    return;
-  }
-
-  const newRequest = {
-    apiKey,
-    limit: Number(limit),
-    expiryDate,
-    status: "Menunggu Aktivasi",
-    createdAt: new Date().toISOString(),
-  };
-
-  const updatedRequests = [newRequest, ...requests];
-  setRequests(updatedRequests);
-  localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
-
-  try {
-    // Call the API to save the API key to the database
-    const response = await fetch("/api/auth/saveApiKey", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        apiKey,
-        expiryDate,
-        limit: Number(limit),
-      }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
+  // Submit function for new API Key request
+  const handleSubmit = async () => {
+    if (!apiKey || !maxRequests || !expiryDate) {
       toast({
-        title: "Success",
-        description: `Permintaan API Key berhasil diajukan. Status: ${data.status}`,
-        status: "success",
+        title: "Error",
+        description: "Semua input wajib diisi!",
+        status: "error",
         duration: 3000,
         isClosable: true,
       });
+      return;
+    }
 
-      // Update request status after successful creation
-      const updatedRequests = requests.map((req) =>
-        req.apiKey === apiKey ? { ...req, status: "Aktif" } : req
-      );
-      setRequests(updatedRequests);
-      localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
-    } else {
+    const remainingRequests = Number(maxRequests);
+    const lastAccessDate = new Date().toISOString(); // Use current timestamp as last access date
+
+    const newRequest = {
+      apiKey,
+      maxRequests: Number(maxRequests),
+      expiryDate,
+      remainingRequests,
+      lastAccessDate,
+      status: "Menunggu Aktivasi",
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedRequests = [newRequest, ...requests];
+    setRequests(updatedRequests);
+    localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
+
+    try {
+      // Call the API to save the API key to the database
+      const response = await fetch("/api/auth/saveApiKey", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          apiKey,
+          expiryDate,
+          limit: Number(maxRequests), // Use maxRequests as limit
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: `Permintaan API Key berhasil diajukan. Status: ${data.status}`,
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+
+        // Update request status after successful creation
+        const updatedRequests = requests.map((req) =>
+          req.apiKey === apiKey ? { ...req, status: "Aktif" } : req
+        );
+        setRequests(updatedRequests);
+        localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Gagal menyimpan API Key.",
+          status: "error",
+          duration: 30000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
       toast({
         title: "Error",
-        description: data.message || "Gagal menyimpan API Key.",
+        description: "Gagal menghubungi server.",
         status: "error",
-        duration: 30000,
+        duration: 3000,
         isClosable: true,
       });
     }
-  } catch (error) {
-    toast({
-      title: "Error",
-      description: "Gagal menghubungi server.",
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
-  }
 
-  // Clear the form after submission
-  setApiKey("");
-  setLimit("");
-  setExpiryDate("");
-};
+    // Clear the form after submission
+    setApiKey("");
+    setMaxRequests("");
+    setExpiryDate("");
+  };
 
   // Handle delete API Key
   const handleDeleteApiKey = async () => {
@@ -202,7 +207,7 @@ export default function HomeView() {
                   inline: true,
                 },
               ],
-              color: 0xff0000, // Warna merah
+              color: 0xff0000, // Red color
               timestamp: new Date().toISOString(),
             },
           ],
@@ -272,9 +277,9 @@ export default function HomeView() {
         />
         <Input
           type="number"
-          placeholder="Masukkan Limit API Key"
-          value={limit}
-          onChange={(e) => setLimit(e.target.value)}
+          placeholder="Masukkan Max Requests API Key"
+          value={maxRequests}
+          onChange={(e) => setMaxRequests(e.target.value)}
         />
         <Input
           type="date"
@@ -294,7 +299,7 @@ export default function HomeView() {
           <Thead>
             <Tr>
               <Th>API Key</Th>
-              <Th>Limit</Th>
+              <Th>Max Requests</Th>
               <Th>Masa Aktif</Th>
               <Th>Status</Th>
             </Tr>
@@ -303,7 +308,7 @@ export default function HomeView() {
             {requests.map((request, index) => (
               <Tr key={index}>
                 <Td>{request.apiKey}</Td>
-                <Td>{request.limit}</Td>
+                <Td>{request.maxRequests}</Td>
                 <Td>{request.expiryDate}</Td>
                 <Td>
                   <Text
