@@ -86,7 +86,7 @@ export default function HomeView() {
   }, [requests]);
 
   // Submit function
-  const handleSubmit = async () => {
+ const handleSubmit = async () => {
   if (!apiKey || !limit || !expiryDate || !maxRequests) {
     toast({
       title: "Error",
@@ -98,13 +98,14 @@ export default function HomeView() {
     return;
   }
 
-  // Format expiryDate
-  const formattedExpiryDate = formatDate(expiryDate);
+  // Convert the expiryDate to the desired format
+  const formattedExpiryDate = new Date(expiryDate).toISOString(); // This gives the format 2024-12-31T18:15:00.000Z
+  const expiryDateWithTimeZone = formattedExpiryDate.slice(0, -1) + "+00:00"; // Adjust to UTC+0 if needed
 
   const newRequest = {
     apiKey,
     limit: Number(limit),
-    expiryDate: formattedExpiryDate,  // Using the formatted expiryDate
+    expiryDate: expiryDateWithTimeZone, // Use the formatted date here
     status: "Menunggu Aktivasi",
     createdAt: new Date().toISOString(),
   };
@@ -122,7 +123,7 @@ export default function HomeView() {
       },
       body: JSON.stringify({
         apiKey,
-        expiryDate: formattedExpiryDate,  // Using the formatted expiryDate here
+        expiryDate: expiryDateWithTimeZone, // Send the formatted expiry date to the server
         limit: Number(limit),
         remainingRequests: maxRequests, // Set remainingRequests same as maxRequests
         maxRequests: Number(maxRequests), // Set maxRequests from the form
