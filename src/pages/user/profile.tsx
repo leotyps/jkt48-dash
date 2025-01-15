@@ -25,7 +25,6 @@ import AppLayout from '@/components/layout/app';
 import { useLogoutMutation } from '@/utils/auth/hooks';
 import { useSelfUser } from '@/api/hooks';
 import { useState, useEffect } from 'react';
-import { useApiKey } from '@/utils/apiKeys'; // Import custom hook to get and update API Key from server
 
 /**
  * User info and general settings here
@@ -46,7 +45,7 @@ const ProfilePage: NextPageWithLayout = () => {
     // Fetch from CockroachDB
     const fetchApiKey = async () => {
       try {
-        const response = await fetch('/api/user/getApiKey'); // Replace with actual API endpoint
+        const response = await fetch('/api/auth/getApiKey'); // Replace with actual API endpoint
         const data = await response.json();
         if (data.apiKey) {
           setApiKey(data.apiKey); // Set the API key to state if available
@@ -74,7 +73,7 @@ const ProfilePage: NextPageWithLayout = () => {
       return;
     }
     try {
-      const response = await fetch('/api/user/updateApiKey', {
+      const response = await fetch('/api/auth/updateApiKey', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
