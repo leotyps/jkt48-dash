@@ -1,5 +1,3 @@
-// pages/api/saveApiKey.ts
-
 import { NextApiRequest, NextApiResponse } from "next";
 import { Pool } from "pg";
 
@@ -27,7 +25,7 @@ const saveApiKey = async (req: NextApiRequest, res: NextApiResponse) => {
       // Insert into the database
       const result = await client.query(
         `INSERT INTO api_keys (api_key, expiry_date, remaining_requests, max_requests, last_access_date, seller)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING api_key`,
         [
           apiKey,
           expiryDate, // Expiry date from the request body
@@ -40,14 +38,16 @@ const saveApiKey = async (req: NextApiRequest, res: NextApiResponse) => {
 
       client.release();
 
-      if (result && result.rowCount !== null && result.rowCount > 0) {
-  return res.status(200).json({
-    message: "API Key successfully created",
-    apiKey: result.rows[0].api_key,
-  });
-} else {
-  return res.status(500).json({ message: "Failed to create API Key" });
-}
+      // Check if the result contains rows and handle properly
+      if (result && result.rows && result.rows.length > 0) {
+        return res.status(200).json({
+          message: "API Key successfully created",
+          apiKey: result.rows[0].api_key,
+        });
+      } else {
+        console.error("Error: No rows returned from the database.");
+        return res.status(500).json({ message: "Failed to create API Key, no rows returned." });
+      }
 
     } catch (error: unknown) {
       if (error instanceof Error) {
