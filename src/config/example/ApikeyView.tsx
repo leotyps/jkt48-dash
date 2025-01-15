@@ -1,7 +1,22 @@
-import { useState, useEffect } from "react";
-import { Button, Flex, Heading, Input, Text, VStack, useToast, Table, Thead, Tr, Th, Tbody, Td, Box, Select, Textarea } from "@chakra-ui/react";
-import { Pool } from "pg";
-import { useRouter } from "next/router";
+import {
+  Button,
+  Flex,
+  Heading,
+  Input,
+  Text,
+  VStack,
+  useToast,
+  Table,
+  Thead,
+  Tr,
+  Th,
+  Tbody,
+  Td,
+  Box,
+  Select,
+  Textarea,
+} from "@chakra-ui/react";
+import { useEffect, useState } from "react";
 
 export default function HomeView() {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
@@ -12,11 +27,9 @@ export default function HomeView() {
   const [selectedApiKey, setSelectedApiKey] = useState<string | null>(null);
   const [deleteReason, setDeleteReason] = useState<string>("");
   const toast = useToast();
-  const router = useRouter();
 
-  const pool = new Pool({
-    connectionString: 'postgresql://jkt48connect_apikey:vAgy5JNXz4woO46g8fho4g@jkt48connect-7018.j77.aws-ap-southeast-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full',
-  });
+  const webhookUrl =
+    "https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C"; // Ganti dengan URL webhook Anda
 
   // Check API Key validity
   useEffect(() => {
@@ -41,8 +54,37 @@ export default function HomeView() {
     }
   }, []);
 
-  // Handle API key submission and saving to the database
-const handleSubmit = async () => {
+  // Load notes from local storage
+  useEffect(() => {
+    const savedRequests = localStorage.getItem("apikey-requests");
+    if (savedRequests) setRequests(JSON.parse(savedRequests));
+  }, []);
+
+  // Update status to "Aktif" after 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const updatedRequests = requests.map((request) => {
+        const createdTime = new Date(request.createdAt).getTime();
+        const now = Date.now();
+
+        if (
+          request.status === "Menunggu Aktivasi" &&
+          now - createdTime >= 5 * 60 * 1000
+        ) {
+          return { ...request, status: "Aktif" };
+        }
+        return request;
+      });
+
+      setRequests(updatedRequests);
+      localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [requests]);
+
+  // Submit function
+ const handleSubmit = async () => {
   if (!apiKey || !limit || !expiryDate) {
     toast({
       title: "Error",
@@ -121,7 +163,8 @@ const handleSubmit = async () => {
   setLimit("");
   setExpiryDate("");
 };
-  // Handle deletion logic
+
+  // Handle delete API Key
   const handleDeleteApiKey = async () => {
     if (!selectedApiKey || !deleteReason) {
       toast({
@@ -142,8 +185,6 @@ const handleSubmit = async () => {
 
     // Send webhook notification with embed
     try {
-      const webhookUrl =
-        "https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C"; // Replace with your webhook URL
       await fetch(webhookUrl, {
         method: "POST",
         headers: {
@@ -161,7 +202,7 @@ const handleSubmit = async () => {
                   inline: true,
                 },
               ],
-              color: 0xff0000, // Red color
+              color: 0xff0000, // Warna merah
               timestamp: new Date().toISOString(),
             },
           ],
@@ -189,6 +230,7 @@ const handleSubmit = async () => {
     setDeleteReason("");
   };
 
+  // Render rejection page if not authorized
   if (isAuthorized === false) {
     return (
       <Flex height="100vh" align="center" justify="center" direction="column">
@@ -207,6 +249,7 @@ const handleSubmit = async () => {
     );
   }
 
+  // Wait until API Key is validated
   if (isAuthorized === null) {
     return (
       <Flex height="100vh" align="center" justify="center">
@@ -215,10 +258,12 @@ const handleSubmit = async () => {
     );
   }
 
+  // Authorized content
   return (
     <Flex direction="column" gap={5}>
       <Heading>Permintaan API Key</Heading>
 
+      {/* Form Input */}
       <VStack spacing={4} align="stretch">
         <Input
           placeholder="Masukkan API Key"
@@ -242,6 +287,7 @@ const handleSubmit = async () => {
         </Button>
       </VStack>
 
+      {/* Table to Display Requests */}
       <Box>
         <Heading size="md">Riwayat Pengajuan</Heading>
         <Table variant="simple" mt={4}>
@@ -277,6 +323,7 @@ const handleSubmit = async () => {
         </Table>
       </Box>
 
+      {/* Form to Delete API Key */}
       <Box>
         <Heading size="md">Hapus API Key</Heading>
         <VStack spacing={4} align="stretch">
