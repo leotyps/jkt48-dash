@@ -42,79 +42,85 @@ export default function HomeView() {
   }, []);
 
   // Handle API key submission and saving to the database
-  const handleSubmit = async () => {
-    if (!apiKey || !limit || !expiryDate) {
-      toast({
-        title: "Error",
-        description: "Semua input wajib diisi!",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+const handleSubmit = async () => {
+  if (!apiKey || !limit || !expiryDate) {
+    toast({
+      title: "Error",
+      description: "Semua input wajib diisi!",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+    return;
+  }
 
-    const newRequest = {
-      apiKey,
-      limit: Number(limit),
-      expiryDate,
-      status: "Menunggu Aktivasi", // Initial status is "Menunggu Aktivasi"
-      createdAt: new Date().toISOString(),
-    };
+  const newRequest = {
+    apiKey,
+    limit: Number(limit),
+    expiryDate,
+    status: "Menunggu Aktivasi",
+    createdAt: new Date().toISOString(),
+  };
 
-    const updatedRequests = [newRequest, ...requests];
-    setRequests(updatedRequests);
-    localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
+  const updatedRequests = [newRequest, ...requests];
+  setRequests(updatedRequests);
+  localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
 
-    try {
-      // Save to CockroachDB
-      const client = await pool.connect();
+  try {
+    // Call the API to save the API key to the database
+    const response = await fetch("/api/saveApiKey", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        apiKey,
+        expiryDate,
+        limit: Number(limit),
+      }),
+    });
 
-      // Insert API Key into the database
-      await client.query(
-        `INSERT INTO api_keys (api_key, expiry_date, remaining_requests, max_requests, last_access_date, seller) 
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [
-          apiKey,
-          expiryDate,
-          limit, // Assuming limit is used as "remaining_requests"
-          limit, // Assuming limit is used as "max_requests"
-          new Date().toISOString(), // Set the current date as last access date
-          false, // Assuming seller is false for now, modify if needed
-        ]
-      );
+    const data = await response.json();
 
-      // Mark request status as "Aktif" if the insert is successful
-      const updatedRequestsWithStatus = updatedRequests.map((request) =>
-        request.apiKey === apiKey ? { ...request, status: "Aktif" } : request
-      );
-      setRequests(updatedRequestsWithStatus);
-      localStorage.setItem("apikey-requests", JSON.stringify(updatedRequestsWithStatus));
-
+    if (response.ok) {
       toast({
         title: "Success",
-        description:
-          "Permintaan API Key berhasil diajukan dan disimpan. Status diubah menjadi 'Aktif'.",
+        description: `Permintaan API Key berhasil diajukan. Status: ${data.status}`,
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-    } catch (error) {
-      console.error("Error saving API Key:", error);
+
+      // Update request status after successful creation
+      const updatedRequests = requests.map((req) =>
+        req.apiKey === apiKey ? { ...req, status: "Aktif" } : req
+      );
+      setRequests(updatedRequests);
+      localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
+    } else {
       toast({
         title: "Error",
-        description: "Gagal menyimpan API Key ke database.",
+        description: data.message || "Gagal menyimpan API Key.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
-    } finally {
-      setApiKey("");
-      setLimit("");
-      setExpiryDate("");
     }
-  };
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Gagal menghubungi server.",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+  }
 
+  // Clear the form after submission
+  setApiKey("");
+  setLimit("");
+  setExpiryDate("");
+};
   // Handle deletion logic
   const handleDeleteApiKey = async () => {
     if (!selectedApiKey || !deleteReason) {
