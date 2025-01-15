@@ -21,15 +21,17 @@ import { useEffect, useState } from "react";
 export default function HomeView() {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [apiKey, setApiKey] = useState<string | null>(null);
-  const [maxRequests, setMaxRequests] = useState<string>("");
+  const [limit, setLimit] = useState<string>("");
   const [expiryDate, setExpiryDate] = useState<string>("");
+  const [maxRequests, setMaxRequests] = useState<string>(""); // New state for maxRequests
+  const [remainingRequests, setRemainingRequests] = useState<string>(""); // New state for remainingRequests
   const [requests, setRequests] = useState<any[]>([]);
   const [selectedApiKey, setSelectedApiKey] = useState<string | null>(null);
   const [deleteReason, setDeleteReason] = useState<string>("");
   const toast = useToast();
 
   const webhookUrl =
-    "https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C"; // Replace with your actual webhook URL
+    "https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C"; // Ganti dengan URL webhook Anda
 
   // Check API Key validity
   useEffect(() => {
@@ -54,13 +56,13 @@ export default function HomeView() {
     }
   }, []);
 
-  // Load requests from local storage
+  // Load notes from local storage
   useEffect(() => {
     const savedRequests = localStorage.getItem("apikey-requests");
     if (savedRequests) setRequests(JSON.parse(savedRequests));
   }, []);
 
-  // Update request status to "Aktif" after 5 minutes
+  // Update status to "Aktif" after 5 minutes
   useEffect(() => {
     const interval = setInterval(() => {
       const updatedRequests = requests.map((request) => {
@@ -83,9 +85,9 @@ export default function HomeView() {
     return () => clearInterval(interval);
   }, [requests]);
 
-  // Submit function for new API Key request
+  // Submit function
   const handleSubmit = async () => {
-    if (!apiKey || !maxRequests || !expiryDate) {
+    if (!apiKey || !limit || !expiryDate || !maxRequests) {
       toast({
         title: "Error",
         description: "Semua input wajib diisi!",
@@ -96,15 +98,10 @@ export default function HomeView() {
       return;
     }
 
-    const remainingRequests = Number(maxRequests);
-    const lastAccessDate = new Date().toISOString(); // Use current timestamp as last access date
-
     const newRequest = {
       apiKey,
-      maxRequests: Number(maxRequests),
+      limit: Number(limit),
       expiryDate,
-      remainingRequests,
-      lastAccessDate,
       status: "Menunggu Aktivasi",
       createdAt: new Date().toISOString(),
     };
@@ -123,7 +120,11 @@ export default function HomeView() {
         body: JSON.stringify({
           apiKey,
           expiryDate,
-          limit: Number(maxRequests), // Use maxRequests as limit
+          limit: Number(limit),
+          remainingRequests: maxRequests, // Set remainingRequests same as maxRequests
+          maxRequests: Number(maxRequests), // Set maxRequests from the form
+          lastAccessDate: new Date().toISOString(), // Set lastAccessDate to current date
+          seller: false, // Seller is set to false by default
         }),
       });
 
@@ -165,8 +166,10 @@ export default function HomeView() {
 
     // Clear the form after submission
     setApiKey("");
-    setMaxRequests("");
+    setLimit("");
     setExpiryDate("");
+    setMaxRequests("");
+    setRemainingRequests("");
   };
 
   // Handle delete API Key
@@ -207,7 +210,7 @@ export default function HomeView() {
                   inline: true,
                 },
               ],
-              color: 0xff0000, // Red color
+              color: 0xff0000, // Warna merah
               timestamp: new Date().toISOString(),
             },
           ],
@@ -277,9 +280,21 @@ export default function HomeView() {
         />
         <Input
           type="number"
-          placeholder="Masukkan Max Requests API Key"
+          placeholder="Masukkan Limit API Key"
+          value={limit}
+          onChange={(e) => setLimit(e.target.value)}
+        />
+        <Input
+          type="number"
+          placeholder="Masukkan Max Requests"
           value={maxRequests}
           onChange={(e) => setMaxRequests(e.target.value)}
+        />
+        <Input
+          type="number"
+          placeholder="Masukkan Remaining Requests"
+          value={remainingRequests}
+          onChange={(e) => setRemainingRequests(e.target.value || maxRequests)}
         />
         <Input
           type="date"
@@ -299,7 +314,7 @@ export default function HomeView() {
           <Thead>
             <Tr>
               <Th>API Key</Th>
-              <Th>Max Requests</Th>
+              <Th>Limit</Th>
               <Th>Masa Aktif</Th>
               <Th>Status</Th>
             </Tr>
@@ -308,7 +323,7 @@ export default function HomeView() {
             {requests.map((request, index) => (
               <Tr key={index}>
                 <Td>{request.apiKey}</Td>
-                <Td>{request.maxRequests}</Td>
+                <Td>{request.limit}</Td>
                 <Td>{request.expiryDate}</Td>
                 <Td>
                   <Text
