@@ -35,25 +35,23 @@ const ProfilePage: NextPageWithLayout = () => {
   const { lang, setLang } = useLang();
   const [devMode, setDevMode] = useSettingsStore((s) => [s.devMode, s.setDevMode]);
   const [apiKey, setApiKey] = useState<string>('');
+  const [apiStatus, setApiStatus] = useState<string | null>(null);
   const toast = useToast();
 
   useEffect(() => {
-    // Ambil API Key dari server saat halaman dimuat
+    // Fetch API key from the server when the component loads
     const fetchApiKey = async () => {
-      try {
-        const response = await fetch(`/api/auth/getApiKey?userId=${user.id}`);
-        const data = await response.json();
-        if (response.ok) {
-          setApiKey(data.apiKey || '');
-        } else {
-          console.error('Error fetching API key:', data.message);
-        }
-      } catch (err) {
-        console.error('Failed to fetch API key:', err);
+      const res = await fetch('/api/auth/apiKey');
+      if (res.ok) {
+        const data = await res.json();
+        setApiKey(data.apiKey || '');
+      } else {
+        console.error('Failed to fetch API key');
       }
     };
+
     fetchApiKey();
-  }, [user.id]);
+  }, []);
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setApiKey(e.target.value);
@@ -71,37 +69,27 @@ const ProfilePage: NextPageWithLayout = () => {
       return;
     }
 
-    try {
-      const response = await fetch('/api/auth/saveApiKey', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId: user.id, apiKey }),
-      });
+    const response = await fetch('/api/auth/apiKey', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ apiKey }),
+    });
 
-      if (response.ok) {
-        toast({
-          title: 'Success',
-          description: 'API Key berhasil diperbarui!',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      } else {
-        toast({
-          title: 'Error',
-          description: 'Gagal memperbarui API Key!',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (err) {
-      console.error('Failed to save API key:', err);
+    if (response.ok) {
+      setApiStatus('API Key berhasil disimpan');
+      toast({
+        title: 'Success',
+        description: 'API Key berhasil disimpan!',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } else {
       toast({
         title: 'Error',
-        description: 'Terjadi kesalahan saat menyimpan API Key!',
+        description: 'Gagal menyimpan API Key.',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -112,7 +100,7 @@ const ProfilePage: NextPageWithLayout = () => {
   return (
     <Grid templateColumns={{ base: '1fr', lg: 'minmax(0, 800px) auto' }} gap={{ base: 3, lg: 6 }}>
       <Flex direction="column">
-        {user.banner ? (
+        {user.banner != null ? (
           <Image
             alt="banner"
             src={bannerUrl(user.id, user.banner)}
@@ -142,13 +130,15 @@ const ProfilePage: NextPageWithLayout = () => {
           {t.settings}
         </CardHeader>
         <CardBody as={Flex} direction="column" gap={6} mt={3}>
-          {/* Pengaturan API Key */}
+          {/* Other settings... */}
+          
+          {/* API Key Settings */}
           <FormControl>
             <Box mb={2}>
               <FormLabel fontSize="md" fontWeight="medium" m={0}>
                 JKT48Connect Apikey
               </FormLabel>
-              <Text color="TextSecondary">Simpan atau edit Apikeymu di sini</Text>
+              <Text color="TextSecondary">Simpan Apikeymu disini</Text>
             </Box>
             <Input
               value={apiKey}
@@ -156,6 +146,7 @@ const ProfilePage: NextPageWithLayout = () => {
               placeholder="Masukkan API Key JKT48"
               size="lg"
             />
+            {apiStatus && <Text mt={2}>{apiStatus}</Text>}
           </FormControl>
           <Button colorScheme="teal" onClick={saveApiKey}>
             Simpan API Key
