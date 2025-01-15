@@ -1,45 +1,62 @@
-import { Grid, Flex, Spacer, Text, VStack, Box, FormControl, FormLabel, Input, Button, useToast } from '@chakra-ui/react';
-import { Avatar, Image } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
-import { IoLogOut } from 'react-icons/io5';
-import { useRouter } from 'next/router';
+import { Flex, Grid, Spacer, Text, VStack } from '@chakra-ui/layout';
+import {
+  Avatar,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  FormControl,
+  FormLabel,
+  Image,
+  useColorMode,
+  Box,
+  Input,
+  useToast,
+} from '@chakra-ui/react';
+import { avatarUrl, bannerUrl } from '@/api/discord';
+import { SelectField } from '@/components/forms/SelectField';
+import { SwitchField } from '@/components/forms/SwitchField';
+import { languages, names, useLang } from '@/config/translations/provider'; // Ensure this is correctly imported
 import { profile } from '@/config/translations/profile';
-import { useSelfUser } from '@/api/hooks';
-import { useLogoutMutation } from '@/utils/auth/hooks';
+import { IoLogOut } from 'react-icons/io5';
 import { useSettingsStore } from '@/stores';
 import { NextPageWithLayout } from '@/pages/_app';
 import AppLayout from '@/components/layout/app';
+import { useLogoutMutation } from '@/utils/auth/hooks';
+import { useSelfUser } from '@/api/hooks';
+import { useState, useEffect } from 'react';
+import { useApiKey } from '@/utils/apiKeys'; // Import custom hook to get and update API Key from server
 
+/**
+ * User info and general settings here
+ */
 const ProfilePage: NextPageWithLayout = () => {
   const user = useSelfUser();
   const logout = useLogoutMutation();
   const t = profile.useTranslations();
+  const { colorMode, setColorMode } = useColorMode();
+  const { lang, setLang } = useLang(); // Make sure useLang is working here
+  const [devMode, setDevMode] = useSettingsStore((s) => [s.devMode, s.setDevMode]);
   const [apiKey, setApiKey] = useState<string>('');
   const [apiStatus, setApiStatus] = useState<string | null>(null);
   const toast = useToast();
-  const { lang } = useLang();
-  
+
+  // Fetch API Key from server after login
   useEffect(() => {
-    // Ambil API Key dari server setelah login
+    // Fetch from CockroachDB
     const fetchApiKey = async () => {
       try {
-        const res = await fetch(`/api/auth/getApiKey?userId=${user.id}`);
-        const data = await res.json();
-
-        if (res.ok) {
-          setApiKey(data.apiKey);
-        } else {
-          console.error(data.error);
+        const response = await fetch('/api/user/getApiKey'); // Replace with actual API endpoint
+        const data = await response.json();
+        if (data.apiKey) {
+          setApiKey(data.apiKey); // Set the API key to state if available
         }
       } catch (error) {
         console.error('Error fetching API key:', error);
       }
     };
-
-    if (user?.id) {
-      fetchApiKey();
-    }
-  }, [user]);
+    fetchApiKey();
+  }, []);
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setApiKey(e.target.value);
@@ -56,86 +73,148 @@ const ProfilePage: NextPageWithLayout = () => {
       });
       return;
     }
-
     try {
-      const res = await fetch('/api/auth/updateApiKey', {
+      const response = await fetch('/api/user/updateApiKey', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId: user.id, newApiKey: apiKey }),
+        body: JSON.stringify({ apiKey }),
       });
 
-      if (res.ok) {
-        setApiStatus('API Key berhasil diperbarui');
+      const data = await response.json();
+
+      if (data.success) {
+        setApiStatus('API Key berhasil disimpan');
         toast({
           title: 'Success',
-          description: 'API Key berhasil diperbarui!',
+          description: 'API Key berhasil disimpan!',
           status: 'success',
           duration: 3000,
           isClosable: true,
         });
       } else {
-        const data = await res.json();
-        console.error(data.error);
+        setApiStatus('Failed to update API key');
         toast({
           title: 'Error',
-          description: 'Gagal memperbarui API Key',
+          description: 'Gagal memperbarui API Key!',
           status: 'error',
           duration: 3000,
           isClosable: true,
         });
       }
     } catch (error) {
-      console.error('Error updating API key:', error);
+      console.error('Error saving API key:', error);
+      setApiStatus('Error saving API Key');
     }
   };
 
   return (
     <Grid templateColumns={{ base: '1fr', lg: 'minmax(0, 800px) auto' }} gap={{ base: 3, lg: 6 }}>
       <Flex direction="column">
-        {/* Avatar and Banner */}
-        <Image src={user.banner ? user.banner : '/default-banner.jpg'} alt="Banner" />
+        {user.banner != null ? (
+          <Image
+            alt="banner"
+            src={bannerUrl(user.id, user.banner)}
+            sx={{ aspectRatio: '1100 / 440' }}
+            objectFit="cover"
+            rounded="2xl"
+          />
+        ) : (
+          <Box bg="Brand" rounded="2xl" sx={{ aspectRatio: '1100 / 440' }} />
+        )}
         <VStack mt="-50px" ml="40px" align="start">
-          <Avatar src={user.avatarUrl} name={user.username} size="xl" />
-          <Text fontSize="2xl">{user.username}</Text>
+          <Avatar
+            src={avatarUrl(user)}
+            name={user.username}
+            w="100px"
+            h="100px"
+            ringColor="CardBackground"
+            ring="6px"
+          />
+          <Text fontWeight="600" fontSize="2xl">
+            {user.username}
+          </Text>
         </VStack>
       </Flex>
-
-      <Box w="full" rounded="3xl" p={6} boxShadow="md">
-        <Text fontSize="2xl" fontWeight="bold">{t.settings}</Text>
-        
-        {/* API Key Section */}
-        <FormControl mt={4}>
-          <FormLabel>JKT48Connect API Key</FormLabel>
-          <Input
-            value={apiKey}
-            onChange={handleApiKeyChange}
-            placeholder="Masukkan API Key"
-            size="lg"
+      <Card w="full" rounded="3xl" h="fit-content" variant="primary">
+        <CardHeader fontSize="2xl" fontWeight="600">
+          {t.settings}
+        </CardHeader>
+        <CardBody as={Flex} direction="column" gap={6} mt={3}>
+          <SwitchField
+            id="dark-mode"
+            label={t['dark mode']}
+            desc={t['dark mode description']}
+            isChecked={colorMode === 'dark'}
+            onChange={(e) => setColorMode(e.target.checked ? 'dark' : 'light')}
           />
-          {apiStatus && <Text mt={2}>{apiStatus}</Text>}
-        </FormControl>
-        
-        <Button colorScheme="teal" onClick={saveApiKey} mt={4}>
-          Simpan API Key
-        </Button>
+          <SwitchField
+            id="developer-mode"
+            label={t['dev mode']}
+            desc={t['dev mode description']}
+            isChecked={devMode}
+            onChange={(e) => setDevMode(e.target.checked)}
+          />
+          <FormControl>
+            <Box mb={2}>
+              <FormLabel fontSize="md" fontWeight="medium" m={0}>
+                {t.language}
+              </FormLabel>
+              <Text color="TextSecondary">{t['language description']}</Text>
+            </Box>
+            <SelectField
+              value={{
+                label: names[lang],
+                value: lang,
+              }}
+              onChange={(e) => e != null && setLang(e.value)}
+              options={languages.map((lang) => ({
+                label: lang.name,
+                value: lang.key,
+              }))}
+            />
+          </FormControl>
 
-        <Spacer />
-        
-        {/* Logout Button */}
-        <Button
-          leftIcon={<IoLogOut />}
-          colorScheme="red"
-          onClick={() => logout.mutate()}
-          mt={4}
-        >
-          {t.logout}
-        </Button>
-      </Box>
+          {/* API Key Settings */}
+          <FormControl>
+            <Box mb={2}>
+              <FormLabel fontSize="md" fontWeight="medium" m={0}>
+                JKT48Connect Apikey
+              </FormLabel>
+              <Text color="TextSecondary">Simpan Apikeymu disini</Text>
+            </Box>
+            <Input
+              value={apiKey}
+              onChange={handleApiKeyChange}
+              placeholder="Masukkan API Key JKT48"
+              size="lg"
+            />
+            {apiStatus && <Text mt={2}>{apiStatus}</Text>}
+          </FormControl>
+          <Button colorScheme="teal" onClick={saveApiKey}>
+            Simpan API Key
+          </Button>
+
+          <Spacer />
+          <Button
+            leftIcon={<IoLogOut />}
+            variant="danger"
+            isLoading={logout.isLoading}
+            onClick={() => logout.mutate()}
+          >
+            {t.logout}
+          </Button>
+        </CardBody>
+      </Card>
+      <Content />
     </Grid>
   );
 };
+
+function Content() {
+  return <></>;
+}
 
 ProfilePage.getLayout = (p) => <AppLayout>{p}</AppLayout>;
 
