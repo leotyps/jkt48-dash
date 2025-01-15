@@ -26,9 +26,6 @@ import { useLogoutMutation } from '@/utils/auth/hooks';
 import { useSelfUser } from '@/api/hooks';
 import { useState, useEffect } from 'react';
 
-/**
- * User info and general settings here
- */
 const ProfilePage: NextPageWithLayout = () => {
   const user = useSelfUser();
   const logout = useLogoutMutation();
@@ -38,22 +35,31 @@ const ProfilePage: NextPageWithLayout = () => {
   const { lang, setLang } = useLang();
   const [devMode, setDevMode] = useSettingsStore((s) => [s.devMode, s.setDevMode]);
   const [apiKey, setApiKey] = useState<string>('');
-  const [apiStatus, setApiStatus] = useState<string | null>(null);
   const toast = useToast();
 
   useEffect(() => {
-    // Cek apakah ada API key yang tersimpan di localStorage
-    const storedApiKey = localStorage.getItem('jkt48-api-key');
-    if (storedApiKey) {
-      setApiKey(storedApiKey);
-    }
-  }, []);
+    // Ambil API Key dari server saat halaman dimuat
+    const fetchApiKey = async () => {
+      try {
+        const response = await fetch(`/api/auth/getApiKey?userId=${user.id}`);
+        const data = await response.json();
+        if (response.ok) {
+          setApiKey(data.apiKey || '');
+        } else {
+          console.error('Error fetching API key:', data.message);
+        }
+      } catch (err) {
+        console.error('Failed to fetch API key:', err);
+      }
+    };
+    fetchApiKey();
+  }, [user.id]);
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setApiKey(e.target.value);
   };
 
-  const saveApiKey = () => {
+  const saveApiKey = async () => {
     if (!apiKey) {
       toast({
         title: 'Error',
@@ -64,22 +70,49 @@ const ProfilePage: NextPageWithLayout = () => {
       });
       return;
     }
-    // Simpan API Key ke localStorage
-    localStorage.setItem('jkt48-api-key', apiKey);
-    setApiStatus('API Key berhasil disimpan');
-    toast({
-      title: 'Success',
-      description: 'API Key berhasil disimpan!',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
+
+    try {
+      const response = await fetch('/api/auth/saveApiKey', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user.id, apiKey }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'API Key berhasil diperbarui!',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Gagal memperbarui API Key!',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to save API key:', err);
+      toast({
+        title: 'Error',
+        description: 'Terjadi kesalahan saat menyimpan API Key!',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
     <Grid templateColumns={{ base: '1fr', lg: 'minmax(0, 800px) auto' }} gap={{ base: 3, lg: 6 }}>
       <Flex direction="column">
-        {user.banner != null ? (
+        {user.banner ? (
           <Image
             alt="banner"
             src={bannerUrl(user.id, user.banner)}
@@ -109,47 +142,13 @@ const ProfilePage: NextPageWithLayout = () => {
           {t.settings}
         </CardHeader>
         <CardBody as={Flex} direction="column" gap={6} mt={3}>
-          <SwitchField
-            id="dark-mode"
-            label={t['dark mode']}
-            desc={t['dark mode description']}
-            isChecked={colorMode === 'dark'}
-            onChange={(e) => setColorMode(e.target.checked ? 'dark' : 'light')}
-          />
-          <SwitchField
-            id="developer-mode"
-            label={t['dev mode']}
-            desc={t['dev mode description']}
-            isChecked={devMode}
-            onChange={(e) => setDevMode(e.target.checked)}
-          />
-          <FormControl>
-            <Box mb={2}>
-              <FormLabel fontSize="md" fontWeight="medium" m={0}>
-                {t.language}
-              </FormLabel>
-              <Text color="TextSecondary">{t['language description']}</Text>
-            </Box>
-            <SelectField
-              value={{
-                label: names[lang],
-                value: lang,
-              }}
-              onChange={(e) => e != null && setLang(e.value)}
-              options={languages.map((lang) => ({
-                label: lang.name,
-                value: lang.key,
-              }))}
-            />
-          </FormControl>
-
-          {/* API Key Settings */}
+          {/* Pengaturan API Key */}
           <FormControl>
             <Box mb={2}>
               <FormLabel fontSize="md" fontWeight="medium" m={0}>
                 JKT48Connect Apikey
               </FormLabel>
-              <Text color="TextSecondary">Simpan Apikeymu disini</Text>
+              <Text color="TextSecondary">Simpan atau edit Apikeymu di sini</Text>
             </Box>
             <Input
               value={apiKey}
@@ -157,7 +156,6 @@ const ProfilePage: NextPageWithLayout = () => {
               placeholder="Masukkan API Key JKT48"
               size="lg"
             />
-            {apiStatus && <Text mt={2}>{apiStatus}</Text>}
           </FormControl>
           <Button colorScheme="teal" onClick={saveApiKey}>
             Simpan API Key
@@ -174,14 +172,9 @@ const ProfilePage: NextPageWithLayout = () => {
           </Button>
         </CardBody>
       </Card>
-      <Content />
     </Grid>
   );
 };
-
-function Content() {
-  return <></>;
-}
 
 ProfilePage.getLayout = (p) => <AppLayout>{p}</AppLayout>;
 
