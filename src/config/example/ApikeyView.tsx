@@ -144,7 +144,7 @@ export default function HomeView() {
         title: "Error",
         description: data.message || "Gagal menyimpan API Key.",
         status: "error",
-        duration: 3000,
+        duration: 30000,
         isClosable: true,
       });
     }
