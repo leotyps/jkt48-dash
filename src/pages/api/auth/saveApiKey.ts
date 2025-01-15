@@ -10,7 +10,7 @@ const pool = new Pool({
 
 const saveApiKey = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "POST") {
-    const { apiKey, expiryDate, limit } = req.body;
+    const { apiKey, expiryDate, limit, seller } = req.body;
 
     if (!apiKey || !expiryDate || !limit) {
       return res.status(400).json({ message: "Missing required fields." });
@@ -19,24 +19,28 @@ const saveApiKey = async (req: NextApiRequest, res: NextApiResponse) => {
     try {
       const client = await pool.connect();
 
-      const currentTimestamp = new Date().toISOString(); // Get current timestamp
+      // Default values
+      const remainingRequests = limit; // Or any default value you want for remainingRequests
+      const maxRequests = limit; // Same for maxRequests
+      const lastAccessDate = new Date().toISOString(); // Use current timestamp for last_access_date
 
+      // Insert into the database
       const result = await client.query(
         `INSERT INTO api_keys (api_key, expiry_date, remaining_requests, max_requests, last_access_date, seller)
-         VALUES ($1, $2, $3, $4, $5, $6) RETURNING api_key`,
+         VALUES ($1, $2, $3, $4, $5, $6)`,
         [
           apiKey,
-          expiryDate,
-          limit,
-          limit,
-          currentTimestamp, // Pass current timestamp as the `last_access_date`
-          false, // Default seller value is false
+          expiryDate, // Expiry date from the request body
+          remainingRequests, // Remaining requests
+          maxRequests, // Max requests
+          lastAccessDate, // Current timestamp as last access date
+          seller || false, // Default seller value is false if not provided
         ]
       );
 
       client.release();
 
-      if (result.rows.length > 0) {
+      if (result.rowCount > 0) {
         return res.status(200).json({
           message: "API Key successfully created",
           apiKey: result.rows[0].api_key,
