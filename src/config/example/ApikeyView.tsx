@@ -87,90 +87,105 @@ export default function HomeView() {
 
   // Submit function
   const handleSubmit = async () => {
-    if (!apiKey || !limit || !expiryDate || !maxRequests) {
-      toast({
-        title: "Error",
-        description: "Semua input wajib diisi!",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+  if (!apiKey || !limit || !expiryDate || !maxRequests) {
+    toast({
+      title: "Error",
+      description: "Semua input wajib diisi!",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+    return;
+  }
 
-    const newRequest = {
-      apiKey,
-      limit: Number(limit),
-      expiryDate,
-      status: "Menunggu Aktivasi",
-      createdAt: new Date().toISOString(),
-    };
+  // Format expiryDate
+  const formattedExpiryDate = formatDate(expiryDate);
 
-    const updatedRequests = [newRequest, ...requests];
-    setRequests(updatedRequests);
-    localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
-
-    try {
-      // Call the API to save the API key to the database
-      const response = await fetch("/api/auth/saveApiKey", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          apiKey,
-          expiryDate,
-          limit: Number(limit),
-          remainingRequests: maxRequests, // Set remainingRequests same as maxRequests
-          maxRequests: Number(maxRequests), // Set maxRequests from the form
-          lastAccessDate: new Date().toISOString(), // Set lastAccessDate to current date
-          seller: false, // Seller is set to false by default
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: `Permintaan API Key berhasil diajukan. Status: ${data.status}`,
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-
-        // Update request status after successful creation
-        const updatedRequests = requests.map((req) =>
-          req.apiKey === apiKey ? { ...req, status: "Aktif" } : req
-        );
-        setRequests(updatedRequests);
-        localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
-      } else {
-        toast({
-          title: "Error",
-          description: data.message || "Gagal menyimpan API Key.",
-          status: "error",
-          duration: 30000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Gagal menghubungi server.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-
-    // Clear the form after submission
-    setApiKey("");
-    setLimit("");
-    setExpiryDate("");
-    setMaxRequests("");
-    setRemainingRequests("");
+  const newRequest = {
+    apiKey,
+    limit: Number(limit),
+    expiryDate: formattedExpiryDate,  // Using the formatted expiryDate
+    status: "Menunggu Aktivasi",
+    createdAt: new Date().toISOString(),
   };
+
+  const updatedRequests = [newRequest, ...requests];
+  setRequests(updatedRequests);
+  localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
+
+  try {
+    // Call the API to save the API key to the database
+    const response = await fetch("/api/auth/saveApiKey", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        apiKey,
+        expiryDate: formattedExpiryDate,  // Using the formatted expiryDate here
+        limit: Number(limit),
+        remainingRequests: maxRequests, // Set remainingRequests same as maxRequests
+        maxRequests: Number(maxRequests), // Set maxRequests from the form
+        lastAccessDate: new Date().toISOString(), // Set lastAccessDate to current date
+        seller: false, // Seller is set to false by default
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      toast({
+        title: "Success",
+        description: `Permintaan API Key berhasil diajukan. Status: ${data.status}`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Update request status after successful creation
+      const updatedRequests = requests.map((req) =>
+        req.apiKey === apiKey ? { ...req, status: "Aktif" } : req
+      );
+      setRequests(updatedRequests);
+      localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
+    } else {
+      toast({
+        title: "Error",
+        description: data.message || "Gagal menyimpan API Key.",
+        status: "error",
+        duration: 30000,
+        isClosable: true,
+      });
+    }
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Gagal menghubungi server.",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+
+  // Clear the form after submission
+  setApiKey("");
+  setLimit("");
+  setExpiryDate("");
+  setMaxRequests("");
+  setRemainingRequests("");
+};
+
+// Function to format date in DD/MM/YYYY/HH:mm format
+const formatDate = (date: string): string => {
+  const d = new Date(date);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+  const year = d.getFullYear();
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+
+  return `${day}/${month}/${year}/${hours}:${minutes}`;
+};
 
   // Handle delete API Key
   const handleDeleteApiKey = async () => {
