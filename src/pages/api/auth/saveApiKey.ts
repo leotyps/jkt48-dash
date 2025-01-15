@@ -19,6 +19,10 @@ const saveApiKey = async (req: NextApiRequest, res: NextApiResponse) => {
     try {
       const client = await pool.connect();
 
+      // Log SQL query and parameters for debugging
+      console.log("Inserting API key data into the database");
+      console.log(`apiKey: ${apiKey}, expiryDate: ${expiryDate}, limit: ${limit}`);
+
       // Insert API key data into the database
       const result = await client.query(
         `INSERT INTO api_keys (api_key, expiry_date, remaining_requests, max_requests, last_access_date, seller)
@@ -34,8 +38,8 @@ const saveApiKey = async (req: NextApiRequest, res: NextApiResponse) => {
 
       client.release();
 
+      // Check if the insertion was successful
       if (result.rows.length > 0) {
-        // Successfully inserted the API key, return success
         return res.status(200).json({
           message: "API Key successfully created",
           apiKey: result.rows[0].api_key,
@@ -45,8 +49,8 @@ const saveApiKey = async (req: NextApiRequest, res: NextApiResponse) => {
         return res.status(500).json({ message: "Failed to save API key." });
       }
     } catch (error) {
-      console.error("Error saving API Key:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      console.error("Error saving API Key:", error); // Log error details
+      return res.status(500).json({ message: `Internal server error: ${error.message}` });
     }
   } else {
     return res.status(405).json({ message: "Method Not Allowed" });
