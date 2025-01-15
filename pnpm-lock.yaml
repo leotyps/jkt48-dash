@@ -107,6 +107,9 @@ importers:
       swagger-ui-react:
         specifier: ^5.18.2
         version: 5.18.2(@types/react@18.3.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      uuid:
+        specifier: ^11.0.5
+        version: 11.0.5
       zod:
         specifier: ^3.20.6
         version: 3.24.1
