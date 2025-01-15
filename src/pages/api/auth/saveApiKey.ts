@@ -19,18 +19,18 @@ const saveApiKey = async (req: NextApiRequest, res: NextApiResponse) => {
     try {
       const client = await pool.connect();
 
-      console.log("Inserting API key data into the database");
-      console.log(`apiKey: ${apiKey}, expiryDate: ${expiryDate}, limit: ${limit}`);
+      const currentTimestamp = new Date().toISOString(); // Get current timestamp
 
       const result = await client.query(
         `INSERT INTO api_keys (api_key, expiry_date, remaining_requests, max_requests, last_access_date, seller)
-         VALUES ($1, $2, $3, $4, NOW(), $5) RETURNING api_key`,
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING api_key`,
         [
           apiKey,
           expiryDate,
           limit,
           limit,
-          false, // default seller value is false
+          currentTimestamp, // Pass current timestamp as the `last_access_date`
+          false, // Default seller value is false
         ]
       );
 
