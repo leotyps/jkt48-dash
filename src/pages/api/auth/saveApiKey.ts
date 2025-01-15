@@ -17,22 +17,27 @@ const saveApiKey = async (req: NextApiRequest, res: NextApiResponse) => {
     try {
       const client = await pool.connect();
 
-      // Default values
-      const remainingRequests = limit; // Or any default value you want for remainingRequests
-      const maxRequests = limit; // Same for maxRequests
-      const lastAccessDate = new Date().toISOString(); // Use current timestamp for last_access_date
+      // Ensure `expiryDate` is stored as a string (text type)
+      const expiryDateFormatted = expiryDate;
+
+      // Ensure `remaining_requests` and `max_requests` are stored as strings (text type)
+      const remainingRequests = String(limit); // Convert limit to string
+      const maxRequests = String(limit); // Convert limit to string
+
+      // Ensure `lastAccessDate` is stored as a string (text type)
+      const lastAccessDate = new Date().toISOString(); // Convert to ISO string format
 
       // Insert into the database
       const result = await client.query(
         `INSERT INTO api_keys (api_key, expiry_date, remaining_requests, max_requests, last_access_date, seller)
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING api_key`,
         [
-          apiKey,
-          expiryDate, // Expiry date from the request body
-          remainingRequests, // Remaining requests
-          maxRequests, // Max requests
-          lastAccessDate, // Current timestamp as last access date
-          seller || false, // Default seller value is false if not provided
+          apiKey, // Text type
+          expiryDateFormatted, // Text type
+          remainingRequests, // Text type
+          maxRequests, // Text type
+          lastAccessDate, // Text type
+          seller || false, // Boolean type, default to false if not provided
         ]
       );
 
