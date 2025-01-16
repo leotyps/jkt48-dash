@@ -21,7 +21,7 @@ import { useEffect, useState } from "react";
 // Fetch chat_id menggunakan username Telegram
 const getChatId = async (telegramUsername: string) => {
   try {
-    const response = await fetch(`https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`);
+    const response = await fetch(`https://api.telegram.org/bot7891069269:AAHgeHtXqT8wx7oiZxZmeHkzuiTCNEvh8QM/getUpdates`);
     const data = await response.json();
 
     // Mencari chat_id berdasarkan username
