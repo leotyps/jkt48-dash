@@ -23,7 +23,8 @@ const saveApiKey = async (req: NextApiRequest, res: NextApiResponse) => {
       const expiryDateFormatted = expiryDate;
       const remainingRequests = String(limit);
       const maxRequests = String(limit);
-      const lastAccessDate = new Date().toISOString();
+      const now = new Date();
+      const lastAccessDate = now.toISOString().split("T")[0]; // Hanya mengambil YYYY-MM-DD
 
       // Cek apakah API key sudah ada di database
       const checkQuery = `SELECT * FROM api_keys WHERE api_key = $1`;
