@@ -52,64 +52,56 @@ export default function HomeView() {
     }
   }, []);
 
-  const handleSubmit = async () => {
-    if (!apiKey || !limit || !expiryDate || !maxRequests) {
+ const handleSubmit = async () => {
+  if (!apiKey || !limit || !expiryDate) {
+    toast({
+      title: "Error",
+      description: "Semua input wajib diisi!",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/auth/saveApiKey", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        apiKey,
+        expiryDate,
+        limit: Number(limit),
+        seller: false, // Set seller status
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
       toast({
-        title: "Error",
-        description: "Semua input wajib diisi!",
-        status: "error",
+        title: "Success",
+        description: "API Key berhasil disimpan.",
+        status: "success",
         duration: 3000,
         isClosable: true,
       });
-      return;
+      setApiKey("");
+      setLimit("");
+      setExpiryDate("");
+    } else {
+      throw new Error(data.message || "Gagal menyimpan API Key.");
     }
-
-    const formattedExpiryDate = new Date(expiryDate).toISOString().slice(0, -1) + "+00:00";
-
-    const newRequest = {
-      apiKey,
-      expiryDate: formattedExpiryDate,
-      limit: Number(limit),
-      maxRequests: Number(maxRequests),
-      remainingRequests: maxRequests,
-    };
-
-    try {
-      const response = await fetch(`/api/github/updateApiKeys`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newRequest),
-      });
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "API Key berhasil ditambahkan.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        setRequests((prev) => [...prev, newRequest]);
-      } else {
-        const error = await response.json();
-        toast({
-          title: "Error",
-          description: error.message || "Gagal menambahkan API Key.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Gagal menghubungi server.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: error.message,
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+};
 
   const handleDeleteApiKey = async () => {
     if (!selectedApiKey || !deleteReason) {
