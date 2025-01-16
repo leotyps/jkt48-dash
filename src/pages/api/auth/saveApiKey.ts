@@ -1,14 +1,18 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { Pool } from "pg";
+import { Octokit } from "octokit";
 
-// Koneksi database PostgreSQL
-const pool = new Pool({
-  connectionString:
-    "postgresql://jkt48connect_apikey:vAgy5JNXz4woO46g8fho4g@jkt48connect-7018.j77.aws-ap-southeast-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full",
+const octokit = new Octokit({
+  auth: process.env.GITHUB_TOKEN, // Tambahkan token GitHub sebagai variabel lingkungan
 });
 
-// Fungsi untuk menyimpan dan menyinkronkan API Key dengan database
-const saveApiKey = async (req: NextApiRequest, res: NextApiResponse) => {
+const REPO_OWNER = "Apalahdek";
+const REPO_NAME = "api-jkt48connect";
+const FILE_PATH = "apiKeys.js"; // Path file yang akan dimodifikasi
+
+export default async function saveApiKey(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method === "POST") {
     const { apiKey, expiryDate, limit, seller } = req.body;
 
@@ -17,94 +21,75 @@ const saveApiKey = async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     try {
-      const client = await pool.connect();
+      // Fetch the current file content
+      const { data: fileData } = await octokit.rest.repos.getContent({
+        owner: REPO_OWNER,
+        repo: REPO_NAME,
+        path: FILE_PATH,
+      });
 
-      // Format tanggal expiryDate dan lainnya
-      const expiryDateFormatted = expiryDate;
-      const remainingRequests = String(limit);
-      const maxRequests = String(limit);
-      const now = new Date();
-      const lastAccessDate = now.toISOString().split("T")[0]; // Hanya mengambil YYYY-MM-DD
+      const fileContent = Buffer.from(
+        fileData.content,
+        fileData.encoding
+      ).toString("utf-8");
 
-      // Cek apakah API key sudah ada di database
-      const checkQuery = `SELECT * FROM api_keys WHERE api_key = $1`;
-      const checkResult = await client.query(checkQuery, [apiKey]);
+      // Parse the current API keys
+      const updatedContent = modifyApiKeys(
+        fileContent,
+        apiKey,
+        expiryDate,
+        limit,
+        seller
+      );
 
-      if (checkResult.rows.length === 0) {
-        // Jika API key belum ada, insert data baru
-        const insertQuery = `
-          INSERT INTO api_keys (api_key, expiry_date, remaining_requests, max_requests, last_access_date, seller)
-          VALUES ($1, $2, $3, $4, $5, $6) RETURNING api_key
-        `;
-        const insertResult = await client.query(insertQuery, [
-          apiKey,
-          expiryDateFormatted,
-          remainingRequests,
-          maxRequests,
-          lastAccessDate,
-          seller || false,
-        ]);
+      // Commit the updated file back to the repository
+      await octokit.rest.repos.createOrUpdateFileContents({
+        owner: REPO_OWNER,
+        repo: REPO_NAME,
+        path: FILE_PATH,
+        message: `Update API key: ${apiKey}`,
+        content: Buffer.from(updatedContent).toString("base64"),
+        sha: fileData.sha,
+      });
 
-        // Periksa apakah API key berhasil disimpan
-        if (insertResult && insertResult.rows.length > 0) {
-          return res.status(200).json({
-            message: "API Key successfully created",
-            apiKey: insertResult.rows[0].api_key,
-          });
-        } else {
-          return res.status(500).json({ message: "Failed to create API Key" });
-        }
-      } else {
-        // Jika API key sudah ada, perbarui data
-        const existingKeyData = checkResult.rows[0];
-
-        // Cek apakah ada perubahan yang perlu diperbarui
-        if (
-          existingKeyData.expiry_date !== expiryDateFormatted ||
-          existingKeyData.remaining_requests !== remainingRequests ||
-          existingKeyData.max_requests !== maxRequests ||
-          existingKeyData.last_access_date !== lastAccessDate ||
-          existingKeyData.seller !== (seller || false)
-        ) {
-          const updateQuery = `
-            UPDATE api_keys 
-            SET expiry_date = $2, remaining_requests = $3, max_requests = $4, last_access_date = $5, seller = $6
-            WHERE api_key = $1
-          `;
-          await client.query(updateQuery, [
-            apiKey,
-            expiryDateFormatted,
-            remainingRequests,
-            maxRequests,
-            lastAccessDate,
-            seller || false,
-          ]);
-
-          return res.status(200).json({
-            message: `API Key ${apiKey} successfully updated.`,
-            apiKey,
-          });
-        } else {
-          return res.status(200).json({
-            message: `No changes detected for API Key ${apiKey}.`,
-            apiKey,
-          });
-        }
-      }
-
-      client.release();
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error saving or updating API Key:", error);
-        return res.status(500).json({ message: `Internal server error: ${error.message}` });
-      } else {
-        console.error("Unknown error:", error);
-        return res.status(500).json({ message: "Unknown error occurred." });
-      }
+      res.status(200).json({ message: "API Key successfully saved." });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Failed to save API Key." });
     }
   } else {
-    return res.status(405).json({ message: "Method Not Allowed" });
+    res.status(405).json({ message: "Method not allowed." });
   }
-};
+}
 
-export default saveApiKey;
+function modifyApiKeys(
+  fileContent: string,
+  apiKey: string,
+  expiryDate: string,
+  limit: number,
+  seller: boolean
+): string {
+  const apiKeysRegex = /const apiKeys = {([\s\S]*?)}/;
+  const match = fileContent.match(apiKeysRegex);
+
+  if (!match) {
+    throw new Error("Invalid apiKeys.js format.");
+  }
+
+  const apiKeysContent = match[1].trim();
+  const apiKeysObject = eval(`({${apiKeysContent}})`);
+
+  apiKeysObject[apiKey] = {
+    expiryDate,
+    remainingRequests: limit,
+    maxRequests: limit,
+    lastAccessDate: new Date().toISOString().slice(0, 10),
+    seller,
+  };
+
+  const updatedApiKeys = JSON.stringify(apiKeysObject, null, 2)
+    .replace(/"([^"]+)":/g, "$1:")
+    .replace(/"/g, "'");
+
+  return fileContent.replace(apiKeysRegex, `const apiKeys = {\n${updatedApiKeys}\n}`);
+}
