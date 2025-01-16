@@ -24,7 +24,6 @@ export default function HomeView() {
   const [limit, setLimit] = useState<string>("");
   const [expiryDate, setExpiryDate] = useState<string>("");
   const [maxRequests, setMaxRequests] = useState<string>("");
-  const [remainingRequests, setRemainingRequests] = useState<string>("");
   const [requests, setRequests] = useState<any[]>([]);
   const [selectedApiKey, setSelectedApiKey] = useState<string | null>(null);
   const [deleteReason, setDeleteReason] = useState<string>("");
@@ -52,61 +51,87 @@ export default function HomeView() {
     }
   }, []);
 
- const handleSubmit = async () => {
-  if (!apiKey || !limit || !expiryDate) {
-    toast({
-      title: "Error",
-      description: "Semua input wajib diisi!",
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
-    return;
-  }
-
-  try {
-    const response = await fetch("/api/auth/saveApiKey", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        apiKey,
-        expiryDate,
-        limit: Number(limit),
-        seller: false, // Set seller status
-      }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
+  const handleSubmit = async () => {
+    if (!apiKey || !limit || !expiryDate || !maxRequests) {
       toast({
-        title: "Success",
-        description: "API Key berhasil disimpan.",
-        status: "success",
+        title: "Error",
+        description: "Semua input wajib diisi!",
+        status: "error",
         duration: 3000,
         isClosable: true,
       });
-      setApiKey("");
-      setLimit("");
-      setExpiryDate("");
-    } else {
-      throw new Error(data.message || "Gagal menyimpan API Key.");
+      return;
     }
-  } catch (error) {
-  let errorMessage = "An unknown error occurred.";
 
-  if (error instanceof Error) {
-    errorMessage = error.message;
-  }
+    const newApiKeyData = {
+      [apiKey]: {
+        expiryDate,
+        remainingRequests: Number(maxRequests),
+        maxRequests: Number(maxRequests),
+        lastAccessDate: new Date().toISOString(),
+        seller: false,
+      },
+    };
 
-  toast({
-    title: "Error",
-    description: errorMessage,
-    status: "error",
-    duration: 3000,
-    isClosable: true,
-  });
-}
+    try {
+      const GITHUB_TOKEN = "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"; // Ganti dengan token GitHub pribadi Anda
+      const REPO_URL =
+        "https://api.github.com/repos/Apalahdek/api-jkt48connect/contents/apiKeys.js";
+
+      // Get the current file content
+      const currentFileResponse = await fetch(REPO_URL, {
+        headers: {
+          Authorization: `Bearer ${GITHUB_TOKEN}`,
+        },
+      });
+
+      const currentFile = await currentFileResponse.json();
+      const decodedContent = atob(currentFile.content);
+      const updatedContent = {
+        ...JSON.parse(decodedContent),
+        ...newApiKeyData,
+      };
+
+      // Update the file in GitHub
+      const updatedFileResponse = await fetch(REPO_URL, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${GITHUB_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: `Add API key: ${apiKey}`,
+          content: btoa(JSON.stringify(updatedContent, null, 2)),
+          sha: currentFile.sha,
+        }),
+      });
+
+      if (updatedFileResponse.ok) {
+        toast({
+          title: "Success",
+          description: "API Key berhasil ditambahkan.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        setRequests([...requests, newApiKeyData]);
+        setApiKey("");
+        setLimit("");
+        setExpiryDate("");
+        setMaxRequests("");
+      } else {
+        throw new Error("Gagal memperbarui file di GitHub.");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Gagal menyimpan API Key.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
 
   const handleDeleteApiKey = async () => {
