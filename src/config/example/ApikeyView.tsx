@@ -85,34 +85,22 @@ export default function HomeView() {
         duration: 3000,
         isClosable: true,
       });
-      // Reset input fields
       setApiKey("");
       setLimit("");
       setExpiryDate("");
-
-      // Optional: Update state to include the new API Key in the requests table
-      setRequests((prev) => [
-        ...prev,
-        {
-          apiKey,
-          limit: Number(limit),
-          expiryDate,
-        },
-      ]);
     } else {
       throw new Error(data.message || "Gagal menyimpan API Key.");
     }
   } catch (error) {
     toast({
       title: "Error",
-      description: error.message || "Terjadi kesalahan saat menyimpan API Key.",
+      description: "Eror kang",
       status: "error",
       duration: 3000,
       isClosable: true,
     });
   }
 };
-
 
   const handleDeleteApiKey = async () => {
     if (!selectedApiKey || !deleteReason) {
