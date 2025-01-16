@@ -52,86 +52,66 @@ export default function HomeView() {
   }, []);
 
   const handleSubmit = async () => {
-    if (!apiKey || !limit || !expiryDate || !maxRequests) {
-      toast({
-        title: "Error",
-        description: "Semua input wajib diisi!",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+  if (!apiKey || !limit || !expiryDate) {
+    toast({
+      title: "Error",
+      description: "Semua input wajib diisi!",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+    return;
+  }
 
-    const newApiKeyData = {
-      [apiKey]: {
+  try {
+    const response = await fetch("/api/auth/saveApiKey", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        apiKey,
         expiryDate,
-        remainingRequests: Number(maxRequests),
-        maxRequests: Number(maxRequests),
-        lastAccessDate: new Date().toISOString(),
-        seller: false,
-      },
-    };
+        limit: Number(limit),
+        seller: false, // Set seller status
+      }),
+    });
 
-    try {
-      const GITHUB_TOKEN = "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"; // Ganti dengan token GitHub pribadi Anda
-      const REPO_URL =
-        "https://api.github.com/repos/Apalahdek/api-jkt48connect/contents/apiKeys.js";
+    const data = await response.json();
 
-      // Get the current file content
-      const currentFileResponse = await fetch(REPO_URL, {
-        headers: {
-          Authorization: `Bearer ${GITHUB_TOKEN}`,
-        },
-      });
-
-      const currentFile = await currentFileResponse.json();
-      const decodedContent = atob(currentFile.content);
-      const updatedContent = {
-        ...JSON.parse(decodedContent),
-        ...newApiKeyData,
-      };
-
-      // Update the file in GitHub
-      const updatedFileResponse = await fetch(REPO_URL, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${GITHUB_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: `Add API key: ${apiKey}`,
-          content: btoa(JSON.stringify(updatedContent, null, 2)),
-          sha: currentFile.sha,
-        }),
-      });
-
-      if (updatedFileResponse.ok) {
-        toast({
-          title: "Success",
-          description: "API Key berhasil ditambahkan.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        setRequests([...requests, newApiKeyData]);
-        setApiKey("");
-        setLimit("");
-        setExpiryDate("");
-        setMaxRequests("");
-      } else {
-        throw new Error("Gagal memperbarui file di GitHub.");
-      }
-    } catch (error) {
+    if (response.ok) {
       toast({
-        title: "Error",
-        description: "Gagal menyimpan API Key.",
-        status: "error",
+        title: "Success",
+        description: "API Key berhasil disimpan.",
+        status: "success",
         duration: 3000,
         isClosable: true,
       });
+      // Reset input fields
+      setApiKey("");
+      setLimit("");
+      setExpiryDate("");
+
+      // Optional: Update state to include the new API Key in the requests table
+      setRequests((prev) => [
+        ...prev,
+        {
+          apiKey,
+          limit: Number(limit),
+          expiryDate,
+        },
+      ]);
+    } else {
+      throw new Error(data.message || "Gagal menyimpan API Key.");
     }
-  };
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: error.message || "Terjadi kesalahan saat menyimpan API Key.",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+};
 
 
   const handleDeleteApiKey = async () => {
