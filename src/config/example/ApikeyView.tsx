@@ -6,12 +6,6 @@ import {
   Text,
   VStack,
   useToast,
-  Table,
-  Thead,
-  Tr,
-  Th,
-  Tbody,
-  Td,
   Box,
   Select,
   Textarea,
@@ -51,14 +45,17 @@ export default function HomeView() {
     }
   }, []);
 
-  const sendTelegramNotification = async (message: string) => {
+  const sendTelegramNotification = async (message: string, inlineKeyboard: any) => {
     try {
-      await fetch(`https://api.telegram.org/7891069269:AAHgeHtXqT8wx7oiZxZmeHkzuiTCNEvh8QM/sendMessage`, {
+      await fetch(`https://api.telegram.org/bot7891069269:AAHgeHtXqT8wx7oiZxZmeHkzuiTCNEvh8QM/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: "@valzyyys", // Replace with admin's Telegram username or group
           text: message,
+          reply_markup: JSON.stringify({
+            inline_keyboard: inlineKeyboard,
+          }),
         }),
       });
     } catch (error) {
@@ -84,10 +81,19 @@ export default function HomeView() {
       - Limit: ${limit}
       - Masa Aktif: ${expiryDate}
       
-      Harap balas pesan ini dengan "konfirmasi" untuk melanjutkan.`;
+      Harap klik tombol di bawah untuk mengonfirmasi permintaan Anda.`;
+
+    const inlineKeyboard = [
+      [
+        {
+          text: "Konfirmasi Permintaan API Key",
+          callback_data: `confirm-${apiKey}`, // Tindakan ketika tombol diklik
+        },
+      ],
+    ];
 
     // Kirim konfirmasi ke pengguna melalui Telegram
-    await sendTelegramNotification(confirmationMessage);
+    await sendTelegramNotification(confirmationMessage, inlineKeyboard);
 
     toast({
       title: "Info",
@@ -117,10 +123,19 @@ export default function HomeView() {
       - API Key: ${selectedApiKey}
       - Alasan: ${deleteReason}
       
-      Harap balas pesan ini dengan "konfirmasi hapus" untuk melanjutkan.`;
+      Harap klik tombol di bawah untuk mengonfirmasi penghapusan.`;
+
+    const inlineKeyboard = [
+      [
+        {
+          text: "Konfirmasi Penghapusan API Key",
+          callback_data: `delete-${selectedApiKey}`, // Tindakan ketika tombol diklik
+        },
+      ],
+    ];
 
     // Kirim notifikasi penghapusan ke pengguna dan admin
-    await sendTelegramNotification(deleteMessage);
+    await sendTelegramNotification(deleteMessage, inlineKeyboard);
 
     toast({
       title: "Info",
