@@ -23,7 +23,7 @@ export default function HomeView() {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [limit, setLimit] = useState<string>("");
   const [expiryDate, setExpiryDate] = useState<string>("");
-  const [maxRequests, setMaxRequests] = useState<string>("");
+  const [telegramUsername, setTelegramUsername] = useState<string>("");
   const [requests, setRequests] = useState<any[]>([]);
   const [selectedApiKey, setSelectedApiKey] = useState<string | null>(null);
   const [deleteReason, setDeleteReason] = useState<string>("");
@@ -51,62 +51,26 @@ export default function HomeView() {
     }
   }, []);
 
-  const handleSubmit = async () => {
-  if (!apiKey || !limit || !expiryDate) {
-    toast({
-      title: "Error",
-      description: "Semua input wajib diisi!",
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
-    return;
-  }
-
-  try {
-    const response = await fetch("/api/auth/saveApiKey", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        apiKey,
-        expiryDate,
-        limit: Number(limit),
-        seller: false, // Set seller status
-      }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      toast({
-        title: "Success",
-        description: "API Key berhasil disimpan.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
+  const sendTelegramNotification = async (message: string) => {
+    try {
+      await fetch(`https://api.telegram.org/7891069269:AAHgeHtXqT8wx7oiZxZmeHkzuiTCNEvh8QM/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: "@valzyyys", // Replace with admin's Telegram username or group
+          text: message,
+        }),
       });
-      setApiKey("");
-      setLimit("");
-      setExpiryDate("");
-    } else {
-      throw new Error(data.message || "Gagal menyimpan API Key.");
+    } catch (error) {
+      console.error("Failed to send Telegram notification:", error);
     }
-  } catch (error) {
-    toast({
-      title: "Error",
-      description: "Eror kang",
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
-  }
-};
+  };
 
-  const handleDeleteApiKey = async () => {
-    if (!selectedApiKey || !deleteReason) {
+  const handleSubmit = async () => {
+    if (!apiKey || !limit || !expiryDate || !telegramUsername) {
       toast({
         title: "Error",
-        description: "Pilih API Key dan masukkan alasan penghapusan!",
+        description: "Semua input wajib diisi, termasuk username Telegram!",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -114,43 +78,58 @@ export default function HomeView() {
       return;
     }
 
-    try {
-      const response = await fetch(`/api/github/deleteApiKey`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: selectedApiKey, reason: deleteReason }),
-      });
+    const confirmationMessage = `Halo, ${telegramUsername}, 
+      Anda telah meminta API Key baru dengan detail berikut:
+      - API Key: ${apiKey}
+      - Limit: ${limit}
+      - Masa Aktif: ${expiryDate}
+      
+      Harap balas pesan ini dengan "konfirmasi" untuk melanjutkan.`;
 
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "API Key berhasil dihapus.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        setRequests((prev) => prev.filter((req) => req.apiKey !== selectedApiKey));
-        setSelectedApiKey(null);
-        setDeleteReason("");
-      } else {
-        const error = await response.json();
-        toast({
-          title: "Error",
-          description: error.message || "Gagal menghapus API Key.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
+    // Kirim konfirmasi ke pengguna melalui Telegram
+    await sendTelegramNotification(confirmationMessage);
+
+    toast({
+      title: "Info",
+      description:
+        "Permintaan API Key telah dikirim. Harap konfirmasi di Telegram Anda.",
+      status: "info",
+      duration: 5000,
+      isClosable: true,
+    });
+  };
+
+  const handleDeleteApiKey = async () => {
+    if (!selectedApiKey || !deleteReason || !telegramUsername) {
       toast({
         title: "Error",
-        description: "Gagal menghubungi server.",
+        description:
+          "Pilih API Key, masukkan alasan penghapusan, dan username Telegram!",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
+      return;
     }
+
+    const deleteMessage = `Halo, ${telegramUsername}, 
+      Anda telah meminta penghapusan API Key berikut:
+      - API Key: ${selectedApiKey}
+      - Alasan: ${deleteReason}
+      
+      Harap balas pesan ini dengan "konfirmasi hapus" untuk melanjutkan.`;
+
+    // Kirim notifikasi penghapusan ke pengguna dan admin
+    await sendTelegramNotification(deleteMessage);
+
+    toast({
+      title: "Info",
+      description:
+        "Permintaan penghapusan API Key telah dikirim. Harap konfirmasi di Telegram Anda.",
+      status: "info",
+      duration: 5000,
+      isClosable: true,
+    });
   };
 
   if (isAuthorized === false) {
@@ -197,42 +176,20 @@ export default function HomeView() {
           onChange={(e) => setLimit(e.target.value)}
         />
         <Input
-          type="number"
-          placeholder="Masukkan Max Requests"
-          value={maxRequests}
-          onChange={(e) => setMaxRequests(e.target.value)}
-        />
-        <Input
           type="date"
           placeholder="Pilih Masa Aktif API Key"
           value={expiryDate}
           onChange={(e) => setExpiryDate(e.target.value)}
         />
+        <Input
+          placeholder="Masukkan Username Telegram"
+          value={telegramUsername}
+          onChange={(e) => setTelegramUsername(e.target.value)}
+        />
         <Button colorScheme="blue" onClick={handleSubmit}>
           Ajukan API Key
         </Button>
       </VStack>
-      <Box>
-        <Heading size="md">Riwayat Pengajuan</Heading>
-        <Table variant="simple" mt={4}>
-          <Thead>
-            <Tr>
-              <Th>API Key</Th>
-              <Th>Limit</Th>
-              <Th>Masa Aktif</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {requests.map((request, index) => (
-              <Tr key={index}>
-                <Td>{request.apiKey}</Td>
-                <Td>{request.limit}</Td>
-                <Td>{request.expiryDate}</Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </Box>
       <Box>
         <Heading size="md">Hapus API Key</Heading>
         <VStack spacing={4} align="stretch">
@@ -251,6 +208,11 @@ export default function HomeView() {
             placeholder="Masukkan alasan penghapusan"
             value={deleteReason}
             onChange={(e) => setDeleteReason(e.target.value)}
+          />
+          <Input
+            placeholder="Masukkan Username Telegram"
+            value={telegramUsername}
+            onChange={(e) => setTelegramUsername(e.target.value)}
           />
           <Button colorScheme="red" onClick={handleDeleteApiKey}>
             Hapus API Key
