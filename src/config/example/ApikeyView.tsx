@@ -23,17 +23,13 @@ export default function HomeView() {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [limit, setLimit] = useState<string>("");
   const [expiryDate, setExpiryDate] = useState<string>("");
-  const [maxRequests, setMaxRequests] = useState<string>(""); // New state for maxRequests
-  const [remainingRequests, setRemainingRequests] = useState<string>(""); // New state for remainingRequests
+  const [maxRequests, setMaxRequests] = useState<string>("");
+  const [remainingRequests, setRemainingRequests] = useState<string>("");
   const [requests, setRequests] = useState<any[]>([]);
   const [selectedApiKey, setSelectedApiKey] = useState<string | null>(null);
   const [deleteReason, setDeleteReason] = useState<string>("");
   const toast = useToast();
 
-  const webhookUrl =
-    "https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C"; // Ganti dengan URL webhook Anda
-
-  // Check API Key validity
   useEffect(() => {
     const storedApiKey = localStorage.getItem("jkt48-api-key");
     setApiKey(storedApiKey);
@@ -56,139 +52,65 @@ export default function HomeView() {
     }
   }, []);
 
-  // Load notes from local storage
-  useEffect(() => {
-    const savedRequests = localStorage.getItem("apikey-requests");
-    if (savedRequests) setRequests(JSON.parse(savedRequests));
-  }, []);
-
-  // Update status to "Aktif" after 5 minutes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const updatedRequests = requests.map((request) => {
-        const createdTime = new Date(request.createdAt).getTime();
-        const now = Date.now();
-
-        if (
-          request.status === "Menunggu Aktivasi" &&
-          now - createdTime >= 5 * 60 * 1000
-        ) {
-          return { ...request, status: "Aktif" };
-        }
-        return request;
-      });
-
-      setRequests(updatedRequests);
-      localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [requests]);
-
-  // Submit function
- const handleSubmit = async () => {
-  if (!apiKey || !limit || !expiryDate || !maxRequests) {
-    toast({
-      title: "Error",
-      description: "Semua input wajib diisi!",
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
-    return;
-  }
-
-  // Convert the expiryDate to the desired format
-  const formattedExpiryDate = new Date(expiryDate).toISOString(); // This gives the format 2024-12-31T18:15:00.000Z
-  const expiryDateWithTimeZone = formattedExpiryDate.slice(0, -1) + "+00:00"; // Adjust to UTC+0 if needed
-
-  const newRequest = {
-    apiKey,
-    limit: Number(limit),
-    expiryDate: expiryDateWithTimeZone, // Use the formatted date here
-    status: "Menunggu Aktivasi",
-    createdAt: new Date().toISOString(),
-  };
-
-  const updatedRequests = [newRequest, ...requests];
-  setRequests(updatedRequests);
-  localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
-
-  try {
-    // Call the API to save the API key to the database
-    const response = await fetch("/api/auth/saveApiKey", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        apiKey,
-        expiryDate: expiryDateWithTimeZone, // Send the formatted expiry date to the server
-        limit: Number(limit),
-        remainingRequests: maxRequests, // Set remainingRequests same as maxRequests
-        maxRequests: Number(maxRequests), // Set maxRequests from the form
-        lastAccessDate: new Date().toISOString(), // Set lastAccessDate to current date
-        seller: false, // Seller is set to false by default
-      }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
+  const handleSubmit = async () => {
+    if (!apiKey || !limit || !expiryDate || !maxRequests) {
       toast({
-        title: "Success",
-        description: `Permintaan API Key berhasil diajukan. Status: ${data.status}`,
-        status: "success",
+        title: "Error",
+        description: "Semua input wajib diisi!",
+        status: "error",
         duration: 3000,
         isClosable: true,
       });
+      return;
+    }
 
-      // Update request status after successful creation
-      const updatedRequests = requests.map((req) =>
-        req.apiKey === apiKey ? { ...req, status: "Aktif" } : req
-      );
-      setRequests(updatedRequests);
-      localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
-    } else {
+    const formattedExpiryDate = new Date(expiryDate).toISOString().slice(0, -1) + "+00:00";
+
+    const newRequest = {
+      apiKey,
+      expiryDate: formattedExpiryDate,
+      limit: Number(limit),
+      maxRequests: Number(maxRequests),
+      remainingRequests: maxRequests,
+    };
+
+    try {
+      const response = await fetch(`/api/github/updateApiKeys`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newRequest),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "API Key berhasil ditambahkan.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        setRequests((prev) => [...prev, newRequest]);
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Error",
+          description: error.message || "Gagal menambahkan API Key.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
       toast({
         title: "Error",
-        description: data.message || "Gagal menyimpan API Key.",
+        description: "Gagal menghubungi server.",
         status: "error",
-        duration: 30000,
+        duration: 3000,
         isClosable: true,
       });
     }
-  } catch (error) {
-    toast({
-      title: "Error",
-      description: "Gagal menghubungi server.",
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
-  }
+  };
 
-  // Clear the form after submission
-  setApiKey("");
-  setLimit("");
-  setExpiryDate("");
-  setMaxRequests("");
-  setRemainingRequests("");
-};
-
-// Function to format date in DD/MM/YYYY/HH:mm format
-const formatDate = (date: string): string => {
-  const d = new Date(date);
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
-  const year = d.getFullYear();
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-
-  return `${day}/${month}/${year}/${hours}:${minutes}`;
-};
-
-  // Handle delete API Key
   const handleDeleteApiKey = async () => {
     if (!selectedApiKey || !deleteReason) {
       toast({
@@ -201,60 +123,45 @@ const formatDate = (date: string): string => {
       return;
     }
 
-    const updatedRequests = requests.filter(
-      (request) => request.apiKey !== selectedApiKey
-    );
-    setRequests(updatedRequests);
-    localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
-
-    // Send webhook notification with embed
     try {
-      await fetch(webhookUrl, {
+      const response = await fetch(`/api/github/deleteApiKey`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          embeds: [
-            {
-              title: "API Key Dihapus",
-              description: `API Key "${selectedApiKey}" telah dihapus.`,
-              fields: [
-                {
-                  name: "Alasan Penghapusan",
-                  value: deleteReason,
-                  inline: true,
-                },
-              ],
-              color: 0xff0000, // Warna merah
-              timestamp: new Date().toISOString(),
-            },
-          ],
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: selectedApiKey, reason: deleteReason }),
       });
 
-      toast({
-        title: "Success",
-        description: "API Key berhasil dihapus dan pemberitahuan dikirim.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "API Key berhasil dihapus.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        setRequests((prev) => prev.filter((req) => req.apiKey !== selectedApiKey));
+        setSelectedApiKey(null);
+        setDeleteReason("");
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Error",
+          description: error.message || "Gagal menghapus API Key.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Gagal mengirim pemberitahuan ke webhook.",
+        description: "Gagal menghubungi server.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
     }
-
-    setSelectedApiKey(null);
-    setDeleteReason("");
   };
 
-  // Render rejection page if not authorized
   if (isAuthorized === false) {
     return (
       <Flex height="100vh" align="center" justify="center" direction="column">
@@ -265,7 +172,9 @@ const formatDate = (date: string): string => {
         </Text>
         <Button
           colorScheme="blue"
-          onClick={() => window.location.href = "https://wa.me/6285701479245"}
+          onClick={() =>
+            (window.location.href = "https://wa.me/6285701479245")
+          }
         >
           Upgrade Sekarang
         </Button>
@@ -273,7 +182,6 @@ const formatDate = (date: string): string => {
     );
   }
 
-  // Wait until API Key is validated
   if (isAuthorized === null) {
     return (
       <Flex height="100vh" align="center" justify="center">
@@ -282,12 +190,9 @@ const formatDate = (date: string): string => {
     );
   }
 
-  // Authorized content
   return (
     <Flex direction="column" gap={5}>
       <Heading>Permintaan API Key</Heading>
-
-      {/* Form Input */}
       <VStack spacing={4} align="stretch">
         <Input
           placeholder="Masukkan API Key"
@@ -307,12 +212,6 @@ const formatDate = (date: string): string => {
           onChange={(e) => setMaxRequests(e.target.value)}
         />
         <Input
-          type="number"
-          placeholder="Masukkan Remaining Requests"
-          value={remainingRequests}
-          onChange={(e) => setRemainingRequests(e.target.value || maxRequests)}
-        />
-        <Input
           type="date"
           placeholder="Pilih Masa Aktif API Key"
           value={expiryDate}
@@ -322,8 +221,6 @@ const formatDate = (date: string): string => {
           Ajukan API Key
         </Button>
       </VStack>
-
-      {/* Table to Display Requests */}
       <Box>
         <Heading size="md">Riwayat Pengajuan</Heading>
         <Table variant="simple" mt={4}>
@@ -332,7 +229,6 @@ const formatDate = (date: string): string => {
               <Th>API Key</Th>
               <Th>Limit</Th>
               <Th>Masa Aktif</Th>
-              <Th>Status</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -341,25 +237,11 @@ const formatDate = (date: string): string => {
                 <Td>{request.apiKey}</Td>
                 <Td>{request.limit}</Td>
                 <Td>{request.expiryDate}</Td>
-                <Td>
-                  <Text
-                    color={
-                      request.status === "Menunggu Aktivasi"
-                        ? "yellow.500"
-                        : "green.500"
-                    }
-                    fontWeight="bold"
-                  >
-                    {request.status}
-                  </Text>
-                </Td>
               </Tr>
             ))}
           </Tbody>
         </Table>
       </Box>
-
-      {/* Form to Delete API Key */}
       <Box>
         <Heading size="md">Hapus API Key</Heading>
         <VStack spacing={4} align="stretch">
