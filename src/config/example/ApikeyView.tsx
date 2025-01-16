@@ -93,15 +93,21 @@ export default function HomeView() {
       throw new Error(data.message || "Gagal menyimpan API Key.");
     }
   } catch (error) {
-    toast({
-      title: "Error",
-      description: error.message,
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
+  let errorMessage = "An unknown error occurred.";
+
+  if (error instanceof Error) {
+    errorMessage = error.message;
   }
-};
+
+  toast({
+    title: "Error",
+    description: errorMessage,
+    status: "error",
+    duration: 3000,
+    isClosable: true,
+  });
+}
+
 
   const handleDeleteApiKey = async () => {
     if (!selectedApiKey || !deleteReason) {
