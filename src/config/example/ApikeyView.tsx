@@ -224,7 +224,7 @@ export default function HomeView() {
             <Text>Total: {paymentDetails?.totalAmount}</Text>
             <Image src={paymentDetails?.qrImageUrl} alt="QRIS" />
             <Text>
-              Harap scan QRIS dan tekan "Konfirmasi" untuk mengecek status
+              Harap scan QRIS dan tekan &rdquo;Konfirmasi&rdquo; untuk mengecek status
               pembayaran.
             </Text>
           </ModalBody>
