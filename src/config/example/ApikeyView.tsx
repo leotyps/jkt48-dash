@@ -6,58 +6,18 @@ import {
   Text,
   VStack,
   useToast,
-  Table,
-  Thead,
-  Tr,
-  Th,
-  Tbody,
-  Td,
   Box,
-  Select,
-  Textarea,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  Image,
+  Spinner,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-
-// Fetch chat_id menggunakan username Telegram
-const getChatId = async (telegramUsername: string) => {
-  try {
-    const response = await fetch(`https://api.telegram.org/bot7891069269:AAHgeHtXqT8wx7oiZxZmeHkzuiTCNEvh8QM/getUpdates`);
-    const data = await response.json();
-
-    // Mencari chat_id berdasarkan username
-    const userChat = data.result.find(
-      (update) => update.message?.from?.username === telegramUsername
-    );
-
-    if (userChat) {
-      return userChat.message.chat.id; // Mengambil chat_id
-    } else {
-      throw new Error("Username Telegram tidak ditemukan!");
-    }
-  } catch (error) {
-    console.error("Error getting chat_id:", error);
-    throw new Error("Terjadi kesalahan saat mengambil chat_id.");
-  }
-};
-
-// Mengirimkan pesan ke Telegram dengan tombol inline
-const sendTelegramNotification = async (chatId: string, message: string, inlineKeyboard: any) => {
-  try {
-    await fetch(`https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-        reply_markup: JSON.stringify({
-          inline_keyboard: inlineKeyboard,
-        }),
-      }),
-    });
-  } catch (error) {
-    console.error("Failed to send Telegram notification:", error);
-  }
-};
 
 export default function HomeView() {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
@@ -66,9 +26,9 @@ export default function HomeView() {
   const [expiryDate, setExpiryDate] = useState<string>("");
   const [maxRequests, setMaxRequests] = useState<string>("");
   const [requests, setRequests] = useState<any[]>([]);
-  const [selectedApiKey, setSelectedApiKey] = useState<string | null>(null);
-  const [deleteReason, setDeleteReason] = useState<string>("");
-  const [telegramUsername, setTelegramUsername] = useState<string>("");
+  const [paymentPopup, setPaymentPopup] = useState(false);
+  const [qrImageUrl, setQrImageUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
@@ -79,161 +39,139 @@ export default function HomeView() {
       fetch(`https://api.jkt48connect.my.id/api/check-apikey/${storedApiKey}`)
         .then((res) => res.json())
         .then((data) => {
-          if (data.seller) {
-            setIsAuthorized(true);
-          } else {
-            setIsAuthorized(false);
-          }
+          if (data.seller) setIsAuthorized(true);
+          else setIsAuthorized(false);
         })
-        .catch(() => {
-          setIsAuthorized(false);
-        });
+        .catch(() => setIsAuthorized(false));
     } else {
       setIsAuthorized(false);
     }
   }, []);
 
+  // Function to handle payment and show popup
+  const handlePayment = async () => {
+    if (!apiKey || !limit || !expiryDate || !maxRequests) {
+      toast({
+        title: "Error",
+        description: "Semua input wajib diisi!",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const randomFee = Math.floor(Math.random() * 250) + 1;
+    setIsLoading(true);
+
+    try {
+      const paymentResponse = await fetch(
+        `https://api.jkt48connect.my.id/api/orkut/createpayment?amount=1000&qris=00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214149391352933240303UMI51440014ID.CO.QRIS.WWW0215ID20233077025890303UMI5204541153033605802ID5919VALZSTORE%20OK14535636006SERANG61054211162070703A016304DCD2&includeFee=true&feeType=rupiah&fee=${randomFee}&api_key=JKTCONNECT`
+      );
+      const paymentData = await paymentResponse.json();
+
+      if (paymentResponse.ok && paymentData.qrImageUrl) {
+        setQrImageUrl(paymentData.qrImageUrl);
+        setPaymentPopup(true);
+      } else {
+        toast({
+          title: "Error",
+          description: "Gagal membuat pembayaran QRIS.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Gagal terhubung ke server pembayaran.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to confirm payment
+  const confirmPayment = async () => {
+    try {
+      setIsLoading(true);
+      const statusResponse = await fetch(
+        `https://api.jkt48connect.my.id/api/orkut/cekstatus?merchant=OK1453563&keyorkut=584312217038625421453563OKCT6AF928C85E124621785168CD18A9B6933&api_key=JKTCONNECT`
+      );
+      const statusData = await statusResponse.json();
+
+      if (
+        statusResponse.ok &&
+        statusData.status === "success" &&
+        statusData.data.some(
+          (payment: any) =>
+            new Date(payment.date) > new Date(Date.now() - 5 * 60 * 1000) &&
+            payment.amount === "1"
+        )
+      ) {
+        toast({
+          title: "Success",
+          description: "Pembayaran berhasil dikonfirmasi!",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+
+        // Close popup and proceed with request submission
+        setPaymentPopup(false);
+        handleSubmit();
+      } else {
+        toast({
+          title: "Error",
+          description: "Pembayaran belum ditemukan atau belum valid.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Gagal mengecek status pembayaran.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Submit function
   const handleSubmit = async () => {
-    if (!apiKey || !limit || !expiryDate || !telegramUsername) {
-      toast({
-        title: "Error",
-        description: "Semua input wajib diisi, termasuk username Telegram!",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+    const newRequest = {
+      apiKey,
+      limit: Number(limit),
+      expiryDate: new Date(expiryDate).toISOString(),
+      status: "Menunggu Aktivasi",
+      createdAt: new Date().toISOString(),
+    };
 
-    try {
-      // Ambil chat_id pengguna
-      const chatId = await getChatId(telegramUsername);
-
-      const confirmationMessage = `Halo, ${telegramUsername}, 
-        Anda telah meminta API Key baru dengan detail berikut:
-        - API Key: ${apiKey}
-        - Limit: ${limit}
-        - Masa Aktif: ${expiryDate}
-        
-        Harap klik tombol di bawah untuk mengonfirmasi permintaan Anda.`;
-
-      const inlineKeyboard = [
-        [
-          {
-            text: "Konfirmasi Permintaan API Key",
-            callback_data: `confirm-${apiKey}`, // Tindakan ketika tombol diklik
-          },
-        ],
-      ];
-
-      // Kirim konfirmasi ke pengguna melalui Telegram
-      await sendTelegramNotification(chatId, confirmationMessage, inlineKeyboard);
-
-      toast({
-        title: "Info",
-        description:
-          "Permintaan API Key telah dikirim. Harap konfirmasi di Telegram Anda.",
-        status: "info",
-        duration: 5000,
-        isClosable: true,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
+    const updatedRequests = [newRequest, ...requests];
+    setRequests(updatedRequests);
+    localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
+    toast({
+      title: "Success",
+      description: "Permintaan API Key berhasil diajukan.",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
   };
-
-  const handleDeleteApiKey = async () => {
-    if (!selectedApiKey || !deleteReason || !telegramUsername) {
-      toast({
-        title: "Error",
-        description:
-          "Pilih API Key, masukkan alasan penghapusan, dan username Telegram!",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      // Ambil chat_id pengguna
-      const chatId = await getChatId(telegramUsername);
-
-      const deleteMessage = `Halo, ${telegramUsername}, 
-        Anda telah meminta penghapusan API Key berikut:
-        - API Key: ${selectedApiKey}
-        - Alasan: ${deleteReason}
-        
-        Harap klik tombol di bawah untuk mengonfirmasi penghapusan.`;
-
-      const inlineKeyboard = [
-        [
-          {
-            text: "Konfirmasi Penghapusan API Key",
-            callback_data: `delete-${selectedApiKey}`, // Tindakan ketika tombol diklik
-          },
-        ],
-      ];
-
-      // Kirim notifikasi penghapusan ke pengguna melalui Telegram
-      await sendTelegramNotification(chatId, deleteMessage, inlineKeyboard);
-
-      toast({
-        title: "Info",
-        description:
-          "Permintaan penghapusan API Key telah dikirim. Harap konfirmasi di Telegram Anda.",
-        status: "info",
-        duration: 5000,
-        isClosable: true,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  if (isAuthorized === false) {
-    return (
-      <Flex height="100vh" align="center" justify="center" direction="column">
-        <Heading color="red.500">Akses Ditolak</Heading>
-        <Text>
-          Anda bukan pengguna <strong>seller</strong>. Silakan upgrade akun Anda
-          untuk mengakses halaman ini.
-        </Text>
-        <Button
-          colorScheme="blue"
-          onClick={() =>
-            (window.location.href = "https://wa.me/6285701479245")
-          }
-        >
-          Upgrade Sekarang
-        </Button>
-      </Flex>
-    );
-  }
-
-  if (isAuthorized === null) {
-    return (
-      <Flex height="100vh" align="center" justify="center">
-        <Text>Memeriksa validitas API Key Anda...</Text>
-      </Flex>
-    );
-  }
 
   return (
     <Flex direction="column" gap={5}>
       <Heading>Permintaan API Key</Heading>
+
       <VStack spacing={4} align="stretch">
         <Input
           placeholder="Masukkan API Key"
@@ -247,71 +185,49 @@ export default function HomeView() {
           onChange={(e) => setLimit(e.target.value)}
         />
         <Input
-          type="number"
-          placeholder="Masukkan Max Requests"
-          value={maxRequests}
-          onChange={(e) => setMaxRequests(e.target.value)}
-        />
-        <Input
           type="date"
           placeholder="Pilih Masa Aktif API Key"
           value={expiryDate}
           onChange={(e) => setExpiryDate(e.target.value)}
         />
         <Input
-          placeholder="Masukkan Username Telegram"
-          value={telegramUsername}
-          onChange={(e) => setTelegramUsername(e.target.value)}
+          type="number"
+          placeholder="Masukkan Max Requests"
+          value={maxRequests}
+          onChange={(e) => setMaxRequests(e.target.value)}
         />
-        <Button colorScheme="blue" onClick={handleSubmit}>
+        <Button colorScheme="blue" onClick={handlePayment}>
           Ajukan API Key
         </Button>
       </VStack>
-      <Box>
-        <Heading size="md">Riwayat Pengajuan</Heading>
-        <Table variant="simple" mt={4}>
-          <Thead>
-            <Tr>
-              <Th>API Key</Th>
-              <Th>Limit</Th>
-              <Th>Masa Aktif</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {requests.map((request, index) => (
-              <Tr key={index}>
-                <Td>{request.apiKey}</Td>
-                <Td>{request.limit}</Td>
-                <Td>{request.expiryDate}</Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </Box>
-      <Box>
-        <Heading size="md">Hapus API Key</Heading>
-        <VStack spacing={4} align="stretch">
-          <Select
-            placeholder="Pilih API Key yang ingin dihapus"
-            value={selectedApiKey || ""}
-            onChange={(e) => setSelectedApiKey(e.target.value)}
-          >
-            {requests.map((request, index) => (
-              <option key={index} value={request.apiKey}>
-                {request.apiKey}
-              </option>
-            ))}
-          </Select>
-          <Textarea
-            placeholder="Masukkan alasan penghapusan"
-            value={deleteReason}
-            onChange={(e) => setDeleteReason(e.target.value)}
-          />
-          <Button colorScheme="red" onClick={handleDeleteApiKey}>
-            Hapus API Key
-          </Button>
-        </VStack>
-      </Box>
+
+      <Modal isOpen={paymentPopup} onClose={() => setPaymentPopup(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Pembayaran QRIS</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {isLoading ? (
+              <Spinner />
+            ) : (
+              qrImageUrl && <Image src={qrImageUrl} alt="QRIS Payment" />
+            )}
+            <Text>Scan kode QRIS untuk menyelesaikan pembayaran.</Text>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="green" onClick={confirmPayment}>
+              Konfirmasi Pembayaran
+            </Button>
+            <Button
+              colorScheme="red"
+              variant="outline"
+              onClick={() => setPaymentPopup(false)}
+            >
+              Batalkan
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Flex>
   );
 }
