@@ -83,7 +83,7 @@ export default function HomeView() {
     }
 
     const randomFee = Math.floor(Math.random() * 250) + 1; // Generate random fee
-    const amount = 1000; // Base price
+    const amount = 50; // Base price
 
     try {
       // Create payment request
