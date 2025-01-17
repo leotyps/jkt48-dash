@@ -127,50 +127,58 @@ export default function HomeView() {
   };
 
   const confirmPayment = async () => {
-    try {
-      const response = await fetch(
-        `https://api.jkt48connect.my.id/api/orkut/cekstatus?merchant=OK1453563&keyorkut=584312217038625421453563OKCT6AF928C85E124621785168CD18A9B693&api_key=JKTCONNECT`
-      );
-      const data = await response.json();
+  try {
+    const response = await fetch(
+      `https://api.jkt48connect.my.id/api/orkut/cekstatus?merchant=OK1453563&keyorkut=584312217038625421453563OKCT6AF928C85E124621785168CD18A9B693&api_key=JKTCONNECT`
+    );
+    const data = await response.json();
 
-      if (response.ok && data.status === "success") {
-        const latestTransaction = data.data.sort(
-  (a: { date: string }, b: { date: string }) =>
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-)[0];
+    if (response.ok && data.status === "success") {
+      // Mendapatkan transaksi terbaru berdasarkan tanggal
+      const latestTransaction = data.data.sort(
+        (a: { date: string }, b: { date: string }) =>
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+      )[0];
 
-        if (latestTransaction.amount === "1") {
-          toast({
-            title: "Success",
-            description: "Pembayaran berhasil. Webhook terkirim.",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-          });
+      // Konversi tanggal API dan tanggal pembayaran menjadi timestamp
+      const latestTransactionDate = new Date(latestTransaction.date).getTime();
+      const paymentDate = new Date().getTime();
 
-          setPaymentPopup(false);
+      // Validasi amount dan toleransi waktu (5 menit)
+      if (
+        latestTransaction.amount === paymentDetails?.totalAmount.toString() &&
+        Math.abs(latestTransactionDate - paymentDate) <= 5 * 60 * 1000
+      ) {
+        toast({
+          title: "Success",
+          description: "Pembayaran berhasil. Webhook terkirim.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
 
-          // Send webhook
-          await fetch(webhookUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              content: `API Key baru telah dibuat: ${paymentDetails.apiKey}`,
-            }),
-          });
-        } else {
-          toast({
-            title: "Error",
-            description: "Pembayaran belum terverifikasi.",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
-        }
+        setPaymentPopup(false);
+
+        // Kirim webhook
+        await fetch(webhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            content: `API Key baru telah dibuat: ${paymentDetails.apiKey}`,
+          }),
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Pembayaran belum terverifikasi atau tidak valid.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       }
-    } catch (error) {
+    } else {
       toast({
         title: "Error",
         description: "Gagal mengecek status pembayaran.",
@@ -179,7 +187,16 @@ export default function HomeView() {
         isClosable: true,
       });
     }
-  };
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Terjadi kesalahan saat memeriksa pembayaran.",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+};
 
   return (
     <Flex direction="column" gap={5}>
