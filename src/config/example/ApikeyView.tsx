@@ -135,8 +135,9 @@ export default function HomeView() {
 
       if (response.ok && data.status === "success") {
         const latestTransaction = data.data.sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-        )[0];
+  (a: { date: string }, b: { date: string }) =>
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+)[0];
 
         if (latestTransaction.amount === "1") {
           toast({
