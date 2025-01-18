@@ -71,7 +71,6 @@ export default function HomeView() {
      <Grid
   templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }}
   gap={4}
-  wrap="wrap"
 >
        <Flex direction="column" gap={3}>
           <Text fontSize="lg" fontWeight="600">
