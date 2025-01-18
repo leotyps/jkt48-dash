@@ -31,6 +31,7 @@ export default function HomeView() {
   const [isLoadingPayment, setIsLoadingPayment] = useState<boolean>(false);
   const [deletePopup, setDeletePopup] = useState<boolean>(false);
   const [deleteReason, setDeleteReason] = useState<string>("");
+  const [selectedApiKey, setSelectedApiKey] = useState<string | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState<boolean>(false);
   const toast = useToast();
 
