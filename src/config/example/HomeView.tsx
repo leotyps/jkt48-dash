@@ -68,8 +68,12 @@ export default function HomeView() {
       </Flex>
 
       {/* JKT48Connect Section */}
-      <Grid templateColumns={{ base: '1fr', lg: '0.5fr 1fr' }} gap={3}>
-        <Flex direction="column" gap={3}>
+     <Grid
+  templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }}
+  gap={4}
+  wrap="wrap"
+>
+       <Flex direction="column" gap={3}>
           <Text fontSize="lg" fontWeight="600">
             JKT48Connect Section
           </Text>
@@ -238,71 +242,91 @@ function VoiceChannelItem() {
 
   return (
     <Flex direction="column" gap={4}>
-      {/* Status Card */}
-      <Card rounded="2xl" variant="primary">
-        <CardHeader as={HStack}>
-          <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: '2xl', md: '3xl' }} />
-          <Text>Status API Key</Text>
-        </CardHeader>
-        <CardBody>
-          <Text
-            color={apiStatus?.includes('valid') ? 'green.500' : 'red.500'}
-            fontWeight="medium"
-          >
-            {apiStatus || 'Memeriksa API Key...'}
-          </Text>
-        </CardBody>
-      </Card>
+       {/* Status Card */}
+  <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+    <CardHeader as={HStack}>
+      <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
+      <Text fontSize={{ base: 'md', md: 'lg' }}>Status API Key</Text>
+    </CardHeader>
+    <CardBody>
+      <Text
+        fontSize={{ base: 'sm', md: 'md' }}
+        color={apiStatus?.includes('valid') ? 'green.500' : 'red.500'}
+        fontWeight="medium"
+      >
+        {apiStatus || 'Memeriksa API Key...'}
+      </Text>
+    </CardBody>
+  </Card>
 
-      {/* API Key Card */}
-      <Card rounded="2xl" variant="primary">
-        <CardHeader>
-          <Text fontWeight="bold">API Key</Text>
-        </CardHeader>
-        <CardBody>
-          {apiKey ? (
-            <Text fontSize="sm" color="TextSecondary" wordBreak="break-word">
-              {apiKey}
-            </Text>
-          ) : (
-            <Text color="TextSecondary">
-              API Key belum tersedia. Silakan tambahkan API Key di profil.
-            </Text>
-          )}
-        </CardBody>
-      </Card>
+  {/* API Key Card */}
+  <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+    <CardHeader>
+      <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
+        API Key
+      </Text>
+    </CardHeader>
+    <CardBody>
+      {apiKey ? (
+        <Text
+          fontSize={{ base: 'sm', md: 'md' }}
+          color="TextSecondary"
+          wordBreak="break-word"
+        >
+          {apiKey}
+        </Text>
+      ) : (
+        <Text color="TextSecondary">
+          API Key belum tersedia. Silakan tambahkan API Key di profil.
+        </Text>
+      )}
+    </CardBody>
+  </Card>
 
-      {/* Remaining Requests Card */}
-      <Card rounded="2xl" variant="primary">
-        <CardHeader>
-          <Text fontWeight="bold">Remaining Requests</Text>
-        </CardHeader>
-        <CardBody>
-          {remainingRequests !== null ? (
-            <Text fontSize="lg" fontWeight="bold" color="blue.500">
-              {remainingRequests}
-            </Text>
-          ) : (
-            <Text color="TextSecondary">Data tidak tersedia.</Text>
-          )}
-        </CardBody>
-      </Card>
+  {/* Remaining Requests Card */}
+  <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+    <CardHeader>
+      <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
+        Remaining Requests
+      </Text>
+    </CardHeader>
+    <CardBody>
+      {remainingRequests !== null ? (
+        <Text
+          fontSize={{ base: 'lg', md: 'xl' }}
+          fontWeight="bold"
+          color="blue.500"
+        >
+          {remainingRequests}
+        </Text>
+      ) : (
+        <Text color="TextSecondary">Data tidak tersedia.</Text>
+      )}
+    </CardBody>
+  </Card>
 
-      {/* Expiry Date Card */}
-      <Card rounded="2xl" variant="primary">
-        <CardHeader>
-          <Text fontWeight="bold">Expiry Date</Text>
-        </CardHeader>
-        <CardBody>
-          {expiryDate ? (
-            <Text fontSize="lg" fontWeight="bold" color="teal.500">
-              {expiryDate}
-            </Text>
-          ) : (
-            <Text color="TextSecondary">Data tidak tersedia.</Text>
-          )}
-        </CardBody>
-      </Card>
+  {/* Expiry Date Card */}
+  <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+    <CardHeader>
+      <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
+        Expiry Date
+      </Text>
+    </CardHeader>
+    <CardBody>
+      {expiryDate ? (
+        <Text
+          fontSize={{ base: 'lg', md: 'xl' }}
+          fontWeight="bold"
+          color="teal.500"
+        >
+          {expiryDate}
+        </Text>
+      ) : (
+        <Text color="TextSecondary">Data tidak tersedia.</Text>
+      )}
+    </CardBody>
+  </Card>
+
     </Flex>
   );
 }
