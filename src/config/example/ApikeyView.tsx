@@ -6,15 +6,6 @@ import {
   Text,
   VStack,
   useToast,
-  Table,
-  Thead,
-  Tr,
-  Th,
-  Tbody,
-  Td,
-  Box,
-  Select,
-  Textarea,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -23,6 +14,8 @@ import {
   ModalFooter,
   Image,
   Spinner,
+  Checkbox,
+  Textarea,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
@@ -33,11 +26,12 @@ export default function HomeView() {
   const [expiryDate, setExpiryDate] = useState<string>("");
   const [maxRequests, setMaxRequests] = useState<string>("");
   const [requests, setRequests] = useState<any[]>([]);
-  const [selectedApiKey, setSelectedApiKey] = useState<string | null>(null);
-  const [deleteReason, setDeleteReason] = useState<string>("");
   const [paymentPopup, setPaymentPopup] = useState<boolean>(false);
   const [paymentDetails, setPaymentDetails] = useState<any | null>(null);
   const [isLoadingPayment, setIsLoadingPayment] = useState<boolean>(false);
+  const [deletePopup, setDeletePopup] = useState<boolean>(false);
+  const [deleteReason, setDeleteReason] = useState<string>("");
+  const [deleteConfirmation, setDeleteConfirmation] = useState<boolean>(false);
   const toast = useToast();
 
   const webhookUrl =
@@ -50,16 +44,8 @@ export default function HomeView() {
     if (storedApiKey) {
       fetch(`https://api.jkt48connect.my.id/api/check-apikey/${storedApiKey}`)
         .then((res) => res.json())
-        .then((data) => {
-          if (data.seller) {
-            setIsAuthorized(true);
-          } else {
-            setIsAuthorized(false);
-          }
-        })
-        .catch(() => {
-          setIsAuthorized(false);
-        });
+        .then((data) => setIsAuthorized(data.seller || false))
+        .catch(() => setIsAuthorized(false));
     } else {
       setIsAuthorized(false);
     }
@@ -71,7 +57,7 @@ export default function HomeView() {
   }, []);
 
   const handleSubmit = async () => {
-    if (!apiKey || !limit || !expiryDate || !maxRequests) {
+    if (!limit || !expiryDate || !maxRequests) {
       toast({
         title: "Error",
         description: "Semua input wajib diisi!",
@@ -82,14 +68,13 @@ export default function HomeView() {
       return;
     }
 
-    const randomFee = Math.floor(Math.random() * 250) + 1; // Generate random fee
-    const amount = 50; // Base price
+    const randomFee = Math.floor(Math.random() * 250) + 1;
+    const amount = 50;
 
     try {
-      // Create payment request
       setIsLoadingPayment(true);
       const response = await fetch(
-        `https://api.jkt48connect.my.id/api/orkut/createpayment?amount=${amount}&qris=00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214149391352933240303UMI51440014ID.CO.QRIS.WWW0215ID20233077025890303UMI5204541153033605802ID5919VALZSTORE OK14535636006SERANG61054211162070703A016304DCD2&includeFee=true&feeType=rupiah&fee=${randomFee}&api_key=JKTCONNECT`
+        `https://api.jkt48connect.my.id/api/orkut/createpayment?amount=${amount}&qris=00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214149391352933240303UMI51440014ID.CO.QRIS.WWW0215ID20233077025890303UMI5204541153033605802ID5919VALZSTORE OK14535636006SERANG61054211162070703A016304DCD2&includeFee=true&fee=${randomFee}&api_key=JKTCONNECT`
       );
       const data = await response.json();
 
@@ -127,81 +112,138 @@ export default function HomeView() {
   };
 
   const confirmPayment = async () => {
-  try {
-    const response = await fetch(
-      `https://api.jkt48connect.my.id/api/orkut/cekstatus?merchant=OK1453563&keyorkut=584312217038625421453563OKCT6AF928C85E124621785168CD18A9B693&api_key=JKTCONNECT`
-    );
-    const data = await response.json();
+    try {
+      const response = await fetch(
+        `https://api.jkt48connect.my.id/api/orkut/cekstatus?merchant=OK1453563&keyorkut=584312217038625421453563OKCT6AF928C85E124621785168CD18A9B693&api_key=JKTCONNECT`
+      );
+      const data = await response.json();
 
-    if (response.ok && data.status === "success") {
-      // Mendapatkan transaksi terbaru berdasarkan tanggal
-      const latestTransaction = data.data.sort(
-        (a: { date: string }, b: { date: string }) =>
-          new Date(b.date).getTime() - new Date(a.date).getTime()
-      )[0];
+      if (response.ok && data.status === "success") {
+        const latestTransaction = data.data.sort(
+          (a: { date: string }, b: { date: string }) =>
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+        )[0];
 
-      // Konversi tanggal API dan tanggal pembayaran menjadi timestamp
-      const latestTransactionDate = new Date(latestTransaction.date).getTime();
-      const paymentDate = new Date().getTime();
+        const latestTransactionDate = new Date(latestTransaction.date).getTime();
+        const paymentDate = new Date().getTime();
 
-      // Validasi amount dan toleransi waktu (5 menit)
-      if (
-        latestTransaction.amount === paymentDetails?.totalAmount.toString() &&
-        Math.abs(latestTransactionDate - paymentDate) <= 5 * 60 * 1000
-      ) {
-        toast({
-          title: "Success",
-          description: "Pembayaran berhasil. Webhook terkirim.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
+        if (
+          latestTransaction.amount === paymentDetails?.totalAmount.toString() &&
+          Math.abs(latestTransactionDate - paymentDate) <= 5 * 60 * 1000
+        ) {
+          toast({
+            title: "Success",
+            description: "Pembayaran berhasil. Webhook terkirim.",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
 
-        setPaymentPopup(false);
+          // Simpan API Key ke localStorage
+          const newRequest = {
+            apiKey: paymentDetails.apiKey,
+            limit: paymentDetails.limit,
+            maxRequests: paymentDetails.maxRequests,
+            expiryDate: paymentDetails.expiryDate,
+            status: "Aktif",
+          };
+          const updatedRequests = [...requests, newRequest];
+          setRequests(updatedRequests);
+          localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
 
-        // Kirim webhook
-        await fetch(webhookUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            content: `API Key baru telah dibuat: ${paymentDetails.apiKey}`,
-          }),
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Pembayaran belum terverifikasi atau tidak valid.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+          // Kirim webhook dengan embed
+          await fetch(webhookUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              embeds: [
+                {
+                  title: "API Key Baru Dibuat",
+                  fields: [
+                    { name: "API Key", value: paymentDetails.apiKey, inline: true },
+                    { name: "Limit", value: paymentDetails.limit, inline: true },
+                    { name: "Max Requests", value: paymentDetails.maxRequests, inline: true },
+                    { name: "Masa Aktif", value: paymentDetails.expiryDate, inline: true },
+                  ],
+                  color: 3066993,
+                },
+              ],
+            }),
+          });
+
+          setPaymentPopup(false);
+        } else {
+          toast({
+            title: "Error",
+            description: "Pembayaran belum terverifikasi atau tidak valid.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+        }
       }
-    } else {
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Gagal mengecek status pembayaran.",
+        description: "Terjadi kesalahan saat memeriksa pembayaran.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
     }
-  } catch (error) {
+  };
+
+  const handleDelete = async (keyToDelete: string) => {
+    if (!deleteConfirmation || !deleteReason) {
+      toast({
+        title: "Error",
+        description: "Anda harus menyetujui kebijakan dan mengisi alasan.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const updatedRequests = requests.filter((req) => req.apiKey !== keyToDelete);
+    setRequests(updatedRequests);
+    localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
+
+    // Kirim webhook penghapusan
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        embeds: [
+          {
+            title: "API Key Dihapus",
+            fields: [
+              { name: "API Key", value: keyToDelete, inline: true },
+              { name: "Alasan", value: deleteReason, inline: false },
+            ],
+            color: 15158332,
+          },
+        ],
+      }),
+    });
+
+    setDeletePopup(false);
     toast({
-      title: "Error",
-      description: "Terjadi kesalahan saat memeriksa pembayaran.",
-      status: "error",
+      title: "Success",
+      description: "API Key berhasil dihapus.",
+      status: "success",
       duration: 3000,
       isClosable: true,
     });
-  }
-};
+  };
 
   return (
     <Flex direction="column" gap={5}>
-      <Heading>Permintaan API Key</Heading>
+      <Heading>Kelola API Key</Heading>
 
+      {/* Form untuk membuat API Key */}
       <VStack spacing={4} align="stretch">
         <Input
           placeholder="Masukkan API Key"
@@ -231,24 +273,78 @@ export default function HomeView() {
         </Button>
       </VStack>
 
+      {/* Modal untuk konfirmasi pembayaran */}
       <Modal isOpen={paymentPopup} onClose={() => setPaymentPopup(false)}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Konfirmasi Pembayaran QRIS</ModalHeader>
           <ModalBody>
             <Text>API Key: {paymentDetails?.apiKey}</Text>
-            <Text>Harga: 1000</Text>
-            <Text>Fee: {paymentDetails?.fee}</Text>
             <Text>Total: {paymentDetails?.totalAmount}</Text>
             <Image src={paymentDetails?.qrImageUrl} alt="QRIS" />
             <Text>
-              Harap scan QRIS dan tekan &rdquo;Konfirmasi&rdquo; untuk mengecek status
+              Harap scan QRIS dan tekan "Konfirmasi" untuk mengecek status
               pembayaran.
             </Text>
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" onClick={confirmPayment}>
               Konfirmasi
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Daftar API Key */}
+      {requests.length > 0 && (
+        <VStack align="stretch" spacing={4}>
+          <Heading size="md">Daftar API Key</Heading>
+          {requests.map((req, idx) => (
+            <Flex key={idx} justify="space-between" p={4} borderWidth={1}>
+              <Text>
+                {req.apiKey} - {req.status}
+              </Text>
+              <Button
+                size="sm"
+                colorScheme="red"
+                onClick={() => {
+                  setDeletePopup(true);
+                  setSelectedApiKey(req.apiKey);
+                }}
+              >
+                Hapus
+              </Button>
+            </Flex>
+          ))}
+        </VStack>
+      )}
+
+      {/* Modal untuk hapus API Key */}
+      <Modal isOpen={deletePopup} onClose={() => setDeletePopup(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Hapus API Key</ModalHeader>
+          <ModalBody>
+            <Textarea
+              placeholder="Alasan penghapusan"
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+            />
+            <Checkbox
+              isChecked={deleteConfirmation}
+              onChange={(e) => setDeleteConfirmation(e.target.checked)}
+              mt={4}
+            >
+              Saya setuju bahwa penghapusan tidak dapat dibatalkan dan tidak
+              ada pengembalian dana.
+            </Checkbox>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="red"
+              onClick={() => handleDelete(selectedApiKey!)}
+            >
+              Hapus
             </Button>
           </ModalFooter>
         </ModalContent>
