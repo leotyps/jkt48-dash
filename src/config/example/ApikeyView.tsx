@@ -6,17 +6,12 @@ import {
   Text,
   VStack,
   useToast,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   Image,
   Spinner,
   Checkbox,
   Textarea,
 } from "@chakra-ui/react";
+import { Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import { useEffect, useState } from "react";
 
 export default function HomeView() {
@@ -140,7 +135,6 @@ export default function HomeView() {
             isClosable: true,
           });
 
-          // Simpan API Key ke localStorage
           const newRequest = {
             apiKey: paymentDetails.apiKey,
             limit: paymentDetails.limit,
@@ -152,12 +146,9 @@ export default function HomeView() {
           setRequests(updatedRequests);
           localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
 
-          // Kirim webhook dengan embed
           await fetch(webhookUrl, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               embeds: [
                 {
@@ -196,55 +187,11 @@ export default function HomeView() {
     }
   };
 
-  const handleDelete = async (keyToDelete: string) => {
-    if (!deleteConfirmation || !deleteReason) {
-      toast({
-        title: "Error",
-        description: "Anda harus menyetujui kebijakan dan mengisi alasan.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    const updatedRequests = requests.filter((req) => req.apiKey !== keyToDelete);
-    setRequests(updatedRequests);
-    localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
-
-    // Kirim webhook penghapusan
-    await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        embeds: [
-          {
-            title: "API Key Dihapus",
-            fields: [
-              { name: "API Key", value: keyToDelete, inline: true },
-              { name: "Alasan", value: deleteReason, inline: false },
-            ],
-            color: 15158332,
-          },
-        ],
-      }),
-    });
-
-    setDeletePopup(false);
-    toast({
-      title: "Success",
-      description: "API Key berhasil dihapus.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-  };
-
   return (
-    <Flex direction="column" gap={5}>
+    <Flex direction="column" gap={5} p={5}>
       <Heading>Kelola API Key</Heading>
 
-      {/* Form untuk membuat API Key */}
+      {/* Form */}
       <VStack spacing={4} align="stretch">
         <Input
           placeholder="Masukkan API Key"
@@ -274,82 +221,21 @@ export default function HomeView() {
         </Button>
       </VStack>
 
-      {/* Modal untuk konfirmasi pembayaran */}
-      <Modal isOpen={paymentPopup} onClose={() => setPaymentPopup(false)}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Konfirmasi Pembayaran QRIS</ModalHeader>
-          <ModalBody>
-            <Text>API Key: {paymentDetails?.apiKey}</Text>
-            <Text>Total: {paymentDetails?.totalAmount}</Text>
-            <Image src={paymentDetails?.qrImageUrl} alt="QRIS" />
-            <Text>
-              Harap scan QRIS dan tekan &rdquo;Konfirmasi&rdquo; untuk mengecek status
-              pembayaran.
-            </Text>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" onClick={confirmPayment}>
-              Konfirmasi
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Daftar API Key */}
-      {requests.length > 0 && (
-        <VStack align="stretch" spacing={4}>
-          <Heading size="md">Daftar API Key</Heading>
-          {requests.map((req, idx) => (
-            <Flex key={idx} justify="space-between" p={4} borderWidth={1}>
-              <Text>
-                {req.apiKey} - {req.status}
-              </Text>
-              <Button
-                size="sm"
-                colorScheme="red"
-                onClick={() => {
-                  setDeletePopup(true);
-                  setSelectedApiKey(req.apiKey);
-                }}
-              >
-                Hapus
-              </Button>
-            </Flex>
-          ))}
-        </VStack>
-      )}
-
-      {/* Modal untuk hapus API Key */}
-      <Modal isOpen={deletePopup} onClose={() => setDeletePopup(false)}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Hapus API Key</ModalHeader>
-          <ModalBody>
-            <Textarea
-              placeholder="Alasan penghapusan"
-              value={deleteReason}
-              onChange={(e) => setDeleteReason(e.target.value)}
-            />
-            <Checkbox
-              isChecked={deleteConfirmation}
-              onChange={(e) => setDeleteConfirmation(e.target.checked)}
-              mt={4}
-            >
-              Saya setuju bahwa penghapusan tidak dapat dibatalkan dan tidak
-              ada pengembalian dana.
-            </Checkbox>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              colorScheme="red"
-              onClick={() => handleDelete(selectedApiKey!)}
-            >
-              Hapus
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      {/* Dialog */}
+      <Dialog open={paymentPopup} onClose={() => setPaymentPopup(false)}>
+        <DialogTitle>Konfirmasi Pembayaran</DialogTitle>
+        <DialogContent>
+          <Text>API Key: {paymentDetails?.apiKey}</Text>
+          <Text>Total: {paymentDetails?.totalAmount}</Text>
+          <Image src={paymentDetails?.qrImageUrl} alt="QRIS" />
+          <Text>Scan QR untuk membayar dan tekan Konfirmasi.</Text>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={confirmPayment} colorScheme="blue">
+            Konfirmasi
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Flex>
   );
 }
