@@ -1,4 +1,5 @@
-import { Flex, Grid, Spacer, Text, VStack } from '@chakra-ui/layout';
+import { useState, useEffect } from 'react';
+import { Flex, Grid, Spacer, Text, VStack, Box } from '@chakra-ui/layout';
 import {
   Avatar,
   Button,
@@ -9,22 +10,22 @@ import {
   FormLabel,
   Image,
   useColorMode,
-  Box,
   Input,
   useToast,
 } from '@chakra-ui/react';
+import { IoLogOut } from 'react-icons/io5';
+import { signInWithPopup, GoogleAuthProvider, getAuth } from 'firebase/auth';
+import { useLogoutMutation } from '@/utils/auth/hooks';
+import { useSelfUser } from '@/api/hooks';
+import { profile } from '@/config/translations/profile';
 import { avatarUrl, bannerUrl } from '@/api/discord';
 import { SelectField } from '@/components/forms/SelectField';
 import { SwitchField } from '@/components/forms/SwitchField';
-import { languages, names, useLang } from '@/config/translations/provider';
-import { profile } from '@/config/translations/profile';
-import { IoLogOut } from 'react-icons/io5';
+import { languages, useLang } from '@/config/translations/provider';
 import { useSettingsStore } from '@/stores';
-import { NextPageWithLayout } from '@/pages/_app';
 import AppLayout from '@/components/layout/app';
-import { useLogoutMutation } from '@/utils/auth/hooks';
-import { useSelfUser } from '@/api/hooks';
-import { useState, useEffect } from 'react';
+import { NextPageWithLayout } from '@/pages/_app';
+import { firebaseAuth } from '@/config/firebaseConfig';  // Firebase config
 
 /**
  * User info and general settings here
@@ -33,16 +34,21 @@ const ProfilePage: NextPageWithLayout = () => {
   const user = useSelfUser();
   const logout = useLogoutMutation();
   const t = profile.useTranslations();
-  
+
   const { colorMode, setColorMode } = useColorMode();
   const { lang, setLang } = useLang();
   const [devMode, setDevMode] = useSettingsStore((s) => [s.devMode, s.setDevMode]);
   const [apiKey, setApiKey] = useState<string>('');
   const [apiStatus, setApiStatus] = useState<string | null>(null);
+  const [linkedGmail, setLinkedGmail] = useState<boolean>(false);
   const toast = useToast();
 
   useEffect(() => {
-    // Cek apakah ada API key yang tersimpan di localStorage
+    // Check if the user has linked their Gmail account
+    const checkLinkedGmail = localStorage.getItem('linked-gmail');
+    if (checkLinkedGmail === 'true') {
+      setLinkedGmail(true);
+    }
     const storedApiKey = localStorage.getItem('jkt48-api-key');
     if (storedApiKey) {
       setApiKey(storedApiKey);
@@ -64,7 +70,6 @@ const ProfilePage: NextPageWithLayout = () => {
       });
       return;
     }
-    // Simpan API Key ke localStorage
     localStorage.setItem('jkt48-api-key', apiKey);
     setApiStatus('API Key berhasil disimpan');
     toast({
@@ -74,6 +79,45 @@ const ProfilePage: NextPageWithLayout = () => {
       duration: 3000,
       isClosable: true,
     });
+  };
+
+  const linkGmailAccount = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      // Trigger the Google sign-in popup
+      const result = await signInWithPopup(firebaseAuth, provider);
+      const user = result.user;
+
+      // Store the Gmail email in localStorage and set linked status
+      localStorage.setItem('linked-gmail', 'true');
+      setLinkedGmail(true);
+
+      toast({
+        title: 'Gmail Linked',
+        description: 'Your Gmail account has been successfully linked.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Optionally, store user's Gmail in the user database on the server
+      await fetch('/api/auth/linkGmail', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: user.email }),
+      });
+    } catch (error) {
+      console.error('Error linking Gmail:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to link Gmail account.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -163,6 +207,22 @@ const ProfilePage: NextPageWithLayout = () => {
             Simpan API Key
           </Button>
 
+          {/* Gmail Link Button */}
+          {!linkedGmail && (
+            <Button
+              colorScheme="blue"
+              mt={4}
+              onClick={linkGmailAccount}
+            >
+              Link Gmail Account
+            </Button>
+          )}
+          {linkedGmail && (
+            <Text mt={4} color="green.500">
+              Gmail Account Linked
+            </Text>
+          )}
+
           <Spacer />
           <Button
             leftIcon={<IoLogOut />}
@@ -174,14 +234,9 @@ const ProfilePage: NextPageWithLayout = () => {
           </Button>
         </CardBody>
       </Card>
-      <Content />
     </Grid>
   );
 };
-
-function Content() {
-  return <></>;
-}
 
 ProfilePage.getLayout = (p) => <AppLayout>{p}</AppLayout>;
 
