@@ -21,7 +21,7 @@ import Head from 'next/head'; // Import Head untuk menambahkan script ke <head>
 
 const Jkt48Page: NextPageWithLayout = () => {
   //used for example only, you should remove it
-  return <Jkt48Recent />;
+  return <Jkt48View />;
   return <GuildSelect />;
 };
 
