@@ -12,6 +12,7 @@ import {
 import { config } from '@/config/common';
 import { useGuilds } from '@/api/hooks';
 import Jkt48View from '@/config/example/Jkt48View';
+import Jkt48Recent from '@/config/example/Jkt48Recent';
 import { NextPageWithLayout } from '@/pages/_app';
 import AppLayout from '@/components/layout/app';
 import { iconUrl } from '@/api/discord';
@@ -20,6 +21,7 @@ import Head from 'next/head'; // Import Head untuk menambahkan script ke <head>
 
 const Jkt48Page: NextPageWithLayout = () => {
   //used for example only, you should remove it
+  return <Jkt48Recent />;
   return <Jkt48View />;
 
   return <GuildSelect />;
