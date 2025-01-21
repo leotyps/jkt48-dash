@@ -85,7 +85,7 @@ const ProfilePage: NextPageWithLayout = () => {
     const provider = new GoogleAuthProvider();
     try {
       // Trigger the Google sign-in popup
-      const result = await signInWithPopup(firebaseAuth, provider);
+      const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
       // Store the Gmail email in localStorage and set linked status
