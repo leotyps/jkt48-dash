@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Client } from 'pg';
+import { getSession } from 'next-auth/react';  // <-- Import getSession from next-auth
 
 // Instantiate the PostgreSQL client for CockroachDB
 const client = new Client({
@@ -15,9 +16,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  // Get user session (optional, depends on your session management)
-  // You can use getSession() if you're using next-auth or similar
+  // Get user session using next-auth
   const session = await getSession({ req });
+
   if (!session || !session.user) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
