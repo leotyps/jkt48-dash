@@ -27,6 +27,13 @@ import AppLayout from '@/components/layout/app';
 import { NextPageWithLayout } from '@/pages/_app';
 import { auth } from '@/config/firebaseConfig';  // Firebase config
 
+
+const names = {
+  en: "English",
+  fr: "French",
+  // Add other language names here
+};
+
 /**
  * User info and general settings here
  */
