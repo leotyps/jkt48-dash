@@ -12,31 +12,33 @@ import {
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 
-// Definisikan tipe data untuk berita
+// Define types for the new API response
+interface Member {
+  name: string;
+  nickname: string;
+  img_alt: string;
+  img: string;
+}
+
 interface NewsItem {
   _id: string;
   data_id: string;
+  created_at: string;
+  member: Member;
   idn: {
     title: string;
     image: string;
   };
-  member: {
-    name: string;
-    nickname: string;
-    img_alt: string;
-  };
-  created_at: string;
 }
 
 interface NewsResponse {
-  author: string;
   recents: NewsItem[];
 }
 
 const API_URL = "https://api.jkt48connect.my.id/api/recent?api_key=JKTCONNECT";
 
 export default function NewsView() {
-  const [news, setNews] = useState<NewsItem[]>([]); // Tipe data array NewsItem
+  const [news, setNews] = useState<NewsItem[]>([]); // Data array of NewsItem
   const [isLoading, setIsLoading] = useState(true);
   const toast = useToast();
 
@@ -47,13 +49,13 @@ export default function NewsView() {
         const data: NewsResponse = await response.json();
 
         if (data.recents) {
-          // Ambil 5 berita terbaru
+          // Take only 5 latest news
           const latestNews = data.recents.slice(0, 5);
           setNews(latestNews);
         } else {
           toast({
             title: "Error",
-            description: "Data berita tidak tersedia.",
+            description: "No news data available.",
             status: "error",
             duration: 3000,
             isClosable: true,
@@ -62,7 +64,7 @@ export default function NewsView() {
       } catch (error) {
         toast({
           title: "Error",
-          description: "Gagal mengambil data berita.",
+          description: "Failed to fetch news data.",
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -86,29 +88,21 @@ export default function NewsView() {
   return (
     <Flex direction="column" gap={5} p={5}>
       <Heading as="h1" size="lg" mb={5}>
-        Berita JKT48
+        Latest JKT48 News
       </Heading>
 
-      {/* Loop untuk menampilkan 5 berita terbaru */}
+      {/* Display individual cards for each news item */}
       {news.map((item) => (
-        <Card key={item._id} rounded="2xl" shadow="md" mb={4}>
+        <Card key={item._id} rounded="2xl" shadow="md" mb={5}>
           <CardHeader p={4}>
             <Heading size="md">{item.idn.title}</Heading>
           </CardHeader>
           <Divider />
           <CardBody>
-            <Flex direction="row" gap={4} align="center">
-              {/* Gambar member */}
-              <Image
-                src={item.member.img_alt}
-                alt="Member Image"
-                boxSize="80px"
-                objectFit="cover"
-                rounded="full"
-              />
-              {/* Detail berita */}
-              <Flex direction="column" flex="1">
-                <Text fontWeight="bold">{item.member.name} / {item.member.nickname}</Text>
+            <Flex direction="row" align="center" gap={4}>
+              {/* Left side: Member information */}
+              <Flex direction="column" flex={1}>
+                <Text fontWeight="bold">{item.member.name}</Text>
                 <Text fontSize="sm" color="gray.500">
                   {new Date(item.created_at).toLocaleDateString("id-ID", {
                     day: "numeric",
@@ -117,13 +111,14 @@ export default function NewsView() {
                   })}
                 </Text>
               </Flex>
-              {/* Gambar berita */}
+
+              {/* Right side: Image */}
               <Image
-                src={item.idn.image}
-                alt="News Image"
-                boxSize="120px"
-                objectFit="contain"
-                rounded="md"
+                src={item.member.img_alt}
+                alt={item.member.name}
+                boxSize="100px"
+                objectFit="cover"
+                borderRadius="md"
               />
             </Flex>
           </CardBody>
