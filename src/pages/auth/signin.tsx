@@ -1,12 +1,12 @@
 import { GetServerSidePropsContext } from 'next';
-import { Button, Flex, Heading, Icon, Text } from '@chakra-ui/react';
-import { BsDiscord } from 'react-icons/bs';
+import { Button, Flex, Heading, Icon, Text, Input, FormControl, FormLabel } from '@chakra-ui/react';
+import { BsEnvelope } from 'react-icons/bs';
 import { auth } from '@/config/translations/auth';
 import { NextPageWithLayout } from '@/pages/_app';
 import AuthLayout from '@/components/layout/auth';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth as firebaseAuth } from '@/config/firebaseConfig';
 import { getServerSession } from '@/utils/auth/server';
 
@@ -15,17 +15,24 @@ const LoginPage: NextPageWithLayout = () => {
   const locale = useRouter().locale;
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false); // Flag to toggle between sign-up and login
 
-  const handleGoogleLogin = async () => {
+  const handleAuth = async () => {
     setLoading(true);
     try {
-      const provider = new GoogleAuthProvider();
+      let userCredential;
+      
+      if (isSignUp) {
+        // Handle sign-up
+        userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      } else {
+        // Handle login
+        userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
+      }
 
-      // Login dengan popup
-      const result = await signInWithPopup(firebaseAuth, provider);
-      const user = result.user;
-
-      // Dapatkan token ID
+      const user = userCredential.user;
       const idToken = await user.getIdToken();
       const userSession = {
         access_token: idToken,
@@ -35,7 +42,7 @@ const LoginPage: NextPageWithLayout = () => {
         scope: 'email',
       };
 
-      // Kirim token ke server untuk disimpan sebagai sesi
+      // Send token to the server to save the session
       const response = await fetch('/api/auth/setSession', {
         method: 'POST',
         headers: {
@@ -45,22 +52,21 @@ const LoginPage: NextPageWithLayout = () => {
       });
 
       if (response.ok) {
-        // Buat API key untuk pengguna melalui API
+        // Create API key after successful sign-up or login
         await createApiKey(user.uid);
 
-        // Redirect ke halaman home setelah login berhasil
+        // Redirect to the home page after successful login
         router.push('/user/home');
       } else {
         console.error('Failed to save session');
       }
     } catch (error) {
-      console.error('Error logging in with Google:', error);
+      console.error('Error during authentication:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fungsi untuk memanggil API pembuatan API key
   const createApiKey = async (userId: string) => {
     try {
       const response = await fetch('/api/auth/createApiKey', {
@@ -97,18 +103,47 @@ const LoginPage: NextPageWithLayout = () => {
       <Text color="TextSecondary" fontSize="lg">
         {t['login description']}
       </Text>
-      {/* Login using Discord */}
+
+      <FormControl id="email" isRequired>
+        <FormLabel>Email</FormLabel>
+        <Input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Enter your email"
+        />
+      </FormControl>
+
+      <FormControl id="password" isRequired mt={4}>
+        <FormLabel>Password</FormLabel>
+        <Input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter your password"
+        />
+      </FormControl>
+
       <Button
-        mt={3}
-        leftIcon={<Icon as={BsDiscord} fontSize="2xl" />}
+        mt={6}
+        leftIcon={<Icon as={BsEnvelope} fontSize="2xl" />}
         variant="action"
         size="lg"
         width="350px"
         maxW="full"
-        as="a"
-        href={`/api/auth/login?locale=${locale}`}
+        onClick={handleAuth}
+        isLoading={loading}
+        loadingText={isSignUp ? 'Signing up...' : 'Logging in...'}
       >
-        {t.login_bn}
+        {isSignUp ? t.signup_bn : t.login_bn}
+      </Button>
+
+      <Button
+        mt={3}
+        variant="link"
+        onClick={() => setIsSignUp(!isSignUp)}
+      >
+        {isSignUp ? t['already have an account?'] : t['need an account?']}
       </Button>
     </Flex>
   );
