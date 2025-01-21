@@ -31,6 +31,7 @@ import { auth } from '@/config/firebaseConfig';  // Firebase config
 const names = {
   en: "English",
   fr: "French",
+  cn: "Chindo Rek",
   // Add other language names here
 };
 
