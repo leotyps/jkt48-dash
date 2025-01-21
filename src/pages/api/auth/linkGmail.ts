@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Get user session using next-auth
   const session = await getSession({ req });
 
-  if (!session || !session.user) {
+  if (!session || !session.user || !session.user.email) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
@@ -32,16 +32,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Check if the email already exists in the database
-    const result = await client.query('SELECT * FROM users WHERE email = $1', [email]);
+    const result = await client.query('SELECT * FROM users WHERE gmail = $1', [email]);
 
     if (result.rows.length > 0) {
       return res.status(400).json({ message: 'This Gmail account is already linked to another user.' });
     }
 
-    // Update the user in the database to link the Gmail account
+    // Update the user in the database to link the Gmail account using their email
     const updateResult = await client.query(
-      'UPDATE users SET gmail = $1 WHERE id = $2 RETURNING *',
-      [email, session.user.id]
+      'UPDATE users SET gmail = $1 WHERE email = $2 RETURNING *',
+      [email, session.user.email]  // Use session.user.email instead of session.user.id
     );
 
     // Respond with success
