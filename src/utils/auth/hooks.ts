@@ -8,11 +8,16 @@ import Router from 'next/router';
  * Get discord oauth2 access token if logged in, otherwise return null
  */
 async function auth() {
-  return await callReturn<AccessToken>('/api/auth', {
-    request: {
-      method: 'GET',
-    },
-  });
+  try {
+    return await callReturn<AccessToken>('/api/auth', {
+      request: {
+        method: 'GET',
+      },
+    });
+  } catch (error) {
+    // Handle the case where the user is not authenticated, or there is an error
+    return null;
+  }
 }
 
 export async function logout() {
@@ -32,24 +37,33 @@ type SessionResult =
       session: AccessToken;
     }
   | {
-      status: 'loading' | 'unauthenticated';
+      status: 'unauthenticated';
+      session: null;
+    }
+  | {
+      status: 'loading';
       session: null;
     };
 
 export function useSession(): SessionResult {
-  const { isError, isLoading, data } = useQuery(Keys.login, () => auth());
+  const { isError, isLoading, data } = useQuery(Keys.login, () => auth(), {
+    retry: false, // Prevent retries if the session fetch fails (e.g., user not logged in)
+    staleTime: Infinity, // Ensure the data remains in cache as long as possible
+  });
 
-  if (isError)
-    return {
-      status: 'unauthenticated',
-      session: null,
-    };
-
-  if (isLoading)
+  if (isLoading) {
     return {
       status: 'loading',
       session: null,
     };
+  }
+
+  if (isError || !data) {
+    return {
+      status: 'unauthenticated',
+      session: null,
+    };
+  }
 
   return {
     status: 'authenticated',
@@ -59,8 +73,7 @@ export function useSession(): SessionResult {
 
 export function useAccessToken() {
   const { session } = useSession();
-
-  return session?.access_token;
+  return session?.access_token || null; // Return null if not authenticated
 }
 
 export function useLogoutMutation() {
