@@ -12,10 +12,27 @@ import {
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 
+// Definisikan tipe data untuk berita
+interface NewsItem {
+  _id: string;
+  id: string;
+  date: string;
+  label: string;
+  title: string;
+}
+
+interface NewsResponse {
+  author: string;
+  news: NewsItem[];
+  page: number;
+  perpage: number;
+  total_count: number;
+}
+
 const API_URL = "https://api.jkt48connect.my.id/api/news?api_key=JKTCONNECT";
 
 export default function NewsView() {
-  const [news, setNews] = useState([]);
+  const [news, setNews] = useState<NewsItem[]>([]); // Tipe data array NewsItem
   const [isLoading, setIsLoading] = useState(true);
   const toast = useToast();
 
@@ -23,7 +40,7 @@ export default function NewsView() {
     const fetchNews = async () => {
       try {
         const response = await fetch(API_URL);
-        const data = await response.json();
+        const data: NewsResponse = await response.json();
 
         if (data.news) {
           setNews(data.news);
