@@ -1,5 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import client from '@/lib/db';  // Import the CockroachDB client
+import { Client } from 'pg';
+
+// Instantiate the PostgreSQL client for CockroachDB
+const client = new Client({
+  connectionString: 'postgresql://dashboard:wZCyQgMUCcOw3ppdNT7Wlg@dashboard-4236.jxf.gcp-asia-southeast1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full',
+});
+
+client.connect();
 
 // API endpoint for linking Gmail account to the user
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -48,5 +55,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     console.error('Error linking Gmail:', error);
     return res.status(500).json({ message: 'Server error. Please try again later.' });
+  } finally {
+    // Close the database connection after handling the request
+    client.end();
   }
 }
