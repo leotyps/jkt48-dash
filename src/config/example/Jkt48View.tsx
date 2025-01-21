@@ -1,16 +1,17 @@
+import React, { useState, useEffect } from "react";
 import {
-  Flex,
-  Grid,
-  Heading,
-  Text,
   Card,
-  CardBody,
+  CardContent,
   CardHeader,
-  Image,
-  Spinner,
-  useToast,
-} from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+  List,
+  ListItem,
+  ListItemAvatar,
+  Avatar,
+  ListItemText,
+  Typography,
+  CircularProgress,
+  Box,
+} from "@mui/material";
 
 // Definisikan tipe data untuk berita
 interface NewsItem {
@@ -32,35 +33,17 @@ interface NewsResponse {
 const API_URL = "https://api.jkt48connect.my.id/api/news?api_key=JKTCONNECT";
 
 export default function NewsView() {
-  const [news, setNews] = useState<NewsItem[]>([]); // Tipe data array NewsItem
+  const [news, setNews] = useState<NewsItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const toast = useToast();
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
         const response = await fetch(API_URL);
         const data: NewsResponse = await response.json();
-
-        if (data.news) {
-          setNews(data.news);
-        } else {
-          toast({
-            title: "Error",
-            description: "Data berita tidak tersedia.",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
-        }
+        setNews(data.news);
       } catch (error) {
-        toast({
-          title: "Error",
-          description: "Gagal mengambil data berita.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        console.error("Gagal mengambil data berita:", error);
       } finally {
         setIsLoading(false);
       }
@@ -71,49 +54,61 @@ export default function NewsView() {
 
   if (isLoading) {
     return (
-      <Flex justify="center" align="center" height="100vh">
-        <Spinner size="xl" />
-      </Flex>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <CircularProgress />
+      </Box>
     );
   }
 
   return (
-    <Flex direction="column" gap={5} p={5}>
-      <Heading as="h1" size="lg" mb={5}>
-        Berita JKT48
-      </Heading>
-      <Grid
-        templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }}
-        gap={5}
-      >
-        {news.map((item) => (
-          <Card key={item._id} rounded="2xl" shadow="md">
-            <CardHeader p={4}>
-              <Image
-                src={`https://jkt48.com${item.label}`}
-                alt="Label"
-                boxSize="50px"
-                objectFit="contain"
-              />
-            </CardHeader>
-            <CardBody>
-              <Heading size="md" mb={2}>
-                {item.title}
-              </Heading>
-              <Text fontSize="sm" color="gray.500" mb={2}>
-                Tanggal: {new Date(item.date).toLocaleDateString("id-ID", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </Text>
-              <Text fontSize="sm" color="gray.600">
-                ID: {item.id}
-              </Text>
-            </CardBody>
-          </Card>
-        ))}
-      </Grid>
-    </Flex>
+    <Box p={3}>
+      <Card>
+        <CardHeader
+          title="Berita JKT48"
+          subheader={`Total Berita: ${news.length}`}
+        />
+        <CardContent>
+          <List>
+            {news.map((item) => (
+              <ListItem key={item._id} alignItems="flex-start" divider>
+                <ListItemAvatar>
+                  <Avatar
+                    src={`https://jkt48.com${item.label}`}
+                    alt="Label"
+                    variant="square"
+                  />
+                </ListItemAvatar>
+                <ListItemText
+                  primary={item.title}
+                  secondary={
+                    <>
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        color="text.primary"
+                      >
+                        Tanggal:{" "}
+                        {new Date(item.date).toLocaleDateString("id-ID", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </Typography>
+                      <br />
+                      ID: {item.id}
+                    </>
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+        </CardContent>
+      </Card>
+    </Box>
   );
 }
