@@ -37,6 +37,7 @@
     "framer-motion": "^6.5.1",
     "jkt48connect-cli": "^3.0.9",
     "next": "^13.2.1",
+    "next-auth": "^4.24.11",
     "nodemailer": "^6.8.0",
     "octokit": "^4.1.0",
     "pg": "^8.13.1",
