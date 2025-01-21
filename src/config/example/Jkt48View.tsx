@@ -51,25 +51,29 @@ export default function NewsAndRecentsView() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true); // Start loading
+
         // Fetch News
         const newsResponse = await fetch(NEWS_API_URL);
+        if (!newsResponse.ok) throw new Error("Failed to fetch news data");
         const newsData = await newsResponse.json();
         setNews(newsData.news.slice(0, 4)); // Ambil 4 berita terbaru
 
         // Fetch Recents
         const recentsResponse = await fetch(RECENT_API_URL);
+        if (!recentsResponse.ok) throw new Error("Failed to fetch recent live data");
         const recentsData = await recentsResponse.json();
         setRecents(recentsData.recents.slice(0, 5)); // Ambil 5 recent live
-      } catch (error) {
+      } catch (error: any) {
         toast({
           title: "Error",
-          description: "Gagal mengambil data.",
+          description: error.message || "Gagal mengambil data.",
           status: "error",
           duration: 3000,
           isClosable: true,
         });
       } finally {
-        setIsLoading(false);
+        setIsLoading(false); // Stop loading
       }
     };
 
@@ -99,8 +103,9 @@ export default function NewsAndRecentsView() {
         <CardBody>
           {news.map((item) => (
             <Flex key={item._id} direction="row" align="center" gap={4} mb={4}>
+              {/* Update URL jika label belum terisi dengan benar */}
               <Image
-                src={`https://jkt48.com${item.label}`}
+                src={item.label ? `https://jkt48.com${item.label}` : "/fallback-image.jpg"}
                 alt="Label"
                 boxSize="50px"
                 objectFit="contain"
@@ -152,7 +157,7 @@ export default function NewsAndRecentsView() {
 
                 {/* Thumbnail */}
                 <Image
-                  src={recent.idn.image}
+                  src={recent.idn.image || "/fallback-thumbnail.jpg"}
                   alt={recent.idn.title}
                   boxSize="100px"
                   objectFit="cover"
