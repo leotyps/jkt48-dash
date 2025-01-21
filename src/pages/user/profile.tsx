@@ -25,7 +25,7 @@ import { languages, useLang } from '@/config/translations/provider';
 import { useSettingsStore } from '@/stores';
 import AppLayout from '@/components/layout/app';
 import { NextPageWithLayout } from '@/pages/_app';
-import { firebaseAuth } from '@/config/firebaseConfig';  // Firebase config
+import { auth } from '@/config/firebaseConfig';  // Firebase config
 
 /**
  * User info and general settings here
