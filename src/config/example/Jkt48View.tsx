@@ -1,90 +1,102 @@
-import React, { useState, useEffect } from "react";
 import {
-  Box,
-  Card,
-  CardHeader,
-  CardBody,
+  Flex,
+  Grid,
   Heading,
   Text,
+  Card,
+  CardBody,
+  CardHeader,
   Image,
-  SimpleGrid,
   Spinner,
-  Center,
+  useToast,
 } from "@chakra-ui/react";
-import { getNews } from "jkt48connect-cli";
+import { useState, useEffect } from "react";
 
-const Jkt48View = () => {
-  const [newsData, setNewsData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+const API_URL = "https://api.jkt48connect.my.id/api/news?api_key=JKTCONNECT";
+
+export default function NewsView() {
+  const [news, setNews] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const toast = useToast();
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await getNews("JKTCONNECT");
-        setNewsData(response.news);
-      } catch (err) {
-        setError("Gagal memuat berita. Silakan coba lagi.");
+        const response = await fetch(API_URL);
+        const data = await response.json();
+
+        if (data.news) {
+          setNews(data.news);
+        } else {
+          toast({
+            title: "Error",
+            description: "Data berita tidak tersedia.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Gagal mengambil data berita.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     fetchNews();
   }, []);
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <Center h="100vh">
+      <Flex justify="center" align="center" height="100vh">
         <Spinner size="xl" />
-      </Center>
-    );
-  }
-
-  if (error) {
-    return (
-      <Center h="100vh">
-        <Text fontSize="xl" color="red.500">
-          {error}
-        </Text>
-      </Center>
+      </Flex>
     );
   }
 
   return (
-    <Box p={5}>
-      <Heading mb={5} fontSize="2xl">
+    <Flex direction="column" gap={5} p={5}>
+      <Heading as="h1" size="lg" mb={5}>
         Berita JKT48
       </Heading>
-      <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={5}>
-        {newsData.map((newsItem) => (
-          <Card key={newsItem._id} borderWidth="1px" rounded="lg" overflow="hidden">
-            <Image
-              src={`https://jkt48.com${newsItem.label}`}
-              alt={newsItem.title}
-              objectFit="cover"
-              h="150px"
-              w="100%"
-            />
-            <CardHeader>
-              <Heading fontSize="lg" noOfLines={2}>
-                {newsItem.title}
-              </Heading>
+      <Grid
+        templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }}
+        gap={5}
+      >
+        {news.map((item) => (
+          <Card key={item._id} rounded="2xl" shadow="md">
+            <CardHeader p={4}>
+              <Image
+                src={`https://jkt48.com${item.label}`}
+                alt="Label"
+                boxSize="50px"
+                objectFit="contain"
+              />
             </CardHeader>
             <CardBody>
-              <Text fontSize="sm" color="gray.500">
-                {new Date(newsItem.date).toLocaleDateString("id-ID", {
-                  day: "2-digit",
+              <Heading size="md" mb={2}>
+                {item.title}
+              </Heading>
+              <Text fontSize="sm" color="gray.500" mb={2}>
+                Tanggal: {new Date(item.date).toLocaleDateString("id-ID", {
+                  day: "numeric",
                   month: "long",
                   year: "numeric",
                 })}
               </Text>
+              <Text fontSize="sm" color="gray.600">
+                ID: {item.id}
+              </Text>
             </CardBody>
           </Card>
         ))}
-      </SimpleGrid>
-    </Box>
+      </Grid>
+    </Flex>
   );
-};
-
-export default Jkt48View;
+}
