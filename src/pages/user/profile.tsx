@@ -199,6 +199,26 @@ const ProfilePage: NextPageWithLayout = () => {
             />
           </FormControl>
 
+          {/* API Key Settings */}
+          <FormControl>
+            <Box mb={2}>
+              <FormLabel fontSize="md" fontWeight="medium" m={0}>
+                JKT48Connect Apikey
+              </FormLabel>
+              <Text color="TextSecondary">Simpan Apikeymu disini</Text>
+            </Box>
+            <Input
+              value={apiKey}
+              onChange={handleApiKeyChange}
+              placeholder="Masukkan API Key JKT48"
+              size="lg"
+            />
+            {apiStatus && <Text mt={2}>{apiStatus}</Text>}
+          </FormControl>
+          <Button colorScheme="teal" onClick={saveApiKey}>
+            Simpan API Key
+          </Button>
+
           {/* Gmail Settings */}
           <FormControl>
             <Box mb={2}>
