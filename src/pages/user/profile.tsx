@@ -91,46 +91,51 @@ const ProfilePage: NextPageWithLayout = () => {
     });
   };
 
-  const linkGmailAccount = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      // Trigger the Google sign-in popup
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+const linkGmailAccount = async () => {
+  const provider = new GoogleAuthProvider();
+  try {
+    // Trigger the Google sign-in popup
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
 
-      // Store the Gmail email in localStorage and set linked status
-      localStorage.setItem('linked-gmail', 'true');
-      localStorage.setItem('linked-gmail-email', user.email || 'Unknown Email');
-      setLinkedGmail(true);
-      setLinkedEmail(user.email || 'Unknown Email');
+    // Handle the case where email might be null
+    const email = user.email || 'Email tidak ditemukan';
 
-      toast({
-        title: 'Gmail Linked',
-        description: `Your Gmail account (${user.email}) has been successfully linked.`,
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+    // Store the Gmail email in localStorage and set linked status
+    localStorage.setItem('linked-gmail', 'true');
+    localStorage.setItem('linked-gmail-email', email);
+    setLinkedGmail(true);
+    setLinkedEmail(email);
 
-      // Optionally, store user's Gmail in the user database on the server
-      await fetch('/api/auth/linkGmail', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: user.email }),
-      });
-    } catch (error) {
-      console.error('Error linking Gmail:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to link Gmail account.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
+    toast({
+      title: 'Gmail Linked',
+      description: email === 'Email tidak ditemukan'
+        ? 'Gmail berhasil ditautkan, tetapi email tidak dapat ditemukan.'
+        : `Gmail berhasil ditautkan (${email}).`,
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+
+    // Optionally, store user's Gmail in the user database on the server
+    await fetch('/api/auth/linkGmail', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+  } catch (error) {
+    console.error('Error linking Gmail:', error);
+    toast({
+      title: 'Error',
+      description: 'Failed to link Gmail account.',
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+};
 
   return (
     <Grid templateColumns={{ base: '1fr', lg: 'minmax(0, 800px) auto' }} gap={{ base: 3, lg: 6 }}>
@@ -221,35 +226,28 @@ const ProfilePage: NextPageWithLayout = () => {
 
           {/* Gmail Settings */}
           <FormControl>
-            <Box mb={2}>
-              <FormLabel fontSize="md" fontWeight="medium" m={0}>
-                Linked Gmail Account
-              </FormLabel>
-              {linkedGmail && linkedEmail ? (
-                <Text color="green.500">
-                  Linked Email: {linkedEmail}
-                </Text>
-              ) : (
-                <Text color="red.500">No Gmail account linked.</Text>
-              )}
-            </Box>
-            <Button
-              colorScheme="blue"
-              onClick={linkGmailAccount}
-            >
-              {linkedGmail ? 'Link Another Gmail Account' : 'Link Gmail Account'}
-            </Button>
-          </FormControl>
+  <Box mb={2}>
+    <FormLabel fontSize="md" fontWeight="medium" m={0}>
+      Linked Gmail Account
+    </FormLabel>
+    {linkedGmail && linkedEmail ? (
+      <Text color="green.500">
+        Linked Email: {linkedEmail === 'Email tidak ditemukan' 
+          ? 'Email tidak dapat ditemukan' 
+          : linkedEmail}
+      </Text>
+    ) : (
+      <Text color="red.500">No Gmail account linked.</Text>
+    )}
+  </Box>
+  <Button
+    colorScheme="blue"
+    onClick={linkGmailAccount}
+  >
+    {linkedGmail ? 'Link Another Gmail Account' : 'Link Gmail Account'}
+  </Button>
+</FormControl>
 
-          <Spacer />
-          <Button
-            leftIcon={<IoLogOut />}
-            variant="danger"
-            isLoading={logout.isLoading}
-            onClick={() => logout.mutate()}
-          >
-            {t.logout}
-          </Button>
         </CardBody>
       </Card>
     </Grid>
