@@ -17,6 +17,7 @@ import AppLayout from '@/components/layout/app';
 import { iconUrl } from '@/api/discord';
 import Link from 'next/link';
 import Head from 'next/head'; // Import Head untuk menambahkan script ke <head>
+import { useEffect, useRef } from 'react';
 
 const HomePage: NextPageWithLayout = () => {
   //used for example only, you should remove it
@@ -100,5 +101,35 @@ HomePage.getLayout = (c) => (
   </AppLayout>
 );
 
-export default HomePage;
+// Tambahkan suara latar belakang
+export const WelcomeSound = () => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  useEffect(() => {
+    // Memutar suara secara otomatis ketika halaman dimuat
+    const playSound = async () => {
+      if (audioRef.current) {
+        try {
+          await audioRef.current.play();
+        } catch (error) {
+          console.error('Audio playback error:', error);
+        }
+      }
+    };
+
+    playSound();
+  }, []);
+
+  return (
+    <audio ref={audioRef} src="../ElevenLabs_2025-01-23T10_56_22_Kira_pvc_s50_sb100_se0_b_m2.mp3" preload="auto" />
+  );
+};
+
+const HomePageWithSound: NextPageWithLayout = () => (
+  <>
+    <WelcomeSound />
+    <HomePage />
+  </>
+);
+
+export default HomePageWithSound;
