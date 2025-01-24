@@ -12,87 +12,66 @@ export function StyledChart(props: ChartProps) {
     'TextSecondary',
   ]);
 
-const options: ApexCharts.ApexOptions = {
-  chart: {
-    type: 'line', // Tetap menggunakan tipe garis
-    toolbar: {
-      show: false, // Nonaktifkan toolbar
+  const options: ApexCharts.ApexOptions = {
+    chart: {
+      toolbar: {
+        show: false,
+      },
+      dropShadow: {
+        enabled: true,
+        top: 13,
+        left: 0,
+        blur: 10,
+        opacity: 0.1,
+        color: '#4318FF',
+      },
     },
-    zoom: {
-      enabled: true, // Aktifkan fitur zoom
-      type: 'x',
-      autoScaleYaxis: true,
+    tooltip: {
+      fillSeriesColor: false,
+      theme: theme,
     },
-    dropShadow: {
-      enabled: true,
-      top: 10,
-      left: 0,
-      blur: 3,
-      opacity: 0.2,
-      color: '#00E396', // Warna garis dengan efek drop shadow
+    markers: {
+      size: 0,
+      colors: textColorPrimary,
+      strokeColors: '#7551FF',
+      strokeWidth: 3,
+      strokeOpacity: 0.9,
+      strokeDashArray: 0,
+      fillOpacity: 1,
+      discrete: [],
+      shape: 'circle',
+      offsetX: 0,
+      offsetY: 0,
+      showNullDataPoints: true,
     },
-  },
-  tooltip: {
-    theme: theme,
-    x: {
-      format: 'dd MMM yyyy HH:mm', // Format tanggal untuk tooltip
+    stroke: {
+      curve: 'smooth',
     },
-    y: {
-      formatter: (value) => value.toFixed(2), // Format angka dua desimal
-    },
-  },
-  markers: {
-    size: 4, // Ukuran marker
-    colors: ['#00E396'], // Warna marker
-    strokeColors: '#ffffff', // Warna garis luar marker
-    strokeWidth: 2,
-    hover: {
-      size: 6, // Ukuran marker saat hover
-    },
-  },
-  stroke: {
-    curve: 'smooth', // Gaya garis "smooth"
-    width: 2, // Ketebalan garis
-    colors: ['#00E396'], // Warna garis
-  },
-  legend: {
-    labels: {
-      colors: textColorSecondary,
-    },
-  },
-  grid: {
-    show: true, // Aktifkan grid
-    borderColor: '#EDEDED', // Warna grid abu-abu terang
-    strokeDashArray: 4, // Garis grid putus-putus
-  },
-  yaxis: {
-    labels: {
-      style: {
+    legend: {
+      labels: {
         colors: textColorSecondary,
       },
     },
-    decimalsInFloat: 2, // Format angka desimal
-  },
-  xaxis: {
-    type: 'datetime', // Sumbu X dengan tipe datetime
-    labels: {
-      style: {
-        colors: textColorSecondary,
-        fontSize: '12px',
-        fontWeight: '500',
+    grid: {
+      show: false,
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: textColorSecondary,
+        },
       },
     },
-    axisTicks: {
-      show: true,
-      color: '#EDEDED',
+    xaxis: {
+      labels: {
+        style: {
+          colors: textColorSecondary,
+          fontSize: '12px',
+          fontWeight: '500',
+        },
+      },
     },
-    axisBorder: {
-      show: true,
-      color: '#EDEDED',
-    },
-  },
-};
+  };
 
   return <Chart {...props} options={deepmerge(options, props.options)} />;
 }
-
