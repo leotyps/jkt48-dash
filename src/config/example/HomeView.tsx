@@ -135,70 +135,117 @@ export default function HomeView() {
   );
 }
 
+
 function TestChart() {
   const [seriesData, setSeriesData] = useState([
     {
-      name: 'Paid',
+      name: "Paid",
       data: [50, 64, 48, 66, 49, 68],
     },
     {
-      name: 'Free Usage',
+      name: "Free Usage",
       data: [30, 50, 13, 46, 26, 16],
     },
   ]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      // Create new data based on the last value in the series
       setSeriesData((prevData) => {
         const newPaidData = [...prevData[0].data];
         const newFreeUsageData = [...prevData[1].data];
 
         // Simulate random change
-        newPaidData.push(newPaidData[newPaidData.length - 1] + Math.floor(Math.random() * 5));
-        newFreeUsageData.push(newFreeUsageData[newFreeUsageData.length - 1] + Math.floor(Math.random() * 5));
+        newPaidData.push(newPaidData[newPaidData.length - 1] + Math.floor(Math.random() * 5) - 2);
+        newFreeUsageData.push(newFreeUsageData[newFreeUsageData.length - 1] + Math.floor(Math.random() * 5) - 2);
 
-        // Keep the data length to 6, remove the first item if it exceeds
+        // Keep data length at 6
         if (newPaidData.length > 6) newPaidData.shift();
         if (newFreeUsageData.length > 6) newFreeUsageData.shift();
 
         return [
-          { name: 'Paid', data: newPaidData },
-          { name: 'Free Usage', data: newFreeUsageData },
+          { name: "Paid", data: newPaidData },
+          { name: "Free Usage", data: newFreeUsageData },
         ];
       });
     }, 2000); // Update every 2 seconds
 
-    return () => clearInterval(intervalId); // Cleanup the interval when the component unmounts
+    return () => clearInterval(intervalId); // Cleanup interval
   }, []);
 
   return (
     <StyledChart
       options={{
-        colors: ['#4318FF', '#39B8FF'],
+        colors: ["#4318FF", "#39B8FF"], // Custom colors for the lines
         chart: {
+          type: "line",
           animations: {
             enabled: true,
-            easing: 'easeinout',
-            speed: 800,
+            easing: "easeinout",
+            speed: 1000,
             animateGradually: {
               enabled: true,
               delay: 150,
             },
           },
+          zoom: {
+            enabled: true,
+            type: "x",
+            autoScaleYaxis: true,
+          },
+        },
+        stroke: {
+          curve: "smooth", // Smooth lines for crypto-style
+          width: 2, // Line thickness
+        },
+        markers: {
+          size: 4,
+          colors: ["#4318FF", "#39B8FF"],
+          strokeColors: "#ffffff",
+          strokeWidth: 2,
+          hover: {
+            size: 6,
+          },
+        },
+        tooltip: {
+          theme: "dark", // Dark theme tooltip
+          x: {
+            format: "dd MMM yyyy HH:mm", // Tooltip date format
+          },
+          y: {
+            formatter: (value) => value.toFixed(2), // Tooltip value format
+          },
         },
         xaxis: {
-          categories: ['SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB'],
+          categories: ["SEP", "OCT", "NOV", "DEC", "JAN", "FEB"], // Static categories
+          labels: {
+            style: {
+              fontSize: "12px",
+              fontWeight: "500",
+            },
+          },
+        },
+        yaxis: {
+          labels: {
+            formatter: (value) => value.toFixed(2), // Format Y-axis values
+          },
+        },
+        grid: {
+          show: true,
+          borderColor: "#EDEDED",
+          strokeDashArray: 4,
         },
         legend: {
-          position: 'right',
+          position: "right",
+          labels: {
+            colors: "#888888", // Legend text color
+          },
         },
         responsive: [
           {
             breakpoint: 650,
             options: {
               legend: {
-                position: 'bottom',
+                position: "bottom",
               },
             },
           },
