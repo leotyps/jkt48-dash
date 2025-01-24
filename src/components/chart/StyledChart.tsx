@@ -14,46 +14,45 @@ export function StyledChart(props: ChartProps) {
 
 const options: ApexCharts.ApexOptions = {
   chart: {
+    type: 'line', // Tetap menggunakan tipe garis
     toolbar: {
-      show: false,
+      show: false, // Nonaktifkan toolbar
+    },
+    zoom: {
+      enabled: true, // Aktifkan fitur zoom
+      type: 'x',
+      autoScaleYaxis: true,
     },
     dropShadow: {
       enabled: true,
       top: 10,
       left: 0,
-      blur: 5,
+      blur: 3,
       opacity: 0.2,
-      color: '#00E396', // Warna lebih segar menyerupai gaya crypto
-    },
-    zoom: {
-      enabled: true, // Tambahkan zoom untuk interaktivitas
-      type: 'x',
-      autoScaleYaxis: true,
+      color: '#00E396', // Warna garis dengan efek drop shadow
     },
   },
   tooltip: {
-    fillSeriesColor: false,
     theme: theme,
     x: {
-      show: true, // Menampilkan label waktu di tooltip
-      format: 'dd MMM yyyy HH:mm',
+      format: 'dd MMM yyyy HH:mm', // Format tanggal untuk tooltip
     },
     y: {
-      formatter: (value) => `${value.toFixed(2)}`, // Format angka dengan dua desimal
+      formatter: (value) => value.toFixed(2), // Format angka dua desimal
     },
   },
   markers: {
-    size: 5, // Ukuran marker untuk titik data
-    colors: ['#00E396'], // Warna marker lebih menonjol
-    strokeColors: '#fff',
+    size: 4, // Ukuran marker
+    colors: ['#00E396'], // Warna marker
+    strokeColors: '#ffffff', // Warna garis luar marker
     strokeWidth: 2,
     hover: {
-      size: 7,
+      size: 6, // Ukuran marker saat hover
     },
   },
   stroke: {
-    curve: 'stepline', // Ubah ke gaya garis "step line" menyerupai gaya crypto
-    width: 2, // Lebih tipis untuk tampilan modern
+    curve: 'smooth', // Gaya garis "smooth"
+    width: 2, // Ketebalan garis
     colors: ['#00E396'], // Warna garis
   },
   legend: {
@@ -62,9 +61,9 @@ const options: ApexCharts.ApexOptions = {
     },
   },
   grid: {
-    show: true,
-    borderColor: '#EDEDED', // Grid abu-abu ringan
-    strokeDashArray: 4, // Garis putus-putus
+    show: true, // Aktifkan grid
+    borderColor: '#EDEDED', // Warna grid abu-abu terang
+    strokeDashArray: 4, // Garis grid putus-putus
   },
   yaxis: {
     labels: {
@@ -72,10 +71,10 @@ const options: ApexCharts.ApexOptions = {
         colors: textColorSecondary,
       },
     },
-    decimalsInFloat: 2, // Format angka dengan dua desimal
+    decimalsInFloat: 2, // Format angka desimal
   },
   xaxis: {
-    type: 'datetime', // Tipe datetime untuk sumbu X
+    type: 'datetime', // Sumbu X dengan tipe datetime
     labels: {
       style: {
         colors: textColorSecondary,
@@ -84,7 +83,7 @@ const options: ApexCharts.ApexOptions = {
       },
     },
     axisTicks: {
-      show: true, // Tampilkan garis penunjuk di sumbu
+      show: true,
       color: '#EDEDED',
     },
     axisBorder: {
