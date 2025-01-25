@@ -52,18 +52,29 @@ const ProfilePage: NextPageWithLayout = () => {
   const toast = useToast();
 
   useEffect(() => {
-    // Check if the user has linked their Gmail account
-    const storedEmail = localStorage.getItem('linked-gmail-email');
-    if (storedEmail) {
-      setLinkedGmail(true);
-      setLinkedEmail(storedEmail);
-    }
+  // Check if the user has linked their Gmail account
+  const storedEmail = localStorage.getItem('linked-gmail-email');
+  if (storedEmail) {
+    setLinkedGmail(true);
+    setLinkedEmail(storedEmail);
+  }
 
+  // Check if ts-apikey cookie exists and set it to localStorage
+  const apiKeyFromCookie = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith('ts-apikey='))
+    ?.split('=')[1];
+  if (apiKeyFromCookie) {
+    localStorage.setItem('jkt48-api-key', apiKeyFromCookie);
+    setApiKey(apiKeyFromCookie);
+  } else {
     const storedApiKey = localStorage.getItem('jkt48-api-key');
     if (storedApiKey) {
       setApiKey(storedApiKey);
     }
-  }, []);
+  }
+}, []);
+
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setApiKey(e.target.value);
