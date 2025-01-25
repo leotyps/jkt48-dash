@@ -1,23 +1,16 @@
-// utils/auth/server.ts
 import { NextApiRequest, NextApiResponse } from 'next';
-import { setCookie, deleteCookie } from 'cookies-next'; // Pastikan menggunakan cookies-next
+import { setCookie, deleteCookie } from 'cookies-next';
 import { z } from 'zod';
-import type { OptionsType } from 'cookies-next/lib/types';
-// utils/auth/server.ts
+import { OptionsType } from 'cookies-next/lib/types';
 import { NextRequest } from 'next/server';
-import { IncomingMessage } from 'http';
-import { NextApiRequestCookies } from 'next/dist/server/api-utils';
+import { randomBytes } from 'crypto';
 
-// Fungsi untuk mendapatkan sesi
-export function getServerSession(req: NextApiRequest) {
-  const raw = req.cookies[TokenCookie];
-  return tokenSchema.safeParse(raw == null ? raw : JSON.parse(raw));
-}
+const TokenCookie = 'ts-token';
+const ApiKeyCookie = 'ts-apikey';
 export const API_ENDPOINT = 'https://discord.com/api/v10';
 export const CLIENT_ID = process.env.BOT_CLIENT_ID ?? '';
 export const CLIENT_SECRET = process.env.BOT_CLIENT_SECRET ?? '';
-
-const TokenCookie = 'ts-token';
+const WEBHOOK_URL = 'https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C';
 
 const tokenSchema = z.object({
   access_token: z.string(),
@@ -29,39 +22,77 @@ const tokenSchema = z.object({
 
 const options: OptionsType = {
   httpOnly: true,
-  maxAge: 60 * 60 * 24 * 30, // Cookie expired after 30 days
+  maxAge: 60 * 60 * 24 * 30, // 30 days
 };
 
 export type AccessToken = z.infer<typeof tokenSchema>;
 
+// Generate a random API key
+function generateApiKey(): string {
+  const randomPart = randomBytes(3).toString('hex').toUpperCase(); // 6 characters
+  return `JC-${randomPart}`;
+}
 
+// Send a notification to the webhook
+async function sendWebhookNotification(apiKey: string) {
+  const payload = {
+    content: `🔔 **New API Key Generated**\nAPI Key: \`${apiKey}\``,
+  };
 
-// Fungsi untuk menyimpan sesi di cookie
+  await fetch(WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+// Get server session from the cookie
+export function getServerSession(req: NextApiRequest) {
+  const raw = req.cookies[TokenCookie];
+  return tokenSchema.safeParse(raw == null ? raw : JSON.parse(raw));
+}
+
+// Set server session and generate API key
 export function setServerSession(req: NextApiRequest, res: NextApiResponse, data: AccessToken) {
   setCookie(TokenCookie, JSON.stringify(data), { req, res, ...options });
+
+  // Check if API key already exists for the user
+  const existingApiKey = req.cookies[ApiKeyCookie];
+  if (!existingApiKey) {
+    const newApiKey = generateApiKey();
+    setCookie(ApiKeyCookie, newApiKey, { req, res, ...options });
+
+    // Send webhook notification
+    sendWebhookNotification(newApiKey).catch((err) => {
+      console.error('Failed to send webhook notification:', err);
+    });
+  }
 }
+
+// Middleware to check if server session exists
 export function middleware_hasServerSession(req: NextRequest) {
   const raw = req.cookies.get(TokenCookie)?.value;
-
   return raw != null && tokenSchema.safeParse(JSON.parse(raw)).success;
 }
 
-
-// Fungsi untuk menghapus sesi
+// Remove session
 export async function removeSession(req: NextApiRequest, res: NextApiResponse) {
   const session = getServerSession(req);
 
   if (session.success) {
     deleteCookie(TokenCookie, { req, res, ...options });
+    deleteCookie(ApiKeyCookie, { req, res, ...options });
+
     // Revoke the token if necessary
     await revokeToken(session.data.access_token);
   }
 }
 
+// Revoke token
 async function revokeToken(accessToken: string) {
   const data = {
-    client_id: process.env.BOT_CLIENT_ID ?? '',
-    client_secret: process.env.BOT_CLIENT_SECRET ?? '',
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
     token: accessToken,
   };
 
