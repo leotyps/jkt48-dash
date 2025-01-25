@@ -9,6 +9,7 @@ import {
   Skeleton,
   Text,
 } from '@chakra-ui/react';
+import { useState, useEffect } from 'react';
 import { config } from '@/config/common';
 import { useGuilds } from '@/api/hooks';
 import HomeView from '@/config/example/HomeView';
