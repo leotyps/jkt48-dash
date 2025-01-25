@@ -19,6 +19,31 @@ import { iconUrl } from '@/api/discord';
 import Link from 'next/link';
 import Head from 'next/head'; // Import Head untuk menambahkan script ke <head>
 
+function initializeApiKeyInClient() {
+  if (typeof window !== 'undefined') {
+    const existingKey = localStorage.getItem('jkt48-api-key');
+
+    if (!existingKey) {
+      fetch('/api/auth/get-api-key')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.apiKey) {
+            localStorage.setItem('jkt48-api-key', data.apiKey);
+            console.log('API Key saved to localStorage:', data.apiKey);
+          }
+        })
+        .catch((err) => console.error('Failed to fetch API key:', err));
+    } else {
+      console.log('API Key already exists in localStorage:', existingKey);
+    }
+  }
+};
+
+useEffect(() => {
+    initializeApiKeyInClient();
+  }, []);
+
+
 const HomePage: NextPageWithLayout = () => {
   //used for example only, you should remove it
   return <HomeView />;
