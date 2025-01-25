@@ -137,6 +137,12 @@ export default function HomeView() {
 
 
 function TestChart() {
+    const getFormattedDate = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+  };
+
+
   const [seriesData, setSeriesData] = useState([
     {
       name: "Requests",
@@ -223,11 +229,6 @@ function TestChart() {
     });
 
     setLastCheckedRequests(remainingRequests); // Reset last checked requests
-  };
-
-  const getFormattedDate = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
   };
 
   return (
