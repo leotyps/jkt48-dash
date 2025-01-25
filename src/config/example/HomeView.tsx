@@ -139,117 +139,128 @@ export default function HomeView() {
 function TestChart() {
   const [seriesData, setSeriesData] = useState([
     {
-      name: "Paid",
-      data: [50, 64, 48, 66, 49, 68],
-    },
-    {
-      name: "Free Usage",
-      data: [30, 50, 13, 46, 26, 16],
+      name: "Requests",
+      data: [0, 0, 0, 0, 0, 0], // Data awal
     },
   ]);
+  const [remainingRequests, setRemainingRequests] = useState<number | null>(null);
+  const [lastCheckedRequests, setLastCheckedRequests] = useState<number | null>(null);
+  const [today, setToday] = useState<string>(getFormattedDate());
 
   useEffect(() => {
+    // Fetch initial data
+    fetchRemainingRequests();
+
+    // Set interval to fetch data every hour (or as required)
     const intervalId = setInterval(() => {
-      setSeriesData((prevData) => {
-        const newPaidData = [...prevData[0].data];
-        const newFreeUsageData = [...prevData[1].data];
+      fetchRemainingRequests();
+    }, 3600000); // 1 hour in milliseconds
 
-        // Simulate random change
-        newPaidData.push(newPaidData[newPaidData.length - 1] + Math.floor(Math.random() * 5) - 2);
-        newFreeUsageData.push(newFreeUsageData[newFreeUsageData.length - 1] + Math.floor(Math.random() * 5) - 2);
-
-        // Keep data length at 6
-        if (newPaidData.length > 6) newPaidData.shift();
-        if (newFreeUsageData.length > 6) newFreeUsageData.shift();
-
-        return [
-          { name: "Paid", data: newPaidData },
-          { name: "Free Usage", data: newFreeUsageData },
-        ];
-      });
-    }, 2000); // Update every 2 seconds
-
-    return () => clearInterval(intervalId); // Cleanup interval
+    return () => clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    // Check for day change
+    const intervalId = setInterval(() => {
+      const currentDay = getFormattedDate();
+      if (currentDay !== today) {
+        resetDailyData();
+        setToday(currentDay);
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(intervalId);
+  }, [today]);
+
+  const fetchRemainingRequests = async () => {
+    try {
+      const response = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/YOUR_API_KEY`);
+      const data = await response.json();
+
+      if (data.success && data.remaining_requests !== null) {
+        const newRemainingRequests = data.remaining_requests;
+
+        if (lastCheckedRequests !== null) {
+          const usage = lastCheckedRequests - newRemainingRequests;
+          if (usage > 0) {
+            updateChartData(usage);
+          }
+        }
+
+        setLastCheckedRequests(newRemainingRequests);
+        setRemainingRequests(newRemainingRequests);
+      }
+    } catch (error) {
+      console.error("Failed to fetch remaining requests:", error);
+    }
+  };
+
+  const updateChartData = (usage: number) => {
+    setSeriesData((prevData) => {
+      const updatedData = [...prevData[0].data];
+      updatedData.push(usage);
+
+      // Keep only the last 6 days of data
+      if (updatedData.length > 6) {
+        updatedData.shift();
+      }
+
+      return [{ name: "Requests", data: updatedData }];
+    });
+  };
+
+  const resetDailyData = () => {
+    setSeriesData((prevData) => {
+      const updatedData = [...prevData[0].data];
+      updatedData.push(0); // Reset daily usage to 0
+
+      // Keep only the last 6 days of data
+      if (updatedData.length > 6) {
+        updatedData.shift();
+      }
+
+      return [{ name: "Requests", data: updatedData }];
+    });
+
+    setLastCheckedRequests(remainingRequests); // Reset last checked requests
+  };
+
+  const getFormattedDate = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+  };
 
   return (
     <StyledChart
       options={{
-        colors: ["#4318FF", "#39B8FF"], // Custom colors for the lines
+        colors: ["#4318FF"], // Line color
         chart: {
           type: "line",
           animations: {
             enabled: true,
             easing: "easeinout",
             speed: 1000,
-            animateGradually: {
-              enabled: true,
-              delay: 150,
-            },
-          },
-          zoom: {
-            enabled: true,
-            type: "x",
-            autoScaleYaxis: true,
           },
         },
         stroke: {
-          curve: "smooth", // Smooth lines for crypto-style
-          width: 2, // Line thickness
-        },
-        markers: {
-          size: 4,
-          colors: ["#4318FF", "#39B8FF"],
-          strokeColors: "#ffffff",
-          strokeWidth: 2,
-          hover: {
-            size: 6,
-          },
-        },
-        tooltip: {
-          theme: "dark", // Dark theme tooltip
-          x: {
-            format: "dd MMM yyyy HH:mm", // Tooltip date format
-          },
-          y: {
-            formatter: (value) => value.toFixed(2), // Tooltip value format
-          },
+          curve: "smooth",
+          width: 2,
         },
         xaxis: {
-          categories: ["SEP", "OCT", "NOV", "DEC", "JAN", "FEB"], // Static categories
-          labels: {
-            style: {
-              fontSize: "12px",
-              fontWeight: "500",
-            },
-          },
+          categories: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Today"], // Example labels
         },
         yaxis: {
           labels: {
-            formatter: (value) => value.toFixed(2), // Format Y-axis values
+            formatter: (value) => `${value} requests`,
           },
         },
         grid: {
-          show: true,
           borderColor: "#EDEDED",
           strokeDashArray: 4,
         },
         legend: {
-          position: "right",
-          labels: {
-            colors: "#888888", // Legend text color
-          },
+          show: false,
         },
-        responsive: [
-          {
-            breakpoint: 650,
-            options: {
-              legend: {
-                position: "bottom",
-              },
-            },
-          },
-        ],
       }}
       series={seriesData}
       height="300"
