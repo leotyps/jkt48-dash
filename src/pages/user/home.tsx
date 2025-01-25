@@ -26,29 +26,6 @@ const HomePage: NextPageWithLayout = () => {
   return <GuildSelect />;
 };
 
-function initializeApiKeyInClient() {
-  if (typeof window !== 'undefined') {
-    const existingKey = localStorage.getItem('jkt48-api-key');
-
-    if (!existingKey) {
-      fetch('/api/auth/get-api-key')
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.apiKey) {
-            localStorage.setItem('jkt48-api-key', data.apiKey);
-            console.log('API Key saved to localStorage:', data.apiKey);
-          }
-        })
-        .catch((err) => console.error('Failed to fetch API key:', err));
-    } else {
-      console.log('API Key already exists in localStorage:', existingKey);
-    }
-  }
-};
-
-useEffect(() => {
-    initializeApiKeyInClient();
-  }, []);
 
 export function GuildSelect() {
   const guilds = useGuilds();
