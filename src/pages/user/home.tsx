@@ -37,20 +37,19 @@ function initializeApiKeyInClient() {
       console.log('API Key already exists in localStorage:', existingKey);
     }
   }
-};
+}
 
-useEffect(() => {
+const HomePage: NextPageWithLayout = () => {
+  // Initialize the API key when the component mounts
+  useEffect(() => {
     initializeApiKeyInClient();
   }, []);
 
-
-const HomePage: NextPageWithLayout = () => {
   //used for example only, you should remove it
   return <HomeView />;
 
   return <GuildSelect />;
 };
-
 
 export function GuildSelect() {
   const guilds = useGuilds();
@@ -100,7 +99,7 @@ export function GuildSelect() {
     );
 
   return <></>;
-}
+};
 
 HomePage.getLayout = (c) => (
   <AppLayout>
@@ -128,4 +127,3 @@ HomePage.getLayout = (c) => (
 );
 
 export default HomePage;
-
