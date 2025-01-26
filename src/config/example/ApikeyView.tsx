@@ -92,21 +92,6 @@ const handleSubmit = async () => {
         maxRequests,
       });
 
-      // Tambahkan request baru hanya jika belum ada API key dengan status Pending
-      const existingRequest = requests.find((r) => r.apiKey === apiKey);
-      if (!existingRequest) {
-        const newRequest = {
-          apiKey,
-          limit,
-          maxRequests,
-          expiryDate,
-          status: "Pending",
-        };
-        const updatedRequests = [...requests, newRequest];
-        setRequests(updatedRequests);
-        localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
-      }
-
       setPaymentPopup(true);
     } else {
       toast({
@@ -152,20 +137,25 @@ const confirmPayment = async () => {
       ) {
         toast({
           title: "Success",
-          description: "Pembayaran berhasil. Webhook terkirim.",
+          description: "Pembayaran berhasil. API Key dalam status Pending.",
           status: "success",
           duration: 3000,
           isClosable: true,
         });
 
-        // Perbarui status API Key dari Pending ke Aktif
-        const updatedRequests = requests.map((r) =>
-          r.apiKey === paymentDetails?.apiKey ? { ...r, status: "Aktif" } : r
-        );
+        // Tambahkan request dengan status Pending
+        const newRequest = {
+          apiKey: paymentDetails.apiKey,
+          limit: paymentDetails.limit,
+          maxRequests: paymentDetails.maxRequests,
+          expiryDate: paymentDetails.expiryDate,
+          status: "Pending",
+        };
+        const updatedRequests = [...requests, newRequest];
         setRequests(updatedRequests);
         localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
 
-        // Kirim webhook dengan embed
+        // Kirim webhook dengan status Pending
         await fetch(webhookUrl, {
           method: "POST",
           headers: {
@@ -174,18 +164,76 @@ const confirmPayment = async () => {
           body: JSON.stringify({
             embeds: [
               {
-                title: "API Key Baru Dibuat",
+                title: "API Key Dibuat (Pending)",
                 fields: [
                   { name: "API Key", value: paymentDetails.apiKey, inline: true },
                   { name: "Limit", value: paymentDetails.limit, inline: true },
-                  { name: "Max Requests", value: paymentDetails.maxRequests, inline: true },
-                  { name: "Masa Aktif", value: paymentDetails.expiryDate, inline: true },
+                  {
+                    name: "Max Requests",
+                    value: paymentDetails.maxRequests,
+                    inline: true,
+                  },
+                  {
+                    name: "Masa Aktif",
+                    value: paymentDetails.expiryDate,
+                    inline: true,
+                  },
                 ],
-                color: 3066993,
+                color: 15105570, // Warna kuning
               },
             ],
           }),
         });
+
+        // Ubah status ke Aktif setelah 2-3 menit
+        setTimeout(async () => {
+          const updatedRequestsAfterActivation = updatedRequests.map((r) =>
+            r.apiKey === paymentDetails.apiKey ? { ...r, status: "Aktif" } : r
+          );
+          setRequests(updatedRequestsAfterActivation);
+          localStorage.setItem(
+            "apikey-requests",
+            JSON.stringify(updatedRequestsAfterActivation)
+          );
+
+          // Kirim webhook dengan status Aktif
+          await fetch(webhookUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              embeds: [
+                {
+                  title: "API Key Aktif",
+                  fields: [
+                    { name: "API Key", value: paymentDetails.apiKey, inline: true },
+                    { name: "Limit", value: paymentDetails.limit, inline: true },
+                    {
+                      name: "Max Requests",
+                      value: paymentDetails.maxRequests,
+                      inline: true,
+                    },
+                    {
+                      name: "Masa Aktif",
+                      value: paymentDetails.expiryDate,
+                      inline: true,
+                    },
+                  ],
+                  color: 3066993, // Warna hijau
+                },
+              ],
+            }),
+          });
+
+          toast({
+            title: "Success",
+            description: "API Key telah aktif.",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+        }, 2 * 60 * 1000); // 2 menit (dapat diubah menjadi 3 menit jika diperlukan)
 
         setPaymentPopup(false);
       } else {
