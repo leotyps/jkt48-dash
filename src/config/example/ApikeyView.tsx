@@ -59,7 +59,7 @@ export default function HomeView() {
     if (savedRequests) setRequests(JSON.parse(savedRequests));
   }, []);
 
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
   if (!limit || !expiryDate || !maxRequests) {
     toast({
       title: "Error",
@@ -92,34 +92,20 @@ export default function HomeView() {
         maxRequests,
       });
 
-      // Tambahkan request baru dengan status awal "Pending"
-      const newRequest = {
-        apiKey,
-        limit,
-        maxRequests,
-        expiryDate,
-        status: "Pending",
-      };
-      const updatedRequests = [...requests, newRequest];
-      setRequests(updatedRequests);
-      localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
-
-      // Set status menjadi "Aktif" setelah 3 menit
-      setTimeout(() => {
-        setRequests((prev) =>
-          prev.map((r) =>
-            r.apiKey === apiKey ? { ...r, status: "Aktif" } : r
-          )
-        );
-        localStorage.setItem(
-          "apikey-requests",
-          JSON.stringify(
-            updatedRequests.map((r) =>
-              r.apiKey === apiKey ? { ...r, status: "Aktif" } : r
-            )
-          )
-        );
-      }, 3 * 60 * 1000); // 3 menit dalam milidetik
+      // Tambahkan request baru hanya jika belum ada API key dengan status Pending
+      const existingRequest = requests.find((r) => r.apiKey === apiKey);
+      if (!existingRequest) {
+        const newRequest = {
+          apiKey,
+          limit,
+          maxRequests,
+          expiryDate,
+          status: "Pending",
+        };
+        const updatedRequests = [...requests, newRequest];
+        setRequests(updatedRequests);
+        localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
+      }
 
       setPaymentPopup(true);
     } else {
@@ -144,89 +130,84 @@ export default function HomeView() {
   }
 };
 
-  const confirmPayment = async () => {
-    try {
-      const response = await fetch(
-        `https://api.jkt48connect.my.id/api/orkut/cekstatus?merchant=OK1453563&keyorkut=584312217038625421453563OKCT6AF928C85E124621785168CD18A9B693&api_key=JKTCONNECT`
-      );
-      const data = await response.json();
+const confirmPayment = async () => {
+  try {
+    const response = await fetch(
+      `https://api.jkt48connect.my.id/api/orkut/cekstatus?merchant=OK1453563&keyorkut=584312217038625421453563OKCT6AF928C85E124621785168CD18A9B693&api_key=JKTCONNECT`
+    );
+    const data = await response.json();
 
-      if (response.ok && data.status === "success") {
-        const latestTransaction = data.data.sort(
-          (a: { date: string }, b: { date: string }) =>
-            new Date(b.date).getTime() - new Date(a.date).getTime()
-        )[0];
+    if (response.ok && data.status === "success") {
+      const latestTransaction = data.data.sort(
+        (a: { date: string }, b: { date: string }) =>
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+      )[0];
 
-        const latestTransactionDate = new Date(latestTransaction.date).getTime();
-        const paymentDate = new Date().getTime();
+      const latestTransactionDate = new Date(latestTransaction.date).getTime();
+      const paymentDate = new Date().getTime();
 
-        if (
-          latestTransaction.amount === paymentDetails?.totalAmount.toString() &&
-          Math.abs(latestTransactionDate - paymentDate) <= 5 * 60 * 1000
-        ) {
-          toast({
-            title: "Success",
-            description: "Pembayaran berhasil. Webhook terkirim.",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-          });
+      if (
+        latestTransaction.amount === paymentDetails?.totalAmount.toString() &&
+        Math.abs(latestTransactionDate - paymentDate) <= 5 * 60 * 1000
+      ) {
+        toast({
+          title: "Success",
+          description: "Pembayaran berhasil. Webhook terkirim.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
 
-          // Simpan API Key ke localStorage
-          const newRequest = {
-            apiKey: paymentDetails.apiKey,
-            limit: paymentDetails.limit,
-            maxRequests: paymentDetails.maxRequests,
-            expiryDate: paymentDetails.expiryDate,
-            status: "Aktif",
-          };
-          const updatedRequests = [...requests, newRequest];
-          setRequests(updatedRequests);
-          localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
+        // Perbarui status API Key dari Pending ke Aktif
+        const updatedRequests = requests.map((r) =>
+          r.apiKey === paymentDetails?.apiKey ? { ...r, status: "Aktif" } : r
+        );
+        setRequests(updatedRequests);
+        localStorage.setItem("apikey-requests", JSON.stringify(updatedRequests));
 
-          // Kirim webhook dengan embed
-          await fetch(webhookUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              embeds: [
-                {
-                  title: "API Key Baru Dibuat",
-                  fields: [
-                    { name: "API Key", value: paymentDetails.apiKey, inline: true },
-                    { name: "Limit", value: paymentDetails.limit, inline: true },
-                    { name: "Max Requests", value: paymentDetails.maxRequests, inline: true },
-                    { name: "Masa Aktif", value: paymentDetails.expiryDate, inline: true },
-                  ],
-                  color: 3066993,
-                },
-              ],
-            }),
-          });
+        // Kirim webhook dengan embed
+        await fetch(webhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            embeds: [
+              {
+                title: "API Key Baru Dibuat",
+                fields: [
+                  { name: "API Key", value: paymentDetails.apiKey, inline: true },
+                  { name: "Limit", value: paymentDetails.limit, inline: true },
+                  { name: "Max Requests", value: paymentDetails.maxRequests, inline: true },
+                  { name: "Masa Aktif", value: paymentDetails.expiryDate, inline: true },
+                ],
+                color: 3066993,
+              },
+            ],
+          }),
+        });
 
-          setPaymentPopup(false);
-        } else {
-          toast({
-            title: "Error",
-            description: "Pembayaran belum terverifikasi atau tidak valid.",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
-        }
+        setPaymentPopup(false);
+      } else {
+        toast({
+          title: "Error",
+          description: "Pembayaran belum terverifikasi atau tidak valid.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Terjadi kesalahan saat memeriksa pembayaran.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
     }
-  };
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Terjadi kesalahan saat memeriksa pembayaran.",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+};
 
   const handleDelete = async (keyToDelete: string) => {
     if (!deleteConfirmation || !deleteReason) {
