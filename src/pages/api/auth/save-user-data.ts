@@ -5,7 +5,7 @@ import { connectToDatabase } from '@/utils/db'; // Koneksi ke database
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { id, username, apiKey, balance } = req.body;
+    const { id, username, apiKey, balance } = req.query;
 
     if (!id || !username || !apiKey) {
       return res.status(400).json({ error: 'Missing required fields' });
