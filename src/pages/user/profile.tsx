@@ -139,7 +139,7 @@ useEffect(() => {
     localStorage.setItem('jkt48-api-key', apiKey);
 
     // Kirim permintaan untuk mengedit API Key pada server
-    const response = await fetch(`/api/auth/edit-api-key?id=${user.id}&apiKey=${apiKey}`, {
+    const response = await fetch(`/api/auth/edit-user-data?id=${user.id}&apiKey=${apiKey}`, {
       method: 'GET',
     });
 
@@ -223,7 +223,6 @@ const linkGmailAccount = async () => {
   return (
     <Grid templateColumns={{ base: '1fr', lg: 'minmax(0, 800px) auto' }} gap={{ base: 3, lg: 6 }}>
       <Flex direction="column">
-        {user.banner != null ? (
           <Image
             alt="banner"
             src="https://8030.us.kg/file/bZC0q7wCUkau.jpg"
@@ -231,9 +230,9 @@ const linkGmailAccount = async () => {
             objectFit="cover"
             rounded="2xl"
           />
-        ) : (
+        
           <Box bg="Brand" rounded="2xl" sx={{ aspectRatio: '1100 / 440' }} />
-        )}
+        
         <VStack mt="-50px" ml="40px" align="start">
           <Avatar
             src={avatarUrl(user)}
