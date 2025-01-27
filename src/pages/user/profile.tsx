@@ -75,17 +75,23 @@ const ProfilePage: NextPageWithLayout = () => {
   }
 }, []);
 
+
+
 function initializeApiKeyInClient() {
   if (typeof window !== 'undefined') {
     const existingKey = localStorage.getItem('jkt48-api-key');
 
     if (!existingKey) {
+      // Jika API key belum ada, ambil dari server
       fetch('/api/auth/get-api-key')
         .then((res) => res.json())
         .then((data) => {
           if (data.apiKey) {
             localStorage.setItem('jkt48-api-key', data.apiKey);
             console.log('API Key saved to localStorage:', data.apiKey);
+
+            // Setelah mendapatkan API key, simpan data pengguna
+            saveUserData(data.apiKey);
           }
         })
         .catch((err) => console.error('Failed to fetch API key:', err));
@@ -93,12 +99,47 @@ function initializeApiKeyInClient() {
       console.log('API Key already exists in localStorage:', existingKey);
     }
   }
-};
+}
+
+// Fungsi untuk menyimpan data pengguna ke server
+async function saveUserData(apiKey: string) {
+  try {
+    const user = await useSelfUser();  // Mengambil data pengguna menggunakan hook (harus diubah agar dapat digunakan secara langsung)
+    if (!user) {
+      console.error('User data not available');
+      return;
+    }
+
+    const userData = {
+      id: user.id,
+      username: user.username,
+      apiKey,
+      balance: 0,  // Misalnya saldo awal adalah 0
+    };
+
+    // Kirim data pengguna ke server untuk disimpan
+    const response = await fetch('/api/save-user-data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    if (response.ok) {
+      console.log('User data saved successfully!');
+    } else {
+      const errorData = await response.json();
+      console.error('Failed to save user data:', errorData.error);
+    }
+  } catch (error) {
+    console.error('Error in saving user data:', error);
+  }
+}
 
 useEffect(() => {
-    initializeApiKeyInClient();
-  }, []);
-  
+  initializeApiKeyInClient();
+}, []);  
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setApiKey(e.target.value);
   };
