@@ -1,7 +1,7 @@
 // pages/api/save-user-data.ts
 
 import { NextApiRequest, NextApiResponse } from 'next';
-import { connectToDatabase } from '../src/utils/db'; // Koneksi ke database
+import { connectToDatabase } from '@/src/utils/db'; // Koneksi ke database
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
