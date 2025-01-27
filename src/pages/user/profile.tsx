@@ -122,27 +122,57 @@ useEffect(() => {
     setApiKey(e.target.value);
   };
 
-  const saveApiKey = () => {
-    if (!apiKey) {
+  const saveApiKey = async () => {
+  if (!apiKey) {
+    toast({
+      title: 'Error',
+      description: 'API Key tidak boleh kosong!',
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    });
+    return;
+  }
+
+  try {
+    // Simpan API Key ke localStorage
+    localStorage.setItem('jkt48-api-key', apiKey);
+
+    // Kirim permintaan untuk mengedit API Key pada server
+    const response = await fetch(`/api/auth/edit-api-key?id=${user.id}&apiKey=${apiKey}`, {
+      method: 'GET',
+    });
+
+    if (response.ok) {
+      setApiStatus('API Key berhasil disimpan');
+      toast({
+        title: 'Success',
+        description: 'API Key berhasil disimpan dan diperbarui di server!',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } else {
+      const errorData = await response.json();
       toast({
         title: 'Error',
-        description: 'API Key tidak boleh kosong!',
+        description: errorData.error || 'Gagal memperbarui API Key di server!',
         status: 'error',
         duration: 3000,
         isClosable: true,
       });
-      return;
     }
-    localStorage.setItem('jkt48-api-key', apiKey);
-    setApiStatus('API Key berhasil disimpan');
+  } catch (error) {
+    console.error('Error saving API Key:', error);
     toast({
-      title: 'Success',
-      description: 'API Key berhasil disimpan!',
-      status: 'success',
+      title: 'Error',
+      description: 'Terjadi kesalahan saat menyimpan API Key.',
+      status: 'error',
       duration: 3000,
       isClosable: true,
     });
-  };
+  }
+};
 
 const linkGmailAccount = async () => {
   const provider = new GoogleAuthProvider();
