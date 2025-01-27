@@ -78,7 +78,7 @@ const ProfilePage: NextPageWithLayout = () => {
 
 
 
-function saveUserDataToServer(user: UserInfo, apiKey: string) {
+function saveUserDataToServer(user, apiKey) {
   if (!user || !apiKey) return;
 
   const userData = {
@@ -88,7 +88,7 @@ function saveUserDataToServer(user: UserInfo, apiKey: string) {
     balance: 0,  // Misalnya saldo awal adalah 0
   };
 
-  fetch('/api/auth/save-user-data', {
+  fetch('/api/save-user-data', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
