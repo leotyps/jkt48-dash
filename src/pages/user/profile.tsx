@@ -18,7 +18,7 @@ import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { useLogoutMutation } from '@/utils/auth/hooks';
 import { useSelfUser } from '@/api/hooks';
 import { profile } from '@/config/translations/profile';
-import { avatarUrl, bannerUrl } from '@/api/discord';
+import { avatarUrl, bannerUrl, UserInfo } from '@/api/discord';
 import { SelectField } from '@/components/forms/SelectField';
 import { SwitchField } from '@/components/forms/SwitchField';
 import { languages, useLang } from '@/config/translations/provider';
@@ -77,7 +77,7 @@ const ProfilePage: NextPageWithLayout = () => {
 
 
 
-function saveUserDataToServer(user, apiKey) {
+function saveUserDataToServer(user: UserInfo, apiKey: string) {
   if (!user || !apiKey) return;
 
   const userData = {
