@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getOrCreateApiKey } from '@/utils/auth/server';
-import { fetchUserInfo, avatarUrl, bannerUrl } from '@/api/discord'; // Import sesuai struktur Anda
+import { avatarUrl, bannerUrl } from '@/api/discord'; // Import untuk membentuk URL gambar
 import { connectToDatabase } from '@/utils/db'; // Koneksi ke CockroachDB
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -8,19 +8,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Mengambil API key
     const apiKey = await getOrCreateApiKey(req, res);
 
-    // Mendapatkan informasi pengguna dari Discord API
-    const token = req.headers.authorization?.split(" ")[1]; // Token dari header
-    if (!token) {
-      return res.status(400).json({ error: "Authorization token is missing." });
+    // Mengambil user.id dan user.username dari request body atau query (misalnya, sebagai input langsung)
+    const { userId, username, banner } = req.body; // Atau menggunakan req.query jika mengirimkan data via query string
+
+    // Validasi input
+    if (!userId || !username) {
+      return res.status(400).json({ error: "User ID and Username are required." });
     }
 
-    const user = await fetchUserInfo(token);
-    if (!user) {
-      return res.status(400).json({ error: "User not authenticated." });
-    }
-
-    const userId = user.id;
-    const username = user.username;
     const initialBalance = 0; // Saldo awal
 
     // Menyimpan data pengguna ke CockroachDB
@@ -34,8 +29,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await db.query(query, values);
 
     // Menyusun URL avatar dan banner
-    const avatar = avatarUrl(user);
-    const banner = user.banner ? bannerUrl(user.id, user.banner) : null;
+    const avatar = avatarUrl({ id: userId, avatar: '', username } as any); // Menggunakan dummy value untuk avatar
+    const userBanner = banner ? bannerUrl(userId, banner) : null;
 
     // Memberikan response ke client
     res.status(200).json({
@@ -44,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       username,
       balance: initialBalance,
       avatarUrl: avatar,
-      bannerUrl: banner,
+      bannerUrl: userBanner,
     });
   } catch (error) {
     console.error("Error generating API key:", error);
