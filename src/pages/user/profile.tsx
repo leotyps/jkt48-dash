@@ -76,9 +76,13 @@ const ProfilePage: NextPageWithLayout = () => {
   }
 }, []);
 
+type User = {
+  id: string;
+  username: string;
+  // tambahkan properti lain yang Anda perlukan dari user
+};
 
-
-function saveUserDataToServer(user: user, apiKey: string) {
+function saveUserDataToServer(user: User, apiKey: string) {
   if (!user || !apiKey) return;
 
   const userData = {
