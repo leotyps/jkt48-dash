@@ -38,13 +38,13 @@ const names = {
  * User info and general settings here
  */
 const ProfilePage: NextPageWithLayout = () => {
- // const user = useSelfUser();
+ const user = useSelfUser();
   const logout = useLogoutMutation();
   const t = profile.useTranslations();
 
   const { colorMode, setColorMode } = useColorMode();
   const { lang, setLang } = useLang();
-  const { user, isLoading, isError } = useSelfUser();
+  //const { user, isLoading, isError } = useSelfUser();
   const [devMode, setDevMode] = useSettingsStore((s) => [s.devMode, s.setDevMode]);
   const [apiKey, setApiKey] = useState<string>('');
   const [apiStatus, setApiStatus] = useState<string | null>(null);
