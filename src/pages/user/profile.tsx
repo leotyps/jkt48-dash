@@ -38,7 +38,7 @@ const names = {
  * User info and general settings here
  */
 const ProfilePage: NextPageWithLayout = () => {
-  const user = useSelfUser();
+ // const user = useSelfUser();
   const logout = useLogoutMutation();
   const t = profile.useTranslations();
 
