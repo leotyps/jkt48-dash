@@ -44,6 +44,7 @@ const ProfilePage: NextPageWithLayout = () => {
 
   const { colorMode, setColorMode } = useColorMode();
   const { lang, setLang } = useLang();
+  const { user, isLoading, isError } = useSelfUser();
   const [devMode, setDevMode] = useSettingsStore((s) => [s.devMode, s.setDevMode]);
   const [apiKey, setApiKey] = useState<string>('');
   const [apiStatus, setApiStatus] = useState<string | null>(null);
