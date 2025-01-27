@@ -88,7 +88,7 @@ function saveUserDataToServer(user, apiKey) {
     balance: 0,  // Misalnya saldo awal adalah 0
   };
 
-  fetch('/api/save-user-data', {
+  fetch('/api/auth/save-user-data', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
