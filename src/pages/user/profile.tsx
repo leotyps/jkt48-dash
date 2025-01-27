@@ -231,8 +231,6 @@ const linkGmailAccount = async () => {
             rounded="2xl"
           />
         
-          <Box bg="Brand" rounded="2xl" sx={{ aspectRatio: '1100 / 440' }} />
-        
         <VStack mt="-50px" ml="40px" align="start">
           <Avatar
             src={avatarUrl(user)}
