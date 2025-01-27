@@ -151,7 +151,7 @@ export default function MyComponent() {
     } else {
       initializeApiKeyInClient(); // Inisialisasi API key jika belum ada
     }
-  }, [user]);
+  }, [user]); // Bergantung pada state `user`
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setApiKey(e.target.value);
