@@ -83,47 +83,24 @@ type User = {
 };
 
 
-function saveUserDataToServer(user: User, apiKey: string) {
-  if (!user || !apiKey) return;
-
-  const userData = new URLSearchParams({
-    id: user.id,
-    username: user.username,
-    apiKey: apiKey,
-    balance: '0',  // Misalnya saldo awal adalah 0
-  });
-
-  fetch(`/api/auth/save-user-data?${userData.toString()}`, {
-    method: 'GET',
-  })
-    .then((response) => {
-      if (response.ok) {
-        console.log('User data and API key saved!');
-      } else {
-        return response.json().then((errorData) => {
-          console.error(errorData.error || 'Failed to save user data');
-        });
-      }
-    })
-    .catch((err) => {
-      console.error('Failed to save user data:', err);
-    });
-}
-
-function initializeApiKeyAndSaveUserData() {
+function initializeApiKeyAndSaveUserData(user: User) {
   if (typeof window !== 'undefined') {
     const existingKey = localStorage.getItem('jkt48-api-key');
-    
+
+    // Buat parameter query dari data user
+    const userData = new URLSearchParams({
+      id: user.id,
+      username: user.username,
+      balance: '0', // Misalnya saldo awal adalah 0
+    });
+
     if (!existingKey) {
-      fetch('/api/auth/get-api-key')
+      fetch(`/api/auth/get-api-key?${userData.toString()}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.apiKey) {
             localStorage.setItem('jkt48-api-key', data.apiKey);
             console.log('API Key saved to localStorage:', data.apiKey);
-
-            // After saving the API Key, send the user data to the server
-            saveUserDataToServer(user, data.apiKey);
           }
         })
         .catch((err) => console.error('Failed to fetch API key:', err));
@@ -134,8 +111,11 @@ function initializeApiKeyAndSaveUserData() {
 }
 
 useEffect(() => {
-  initializeApiKeyAndSaveUserData();
-}, []);
+  // Pastikan user sudah tersedia sebelum memanggil fungsi
+  if (user) {
+    initializeApiKeyAndSaveUserData(user);
+  }
+}, [user]);
 
   
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
