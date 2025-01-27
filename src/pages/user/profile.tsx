@@ -87,7 +87,7 @@ function saveUserDataToServer(user: UserInfo, apiKey: string) {
     balance: 0,  // Misalnya saldo awal adalah 0
   };
 
-  fetch('/api/save-user-data', {
+  fetch('/api/auth/save-user-data', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -121,13 +121,6 @@ function initializeApiKeyAndSaveUserData() {
             console.log('API Key saved to localStorage:', data.apiKey);
 
             // After saving the API Key, send the user data to the server
-            const user: UserInfo = { 
-              id: "123", 
-              username: "userName", 
-              discriminator: "0001", 
-              avatar: "avatar_url" 
-            };  // Gantilah dengan data pengguna yang sesungguhnya
-           
             saveUserDataToServer(user, data.apiKey);
           }
         })
