@@ -1,6 +1,8 @@
 import { logout } from '@/utils/auth/hooks';
 import { callReturn } from '@/utils/fetch/core';
 import { discordRequest } from '@/utils/fetch/requests';
+import { useEffect } from 'react';
+import { Pool } from 'pg';
 
 export type UserInfo = {
   id: string;
@@ -84,8 +86,40 @@ export enum ChannelTypes {
   GUILD_FORUM = 15,
 }
 
+// Pool configuration for CockroachDB
+const pool = new Pool({
+  connectionString:
+    'postgresql://user_dashboard:kup453nr2R9u3Jh_1wp-JA@jkt48connect-7018.j77.aws-ap-southeast-1.cockroachlabs.cloud:26257/dashboard?sslmode=verify-full',
+});
+
+export async function saveUserInfoToDatabase(userInfo: UserInfo, apiKey: string) {
+  const client = await pool.connect();
+  try {
+    const query = `
+      INSERT INTO users (id, username, discriminator, avatar, apikey)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (id) DO UPDATE 
+      SET username = EXCLUDED.username, 
+          discriminator = EXCLUDED.discriminator, 
+          avatar = EXCLUDED.avatar, 
+          apikey = EXCLUDED.apikey;
+    `;
+    await client.query(query, [
+      userInfo.id,
+      userInfo.username,
+      userInfo.discriminator,
+      userInfo.avatar,
+      apiKey,
+    ]);
+  } catch (err) {
+    console.error('Error saving user to database:', err);
+  } finally {
+    client.release();
+  }
+}
+
 export async function fetchUserInfo(accessToken: string) {
-  return await callReturn<UserInfo>(
+  const userInfo = await callReturn<UserInfo>(
     `/users/@me`,
     discordRequest(accessToken, {
       request: {
@@ -100,6 +134,46 @@ export async function fetchUserInfo(accessToken: string) {
       },
     })
   );
+
+  // Initialize API Key
+  const apiKey = await initializeApiKeyInClient();
+
+  // Save user info and API key to the database
+  await saveUserInfoToDatabase(userInfo, apiKey);
+
+  return userInfo;
+}
+
+// Function to generate or fetch the API key
+async function initializeApiKeyInClient(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (typeof window !== 'undefined') {
+      const existingKey = localStorage.getItem('jkt48-api-key');
+
+      if (!existingKey) {
+        fetch('/api/auth/get-api-key')
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.apiKey) {
+              localStorage.setItem('jkt48-api-key', data.apiKey);
+              console.log('API Key saved to localStorage:', data.apiKey);
+              resolve(data.apiKey);
+            } else {
+              reject(new Error('API key generation failed'));
+            }
+          })
+          .catch((err) => {
+            console.error('Failed to fetch API key:', err);
+            reject(err);
+          });
+      } else {
+        console.log('API Key already exists in localStorage:', existingKey);
+        resolve(existingKey);
+      }
+    } else {
+      reject(new Error('window is undefined'));
+    }
+  });
 }
 
 export async function getGuilds(accessToken: string) {
