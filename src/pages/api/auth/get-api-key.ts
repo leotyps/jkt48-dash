@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getOrCreateApiKey } from '@/utils/auth/server';
-import { avatarUrl, bannerUrl } from '@/api/discord'; // Import untuk membentuk URL gambar
+import { useSelfUser } from '@/api/hooks';  // Menggunakan hooks untuk mendapatkan data user
 import { connectToDatabase } from '@/utils/db'; // Koneksi ke CockroachDB
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -8,14 +8,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Mengambil API key
     const apiKey = await getOrCreateApiKey(req, res);
 
-    // Mengambil user.id dan user.username dari request body atau query (misalnya, sebagai input langsung)
-    const { userId, username, banner } = req.body; // Atau menggunakan req.query jika mengirimkan data via query string
-
-    // Validasi input
-    if (!userId || !username) {
-      return res.status(400).json({ error: "User ID and Username are required." });
+    // Mendapatkan data user langsung menggunakan useSelfUser
+    const user = useSelfUser();
+    if (!user || !user.id || !user.username) {
+      return res.status(400).json({ error: "User data is missing or invalid." });
     }
 
+    const userId = user.id;
+    const username = user.username;
     const initialBalance = 0; // Saldo awal
 
     // Menyimpan data pengguna ke CockroachDB
@@ -28,9 +28,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const values = [userId, username, apiKey, initialBalance];
     await db.query(query, values);
 
-    // Menyusun URL avatar dan banner
-    const avatar = avatarUrl({ id: userId, avatar: '', username } as any); // Menggunakan dummy value untuk avatar
-    const userBanner = banner ? bannerUrl(userId, banner) : null;
+    // Menyusun URL avatar dan banner jika ada
+    const avatar = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}?size=512` : null;
+    const banner = user.banner ? `https://cdn.discordapp.com/banners/${user.id}/${user.banner}?size=1024` : null;
 
     // Memberikan response ke client
     res.status(200).json({
@@ -39,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       username,
       balance: initialBalance,
       avatarUrl: avatar,
-      bannerUrl: userBanner,
+      bannerUrl: banner,
     });
   } catch (error) {
     console.error("Error generating API key:", error);
