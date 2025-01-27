@@ -78,7 +78,7 @@ const ProfilePage: NextPageWithLayout = () => {
 
 
 
-function saveUserDataToServer(user, apiKey) {
+function saveUserDataToServer(user: useSelfUser, apiKey: string) {
   if (!user || !apiKey) return;
 
   const userData = {
