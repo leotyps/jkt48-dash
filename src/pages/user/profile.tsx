@@ -89,9 +89,6 @@ function initializeApiKeyInClient() {
           if (data.apiKey) {
             localStorage.setItem('jkt48-api-key', data.apiKey);
             console.log('API Key saved to localStorage:', data.apiKey);
-
-            // Setelah mendapatkan API key, simpan data pengguna
-            saveUserData(data.apiKey);
           }
         })
         .catch((err) => console.error('Failed to fetch API key:', err));
@@ -101,10 +98,8 @@ function initializeApiKeyInClient() {
   }
 }
 
-// Fungsi untuk menyimpan data pengguna ke server
-async function saveUserData(apiKey: string) {
+async function saveUserData(apiKey: string, user: any) {
   try {
-    const user = await useSelfUser();  // Mengambil data pengguna menggunakan hook (harus diubah agar dapat digunakan secara langsung)
     if (!user) {
       console.error('User data not available');
       return;
@@ -137,9 +132,27 @@ async function saveUserData(apiKey: string) {
   }
 }
 
-useEffect(() => {
-  initializeApiKeyInClient();
-}, []);  
+export default function MyComponent() {
+  const [user, setUser] = useState(null);
+  const { data: userData } = useSelfUser(); // Mengambil data pengguna menggunakan hook
+
+  useEffect(() => {
+    // Set data pengguna ke state jika berhasil didapatkan
+    if (userData) {
+      setUser(userData);
+    }
+  }, [userData]);
+
+  useEffect(() => {
+    // Menyimpan API key dan data pengguna setelah data pengguna tersedia
+    if (user && localStorage.getItem('jkt48-api-key')) {
+      const apiKey = localStorage.getItem('jkt48-api-key');
+      saveUserData(apiKey, user); // Menyimpan data pengguna ke server
+    } else {
+      initializeApiKeyInClient(); // Inisialisasi API key jika belum ada
+    }
+  }, [user]);
+
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setApiKey(e.target.value);
   };
