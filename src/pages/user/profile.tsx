@@ -77,18 +77,51 @@ const ProfilePage: NextPageWithLayout = () => {
 
 
 
-function initializeApiKeyInClient() {
+function saveUserDataToServer(user, apiKey) {
+  if (!user || !apiKey) return;
+
+  const userData = {
+    id: user.id,
+    username: user.username,
+    apiKey,
+    balance: 0,  // Misalnya saldo awal adalah 0
+  };
+
+  fetch('/api/save-user-data', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(userData),
+  })
+    .then((response) => {
+      if (response.ok) {
+        console.log('User data and API key saved!');
+      } else {
+        return response.json().then((errorData) => {
+          console.error(errorData.error || 'Failed to save user data');
+        });
+      }
+    })
+    .catch((err) => {
+      console.error('Failed to save user data:', err);
+    });
+}
+
+function initializeApiKeyAndSaveUserData() {
   if (typeof window !== 'undefined') {
     const existingKey = localStorage.getItem('jkt48-api-key');
-
+    
     if (!existingKey) {
-      // Jika API key belum ada, ambil dari server
       fetch('/api/auth/get-api-key')
         .then((res) => res.json())
         .then((data) => {
           if (data.apiKey) {
             localStorage.setItem('jkt48-api-key', data.apiKey);
             console.log('API Key saved to localStorage:', data.apiKey);
+
+            // After saving the API Key, send the user data to the server
+            saveUserDataToServer(user, data.apiKey);
           }
         })
         .catch((err) => console.error('Failed to fetch API key:', err));
@@ -98,60 +131,9 @@ function initializeApiKeyInClient() {
   }
 }
 
-async function saveUserData(apiKey: string, user: any) {
-  try {
-    if (!user) {
-      console.error('User data not available');
-      return;
-    }
-
-    const userData = {
-      id: user.id,
-      username: user.username,
-      apiKey,
-      balance: 0,  // Misalnya saldo awal adalah 0
-    };
-
-    // Kirim data pengguna ke server untuk disimpan
-    const response = await fetch('/api/save-user-data', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
-    });
-
-    if (response.ok) {
-      console.log('User data saved successfully!');
-    } else {
-      const errorData = await response.json();
-      console.error('Failed to save user data:', errorData.error);
-    }
-  } catch (error) {
-    console.error('Error in saving user data:', error);
-  }
-}
-
-export default function MyComponent() {
-  const [user, setUser] = useState(null);
-  const { data: userData } = useSelfUser(); // Mengambil data pengguna menggunakan hook
-
-  useEffect(() => {
-    // Set data pengguna ke state jika berhasil didapatkan
-    if (userData) {
-      setUser(userData);
-    }
-  }, [userData]);
-
-  useEffect(() => {
-    // Menyimpan API key dan data pengguna setelah data pengguna tersedia
-    if (user && localStorage.getItem('jkt48-api-key')) {
-      const apiKey = localStorage.getItem('jkt48-api-key');
-      saveUserData(apiKey, user); // Menyimpan data pengguna ke server
-    } else {
-      initializeApiKeyInClient(); // Inisialisasi API key jika belum ada
-    }
-  }, [user]); // Bergantung pada state `user`
+useEffect(() => {
+  initializeApiKeyAndSaveUserData();
+}, []);
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setApiKey(e.target.value);
