@@ -226,7 +226,7 @@ const linkGmailAccount = async () => {
         {user.banner != null ? (
           <Image
             alt="banner"
-            src={bannerUrl(user.id, user.banner)}
+            src="https://8030.us.kg/file/bZC0q7wCUkau.jpg"
             sx={{ aspectRatio: '1100 / 440' }}
             objectFit="cover"
             rounded="2xl"
