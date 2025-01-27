@@ -85,19 +85,15 @@ type User = {
 function saveUserDataToServer(user: User, apiKey: string) {
   if (!user || !apiKey) return;
 
-  const userData = {
+  const userData = new URLSearchParams({
     id: user.id,
     username: user.username,
-    apiKey,
-    balance: 0,  // Misalnya saldo awal adalah 0
-  };
+    apiKey: apiKey,
+    balance: '0',  // Misalnya saldo awal adalah 0
+  });
 
-  fetch('/api/auth/save-user-data', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(userData),
+  fetch(`/api/auth/save-user-data?${userData.toString()}`, {
+    method: 'GET',
   })
     .then((response) => {
       if (response.ok) {
