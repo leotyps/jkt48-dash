@@ -14,6 +14,7 @@ import {
   useToast,
   Box,
   Input,
+  IconButton,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { config } from '@/config/common';
@@ -23,7 +24,7 @@ import Link from 'next/link';
 import { BsMusicNoteBeamed } from 'react-icons/bs';
 import { IoOpen, IoPricetag } from 'react-icons/io5';
 import { FaRobot } from 'react-icons/fa';
-import { MdVoiceChat } from 'react-icons/md';
+import { MdVoiceChat, MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import { GuildSelect } from '@/pages/user/home';
 
 export default function HomeView() {
@@ -337,52 +338,69 @@ function VoiceChannelItem() {
       setApiStatus('Terjadi kesalahan saat memeriksa API Key.');
     }
   };
+  
+const ApiKeyCard = () => {
+  const [showApiKey, setShowApiKey] = useState(false); // State untuk mengontrol visibilitas API Key
 
+  const toggleApiKeyVisibility = () => {
+    setShowApiKey(!showApiKey);
+  };
+
+  const maskedApiKey = apiKey ? '•'.repeat(apiKey.length) : ''; // Mengonversi API Key menjadi titik
+        
   return (
-    <Flex direction="column" gap={4}>
-       {/* Status Card */}
-  <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
-    <CardHeader as={HStack}>
-      <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
-      <Text fontSize={{ base: 'md', md: 'lg' }}>Status API Key</Text>
-    </CardHeader>
-    <CardBody>
-      <Text
-        fontSize={{ base: 'sm', md: 'md' }}
-        color={apiStatus?.includes('valid') ? 'green.500' : 'red.500'}
-        fontWeight="medium"
-      >
-        {apiStatus || 'Memeriksa API Key...'}
-      </Text>
-    </CardBody>
-  </Card>
+   <Flex direction="column" gap={4}>
+      {/* Status Card */}
+      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+        <CardHeader as={HStack}>
+          <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
+          <Text fontSize={{ base: 'md', md: 'lg' }}>Status API Key</Text>
+        </CardHeader>
+        <CardBody>
+          <Text
+            fontSize={{ base: 'sm', md: 'md' }}
+            color={apiStatus?.includes('valid') ? 'green.500' : 'red.500'}
+            fontWeight="medium"
+          >
+            {apiStatus || 'Memeriksa API Key...'}
+          </Text>
+        </CardBody>
+      </Card>
 
-  {/* API Key Card */}
-  <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
-    <CardHeader>
-      <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
-        {apiKey}
-      </Text>
-    </CardHeader>
-    <CardBody>
-      {apiKey ? (
-        <Text
-          fontSize={{ base: 'sm', md: 'md' }}
-          color="TextSecondary"
-          wordBreak="break-word"
-        >
-          API Key
-        </Text>
-      ) : (
-        <Text color="TextSecondary">
-          API Key belum tersedia. Silakan tambahkan API Key di profil.
-        </Text>
-      )}
-    </CardBody>
-  </Card>
-
-
+      {/* API Key Card */}
+      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+        <CardHeader as={HStack} justifyContent="space-between">
+          <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
+            {showApiKey ? apiKey : maskedApiKey}
+          </Text>
+          {apiKey && (
+            <IconButton
+              aria-label="Toggle API Key Visibility"
+              icon={showApiKey ? <MdVisibilityOff /> : <MdVisibility />}
+              onClick={toggleApiKeyVisibility}
+              size="sm"
+              variant="ghost"
+            />
+          )}
+        </CardHeader>
+        <CardBody>
+          {apiKey ? (
+            <Text
+              fontSize={{ base: 'sm', md: 'md' }}
+              color="TextSecondary"
+              wordBreak="break-word"
+            >
+              API Key
+            </Text>
+          ) : (
+            <Text color="TextSecondary">
+              API Key belum tersedia. Silakan tambahkan API Key di profil.
+            </Text>
+          )}
+        </CardBody>
+      </Card>
     </Flex>
   );
-}
+};
 
+export default ApiKeyCard;
