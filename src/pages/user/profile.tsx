@@ -54,9 +54,37 @@ const ProfilePage: NextPageWithLayout = () => {
   const [linkedGmail, setLinkedGmail] = useState<boolean>(false);
   const [linkedEmail, setLinkedEmail] = useState<string | null>(null);
   const toast = useToast();
-  const [isPremium, setIsPremium] = useState<boolean | null>(null);
-const [isChecking, setIsChecking] = useState<boolean>(true); // State untuk cek API status
+  const [isChecking, setIsChecking] = useState(true); // Mulai dengan pengecekan
+const [isPremium, setIsPremium] = useState(false); // Status premium
 
+useEffect(() => {
+  const apiKey = localStorage.getItem('jkt48-api-key');
+
+  if (apiKey) {
+    // Lakukan fetch ke API untuk memeriksa status premium
+    fetch(`https://api.jkt48connect.my.id/api/check-apikey/${apiKey}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.premium !== undefined) {
+          setIsPremium(data.premium);
+        } else {
+          setIsPremium(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching premium status:', err);
+        setIsPremium(false);
+      })
+      .finally(() => {
+        // Pastikan isChecking diatur ke false setelah selesai memeriksa
+        setIsChecking(false);
+      });
+  } else {
+    // Jika API key tidak ditemukan, anggap bukan premium
+    setIsPremium(false);
+    setIsChecking(false);
+  }
+}, []);
 
   useEffect(() => {
   // Check if the user has linked their Gmail account
