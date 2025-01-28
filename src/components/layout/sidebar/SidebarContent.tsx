@@ -121,13 +121,14 @@ export function BottomCard() {
     <Card pos="sticky" left={0} bottom={0} w="full" py={2}>
       <CardBody as={HStack}>
         <Avatar src={avatarUrl(user)} name={user.username} size="sm" />
-        <Text fontWeight="600">
-          {user.username} {isChecking ? (
-            <Spinner size="xs" ml={2} />
+        <Flex align="center" gap={2}>
+          <Text fontWeight="600">{user.username}</Text>
+          {isChecking ? (
+            <Spinner size="xs" />
           ) : isPremium ? (
-            <RiVerifiedBadgeFill color="#4299E1" size={16} style={{ marginLeft: '8px' }} title="Verified Premium" />
+            <RiVerifiedBadgeFill color="#4299E1" size={16} title="Verified Premium" />
           ) : null}
-        </Text>
+        </Flex>
         <Spacer />
         <Link href="/user/profile">
           <IconButton icon={<SettingsIcon />} aria-label="settings" />
