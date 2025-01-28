@@ -122,8 +122,7 @@ export function BottomCard() {
       <CardBody as={HStack}>
         <Avatar src={avatarUrl(user)} name={user.username} size="sm" />
         <Text fontWeight="600">
-          {user.username}
-          {isChecking ? (
+          {user.username} {isChecking ? (
             <Spinner size="xs" ml={2} />
           ) : isPremium ? (
             <RiVerifiedBadgeFill color="#4299E1" size={16} style={{ marginLeft: '8px' }} title="Verified Premium" />
