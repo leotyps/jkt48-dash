@@ -12,6 +12,7 @@ import {
   useColorMode,
   Input,
   useToast,
+  Spinner,
 } from '@chakra-ui/react';
 import { IoLogOut } from 'react-icons/io5';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
@@ -26,6 +27,8 @@ import { useSettingsStore } from '@/stores';
 import AppLayout from '@/components/layout/app';
 import { NextPageWithLayout } from '@/pages/_app';
 import { auth } from '@/config/firebaseConfig'; // Firebase config
+import { BiCheckCircle } from 'react-icons/bi'; // Ikon dari React Icons
+
 
 const names = {
   en: "English",
@@ -51,6 +54,9 @@ const ProfilePage: NextPageWithLayout = () => {
   const [linkedGmail, setLinkedGmail] = useState<boolean>(false);
   const [linkedEmail, setLinkedEmail] = useState<string | null>(null);
   const toast = useToast();
+  const [isPremium, setIsPremium] = useState<boolean | null>(null);
+const [isChecking, setIsChecking] = useState<boolean>(true); // State untuk cek API status
+
 
   useEffect(() => {
   // Check if the user has linked their Gmail account
@@ -81,6 +87,35 @@ type User = {
   username: string;
   // tambahkan properti lain yang Anda perlukan dari user
 };
+
+// Ambil API key dari localStorage
+useEffect(() => {
+  const storedApiKey = localStorage.getItem('jkt48-api-key');
+  if (storedApiKey) {
+    setApiKey(storedApiKey); // Simpan API key ke state
+  } else {
+    console.warn('API key tidak ditemukan di localStorage');
+  }
+}, []);
+
+// Periksa status premium berdasarkan API key
+useEffect(() => {
+  if (apiKey) {
+    setIsChecking(true); // Mulai pengecekan API
+    fetch(`https://api.jkt48connect.my.id/api/check-apikey/${apiKey}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setIsPremium(data.premium || false); // Set status premium berdasarkan API
+      })
+      .catch((err) => {
+        console.error('Error checking premium status:', err);
+        setIsPremium(false); // Default ke false jika ada error
+      })
+      .finally(() => {
+        setIsChecking(false); // Selesai pengecekan
+      });
+  }
+}, [apiKey]); // Cek ulang jika `apiKey` berubah
 
 
 function initializeApiKeyAndSaveUserData(user: User) {
@@ -232,18 +267,29 @@ const linkGmailAccount = async () => {
           />
         
         <VStack mt="-50px" ml="40px" align="start">
-          <Avatar
-            src={avatarUrl(user)}
-            name={user.username}
-            w="100px"
-            h="100px"
-            ringColor="CardBackground"
-            ring="6px"
-          />
-          <Text fontWeight="600" fontSize="2xl">
-            {user.username}
-          </Text>
-        </VStack>
+  <Avatar
+    src={avatarUrl(user)}
+    name={user.username}
+    w="100px"
+    h="100px"
+    ringColor="CardBackground"
+    ring="6px"
+  />
+  <Text fontWeight="600" fontSize="2xl" display="flex" alignItems="center">
+    {user.username}
+    {isChecking ? ( // Tampilkan Spinner saat cek API
+      <Spinner ml={2} size="sm" />
+    ) : (
+      <BiCheckCircle
+        ml={2}
+        size={20} // Ukuran ikon
+        color={isPremium ? '#4299E1' : '#A0AEC0'} // Warna biru untuk premium, abu-abu untuk non-premium
+        title={isPremium ? 'Verified Premium' : 'Not Premium'} // Tooltip untuk informasi
+      />
+    )}
+  </Text>
+</VStack>;
+
       </Flex>
       <Card w="full" rounded="3xl" h="fit-content" variant="primary">
         <CardHeader fontSize="2xl" fontWeight="600">
