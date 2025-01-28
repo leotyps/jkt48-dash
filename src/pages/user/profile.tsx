@@ -88,34 +88,6 @@ type User = {
   // tambahkan properti lain yang Anda perlukan dari user
 };
 
-// Ambil API key dari localStorage
-useEffect(() => {
-  const storedApiKey = localStorage.getItem('jkt48-api-key');
-  if (storedApiKey) {
-    setApiKey(storedApiKey); // Simpan API key ke state
-  } else {
-    console.warn('API key tidak ditemukan di localStorage');
-  }
-}, []);
-
-// Periksa status premium berdasarkan API key
-useEffect(() => {
-  if (apiKey) {
-    setIsChecking(true); // Mulai pengecekan API
-    fetch(`https://api.jkt48connect.my.id/api/check-apikey/${apiKey}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setIsPremium(data.premium || false); // Set status premium berdasarkan API
-      })
-      .catch((err) => {
-        console.error('Error checking premium status:', err);
-        setIsPremium(false); // Default ke false jika ada error
-      })
-      .finally(() => {
-        setIsChecking(false); // Selesai pengecekan
-      });
-  }
-}, [apiKey]); // Cek ulang jika `apiKey` berubah
 
 
 function initializeApiKeyAndSaveUserData(user: User) {
@@ -277,19 +249,19 @@ const linkGmailAccount = async () => {
   />
   <Text fontWeight="600" fontSize="2xl" display="flex" alignItems="center">
     {user.username}
-    {isChecking ? ( // Tampilkan Spinner saat cek API
+    {isChecking ? (
       <Spinner ml={2} size="sm" />
     ) : (
-      <BiCheckCircle
-        ml={2}
-        size={20} // Ukuran ikon
-        color={isPremium ? '#4299E1' : '#A0AEC0'} // Warna biru untuk premium, abu-abu untuk non-premium
-        title={isPremium ? 'Verified Premium' : 'Not Premium'} // Tooltip untuk informasi
-      />
+      <Box as="span" ml={2}>
+        <BiCheckCircle
+          size={20} // Ukuran ikon
+          color={isPremium ? '#4299E1' : '#A0AEC0'} // Warna biru untuk premium, abu-abu untuk non-premium
+          title={isPremium ? 'Verified Premium' : 'Not Premium'} // Tooltip untuk informasi
+        />
+      </Box>
     )}
   </Text>
-</VStack>;
-
+</VStack>
       </Flex>
       <Card w="full" rounded="3xl" h="fit-content" variant="primary">
         <CardHeader fontSize="2xl" fontWeight="600">
