@@ -11,13 +11,15 @@ import {
   Stack,
   Text,
   VStack,
+  Spinner,
 } from '@chakra-ui/react';
 import { useActiveSidebarItem, SidebarItemInfo } from '@/utils/router';
 import { useGuilds, useSelfUserQuery } from '@/api/hooks';
 import { SearchBar } from '@/components/forms/SearchBar';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { config } from '@/config/common';
 import { FiSettings as SettingsIcon } from 'react-icons/fi';
+import { RiVerifiedBadgeFill } from 'react-icons/ri'; // Ikon verified
 import { avatarUrl } from '@/api/discord';
 import { GuildItem, GuildItemsSkeleton } from './GuildItem';
 import Link from 'next/link';
@@ -84,13 +86,49 @@ export function SidebarContent() {
 
 export function BottomCard() {
   const user = useSelfUserQuery().data;
+  const [isChecking, setIsChecking] = useState(true);
+  const [isPremium, setIsPremium] = useState(false);
+
+  useEffect(() => {
+    const apiKey = localStorage.getItem('jkt48-api-key'); // Ambil API key dari localStorage
+
+    if (apiKey) {
+      fetch(`https://api.jkt48connect.my.id/api/check-apikey/${apiKey}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.premium !== undefined) {
+            setIsPremium(data.premium);
+          } else {
+            setIsPremium(false);
+          }
+        })
+        .catch((err) => {
+          console.error('Error checking premium status:', err);
+          setIsPremium(false);
+        })
+        .finally(() => {
+          setIsChecking(false); // Selesai pengecekan
+        });
+    } else {
+      setIsPremium(false);
+      setIsChecking(false);
+    }
+  }, []);
+
   if (user == null) return <></>;
 
   return (
     <Card pos="sticky" left={0} bottom={0} w="full" py={2}>
       <CardBody as={HStack}>
         <Avatar src={avatarUrl(user)} name={user.username} size="sm" />
-        <Text fontWeight="600">{user.username}</Text>
+        <Text fontWeight="600">
+          {user.username}
+          {isChecking ? (
+            <Spinner size="xs" ml={2} />
+          ) : isPremium ? (
+            <RiVerifiedBadgeFill color="#4299E1" size={16} style={{ marginLeft: '8px' }} title="Verified Premium" />
+          ) : null}
+        </Text>
         <Spacer />
         <Link href="/user/profile">
           <IconButton icon={<SettingsIcon />} aria-label="settings" />
