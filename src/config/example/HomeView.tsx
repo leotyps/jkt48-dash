@@ -23,9 +23,8 @@ import Link from 'next/link';
 import { BsMusicNoteBeamed } from 'react-icons/bs';
 import { IoOpen, IoPricetag } from 'react-icons/io5';
 import { FaRobot } from 'react-icons/fa';
-import { MdVoiceChat } from 'react-icons/md';
+import { MdVoiceChat, MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import { GuildSelect } from '@/pages/user/home';
-import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons'; // Icon mata dan mata tertutup dari Chakra UI
 
 export default function HomeView() {
   const t = dashboard.useTranslations();
@@ -374,7 +373,7 @@ function VoiceChannelItem() {
               variant="ghost"
               p={0}
             >
-              {isApiKeyVisible ? <ViewOffIcon /> : <ViewIcon />} {/* Icon mata */}
+              {isApiKeyVisible ? <MdVisibilityOff /> : <MdVisibility />} {/* Icon mata */}
             </Button>
           </HStack>
         </CardHeader>
