@@ -297,9 +297,10 @@ function TestChart() {
 
 function MusicPlayer() {
   const videoUrls = [
+    { url: 'https://8030.us.kg/file/tu1QxK8pfvGN.mp4', title: 'Dj Anugrah Terindah' },
+    { url: 'https://8030.us.kg/file/SSN3QnR0C5sU.mp4', title: 'Dj Terlalu Cinta' },
     { url: 'https://8030.us.kg/file/wU0N09SMt41S.mp4', title: 'Gedene Cintaku Luarr Biasa (Tresno Tekan Mati)' },
-    { url: '/videos/song2.mp4', title: 'Song 2' },
-    { url: '/videos/song3.mp4', title: 'Song 3' },
+    { url: 'https://8030.us.kg/file/BBjoKygdO5Wi.mp4', title: 'Dj Aku Gak Mau Selain Kamu' }   
   ]; // Daftar file video .mp4 dengan judul
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0); // Indeks lagu saat ini
   const [isPlaying, setIsPlaying] = useState(false); // Status pemutaran
