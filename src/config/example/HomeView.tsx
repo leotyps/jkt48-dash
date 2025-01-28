@@ -361,7 +361,7 @@ function VoiceChannelItem() {
   <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
     <CardHeader>
       <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
-        API Key
+        {apiKey}
       </Text>
     </CardHeader>
     <CardBody>
@@ -371,7 +371,7 @@ function VoiceChannelItem() {
           color="TextSecondary"
           wordBreak="break-word"
         >
-          {apiKey}
+          API Key
         </Text>
       ) : (
         <Text color="TextSecondary">
@@ -381,49 +381,6 @@ function VoiceChannelItem() {
     </CardBody>
   </Card>
 
-  {/* Remaining Requests Card */}
-  <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
-    <CardHeader>
-      <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
-        Remaining Requests
-      </Text>
-    </CardHeader>
-    <CardBody>
-      {remainingRequests !== null ? (
-        <Text
-          fontSize={{ base: 'lg', md: 'xl' }}
-          fontWeight="bold"
-          color="blue.500"
-        >
-          {remainingRequests}
-        </Text>
-      ) : (
-        <Text color="TextSecondary">Data tidak tersedia.</Text>
-      )}
-    </CardBody>
-  </Card>
-
-  {/* Expiry Date Card */}
-  <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
-    <CardHeader>
-      <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
-        Expiry Date
-      </Text>
-    </CardHeader>
-    <CardBody>
-      {expiryDate ? (
-        <Text
-          fontSize={{ base: 'lg', md: 'xl' }}
-          fontWeight="bold"
-          color="teal.500"
-        >
-          {expiryDate}
-        </Text>
-      ) : (
-        <Text color="TextSecondary">Data tidak tersedia.</Text>
-      )}
-    </CardBody>
-  </Card>
 
     </Flex>
   );
