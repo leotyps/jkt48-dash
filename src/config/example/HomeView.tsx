@@ -301,20 +301,22 @@ function MusicPlayer() {
     { url: '/videos/song2.mp4', title: 'Song 2' },
     { url: '/videos/song3.mp4', title: 'Song 3' },
   ]; // Daftar file video .mp4 dengan judul
+
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0); // Indeks lagu saat ini
   const [isPlaying, setIsPlaying] = useState(false); // Status pemutaran
   const videoRef = useRef<HTMLVideoElement>(null); // Referensi ke elemen video
+  const audioRef = useRef<HTMLAudioElement>(null); // Referensi untuk audio latar belakang
 
   const currentTrack = videoUrls[currentTrackIndex];
 
-  const playVideo = () => {
+  const playAudio = () => {
     setIsPlaying(true);
-    if (videoRef.current) videoRef.current.play();
+    if (audioRef.current) audioRef.current.play();
   };
 
-  const pauseVideo = () => {
+  const pauseAudio = () => {
     setIsPlaying(false);
-    if (videoRef.current) videoRef.current.pause();
+    if (audioRef.current) audioRef.current.pause();
   };
 
   const nextTrack = () => {
@@ -329,22 +331,35 @@ function MusicPlayer() {
     setIsPlaying(true);
   };
 
+  useEffect(() => {
+    if (isPlaying) {
+      playAudio();
+    } else {
+      pauseAudio();
+    }
+  }, [currentTrackIndex, isPlaying]);
+
   return (
     <Flex direction="column" align="center" gap={3}>
       <Text fontWeight="medium">Now Playing:</Text>
       <Text fontSize="lg" fontWeight="bold" textAlign="center">
         {currentTrack.title}
       </Text>
-      <Box w="100%" maxW="600px" rounded="lg" overflow="hidden" shadow="md">
+
+      {/* Video untuk tampilan */}
+      <Box w="100%" maxW="600px" rounded="lg" overflow="hidden" shadow="md" display={{ base: 'none', md: 'block' }}>
         <video
           ref={videoRef}
           width="100%"
           height="300"
           src={currentTrack.url}
           controls={false} // Tidak menampilkan kontrol bawaan
-          onEnded={nextTrack} // Lanjut ke lagu berikutnya setelah video selesai
         ></video>
       </Box>
+
+      {/* Audio untuk pemutaran latar belakang */}
+      <audio ref={audioRef} src={currentTrack.url} preload="auto" onEnded={nextTrack}></audio>
+
       <HStack spacing={4} mt={4}>
         <IconButton
           icon={<IoPlaySkipBack />}
@@ -355,14 +370,14 @@ function MusicPlayer() {
         {isPlaying ? (
           <IconButton
             icon={<IoPause />}
-            aria-label="Pause Video"
-            onClick={pauseVideo}
+            aria-label="Pause Audio"
+            onClick={pauseAudio}
           />
         ) : (
           <IconButton
             icon={<IoPlay />}
-            aria-label="Play Video"
-            onClick={playVideo}
+            aria-label="Play Audio"
+            onClick={playAudio}
           />
         )}
         <IconButton
@@ -375,7 +390,6 @@ function MusicPlayer() {
     </Flex>
   );
 }
-
 function VoiceChannelItem() {
   const [apiKey, setApiKey] = useState<string>('');
   const [isApiKeyVisible, setIsApiKeyVisible] = useState<boolean>(false); // Status untuk toggle visibility
