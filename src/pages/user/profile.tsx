@@ -27,7 +27,7 @@ import { useSettingsStore } from '@/stores';
 import AppLayout from '@/components/layout/app';
 import { NextPageWithLayout } from '@/pages/_app';
 import { auth } from '@/config/firebaseConfig'; // Firebase config
-import { BiCheckCircle } from 'react-icons/bi'; // Ikon dari React Icons
+import { RiVerifiedBadgeFill } from 'react-icons/ri'; // Ikon dari React Icons
 
 
 const names = {
@@ -281,7 +281,7 @@ const linkGmailAccount = async () => {
       <Spinner ml={2} size="sm" />
     ) : (
       <Box as="span" ml={2}>
-        <BiCheckCircle
+        <RiVerifiedBadgeFill
           size={20} // Ukuran ikon
           color={isPremium ? '#4299E1' : '#A0AEC0'} // Warna biru untuk premium, abu-abu untuk non-premium
           title={isPremium ? 'Verified Premium' : 'Not Premium'} // Tooltip untuk informasi
