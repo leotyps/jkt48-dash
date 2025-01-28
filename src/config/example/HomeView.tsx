@@ -14,7 +14,7 @@ import {
   useToast,
   Box,
   Input,
-  iconButton,
+  IconButton,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { config } from '@/config/common';
