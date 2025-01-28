@@ -25,6 +25,9 @@ import { IoOpen, IoPricetag } from 'react-icons/io5';
 import { FaRobot } from 'react-icons/fa';
 import { MdVoiceChat, MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import { GuildSelect } from '@/pages/user/home';
+import { IoPlay, IoPause, IoPlaySkipForward, IoPlaySkipBack } from 'react-icons/io5';
+
+
 
 export default function HomeView() {
   const t = dashboard.useTranslations();
@@ -144,22 +147,99 @@ useEffect(() => {
       {/* Chart Section */}
       <TestChart />
 
-      {/* Create a Voice Channel Section */}
-      <Flex direction="column" gap={3} mt={5}>
-        <Heading size="md">Create a Voice Channel</Heading>
-        <Card rounded="3xl" variant="primary">
-          <CardBody as={Center} p={4} flexDirection="column" gap={3}>
-            <Circle p={4} bg="brandAlpha.100" color="brand.500" _dark={{ color: 'brand.200' }}>
-              <Icon as={MdVoiceChat} w="80px" h="80px" />
-            </Circle>
-            <Text fontWeight="medium">Silakan buat voice channel baru untuk diskusi</Text>
-          </CardBody>
-        </Card>
-      </Flex>
-    </Flex>
+      {/* Radio Music Section */}
+ <Flex direction="column" gap={3} mt={5}>
+  <Heading size="md">Radio Music Section</Heading>
+  <Card rounded="3xl" variant="primary">
+    <CardBody as={Center} p={4} flexDirection="column" gap={3}>
+      <Circle p={4} bg="brandAlpha.100" color="brand.500" _dark={{ color: 'brand.200' }}>
+        <Icon as={BsMusicNoteBeamed} w="80px" h="80px" />
+      </Circle>
+      <MusicPlayer />
+    </CardBody>
+  </Card>
+</Flex>
   );
 }
 
+function MusicPlayer() {
+  const musicUrls = [
+    'https://music.youtube.com/watch?v=gXc5JeztwDY&si=ic_RZJUkpGt76SWN',
+    'https://music.youtube.com/watch?v=example1&si=abc',
+    'https://music.youtube.com/watch?v=example2&si=def',
+  ]; // Daftar URL lagu
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0); // Index lagu saat ini
+  const [isPlaying, setIsPlaying] = useState(false); // Status pemutaran
+
+  const currentTrack = musicUrls[currentTrackIndex];
+
+  const playMusic = () => {
+    setIsPlaying(true);
+    const audio = document.getElementById('music-player') as HTMLAudioElement;
+    if (audio) audio.play();
+  };
+
+  const pauseMusic = () => {
+    setIsPlaying(false);
+    const audio = document.getElementById('music-player') as HTMLAudioElement;
+    if (audio) audio.pause();
+  };
+
+  const nextTrack = () => {
+    setCurrentTrackIndex((prevIndex) => (prevIndex + 1) % musicUrls.length);
+    setIsPlaying(true);
+  };
+
+  const previousTrack = () => {
+    setCurrentTrackIndex((prevIndex) =>
+      prevIndex - 1 < 0 ? musicUrls.length - 1 : prevIndex - 1
+    );
+    setIsPlaying(true);
+  };
+
+  return (
+    <Flex direction="column" align="center" gap={3}>
+      <Text fontWeight="medium">Now Playing:</Text>
+      <Text
+        fontSize="sm"
+        color="TextSecondary"
+        wordBreak="break-word"
+        maxW="300px"
+        textAlign="center"
+      >
+        {currentTrack}
+      </Text>
+      <audio id="music-player" src={currentTrack} preload="auto"></audio>
+      <HStack spacing={4}>
+        <IconButton
+          icon={<IoPlaySkipBack />}
+          aria-label="Previous Track"
+          onClick={previousTrack}
+          isDisabled={musicUrls.length <= 1}
+        />
+        {isPlaying ? (
+          <IconButton
+            icon={<IoPause />}
+            aria-label="Pause Music"
+            onClick={pauseMusic}
+          />
+        ) : (
+          <IconButton
+            icon={<IoPlay />}
+            aria-label="Play Music"
+            onClick={playMusic}
+          />
+        )}
+        <IconButton
+          icon={<IoPlaySkipForward />}
+          aria-label="Next Track"
+          onClick={nextTrack}
+          isDisabled={musicUrls.length <= 1}
+        />
+      </HStack>
+    </Flex>
+  );
+}
 
 function TestChart() {
     const getFormattedDate = () => {
