@@ -16,7 +16,7 @@ import {
   Input,
   IconButton,
 } from '@chakra-ui/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { config } from '@/config/common';
 import { StyledChart } from '@/components/chart/StyledChart';
 import { dashboard } from '@/config/translations/dashboard';
@@ -151,9 +151,6 @@ useEffect(() => {
   <Heading size="md">Radio Music Section</Heading>
   <Card rounded="3xl" variant="primary">
     <CardBody as={Center} p={4} flexDirection="column" gap={3}>
-      <Circle p={4} bg="brandAlpha.100" color="brand.500" _dark={{ color: 'brand.200' }}>
-        <Icon as={BsMusicNoteBeamed} w="80px" h="80px" />
-      </Circle>
       <MusicPlayer />
     </CardBody>
   </Card>
@@ -297,38 +294,37 @@ function TestChart() {
   );
 }
 
+
 function MusicPlayer() {
-  const musicUrls = [
-    { id: 'gXc5JeztwDY', title: 'Song 1' },
-    { id: 'example1', title: 'Song 2' },
-    { id: 'example2', title: 'Song 3' },
-  ]; // Daftar video ID dan judul
-
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0); // Index lagu saat ini
+  const videoUrls = [
+    { url: 'https://8030.us.kg/file/wU0N09SMt41S.mp4', title: 'Gedene Cintaku Luarr Biasa (Tresno Tekan Mati)' },
+    { url: '/videos/song2.mp4', title: 'Song 2' },
+    { url: '/videos/song3.mp4', title: 'Song 3' },
+  ]; // Daftar file video .mp4 dengan judul
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0); // Indeks lagu saat ini
   const [isPlaying, setIsPlaying] = useState(false); // Status pemutaran
+  const videoRef = useRef<HTMLVideoElement>(null); // Referensi ke elemen video
 
-  const currentTrack = musicUrls[currentTrackIndex];
+  const currentTrack = videoUrls[currentTrackIndex];
 
-  const playMusic = () => {
+  const playVideo = () => {
     setIsPlaying(true);
-    const iframe = document.getElementById('music-player') as HTMLIFrameElement;
-    iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+    if (videoRef.current) videoRef.current.play();
   };
 
-  const pauseMusic = () => {
+  const pauseVideo = () => {
     setIsPlaying(false);
-    const iframe = document.getElementById('music-player') as HTMLIFrameElement;
-    iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+    if (videoRef.current) videoRef.current.pause();
   };
 
   const nextTrack = () => {
-    setCurrentTrackIndex((prevIndex) => (prevIndex + 1) % musicUrls.length);
+    setCurrentTrackIndex((prevIndex) => (prevIndex + 1) % videoUrls.length);
     setIsPlaying(true);
   };
 
   const previousTrack = () => {
     setCurrentTrackIndex((prevIndex) =>
-      prevIndex - 1 < 0 ? musicUrls.length - 1 : prevIndex - 1
+      prevIndex - 1 < 0 ? videoUrls.length - 1 : prevIndex - 1
     );
     setIsPlaying(true);
   };
@@ -340,41 +336,40 @@ function MusicPlayer() {
         {currentTrack.title}
       </Text>
       <Box w="100%" maxW="600px" rounded="lg" overflow="hidden" shadow="md">
-        <iframe
-          id="music-player"
+        <video
+          ref={videoRef}
           width="100%"
-          height="300px"
-          src={`https://www.youtube.com/embed/${currentTrack.id}?enablejsapi=1&autoplay=0&controls=0`}
-          frameBorder="0"
-          allow="autoplay; encrypted-media"
-          allowFullScreen
-        ></iframe>
+          height="300"
+          src={currentTrack.url}
+          controls={false} // Tidak menampilkan kontrol bawaan
+          onEnded={nextTrack} // Lanjut ke lagu berikutnya setelah video selesai
+        ></video>
       </Box>
       <HStack spacing={4} mt={4}>
         <IconButton
           icon={<IoPlaySkipBack />}
           aria-label="Previous Track"
           onClick={previousTrack}
-          isDisabled={musicUrls.length <= 1}
+          isDisabled={videoUrls.length <= 1}
         />
         {isPlaying ? (
           <IconButton
             icon={<IoPause />}
-            aria-label="Pause Music"
-            onClick={pauseMusic}
+            aria-label="Pause Video"
+            onClick={pauseVideo}
           />
         ) : (
           <IconButton
             icon={<IoPlay />}
-            aria-label="Play Music"
-            onClick={playMusic}
+            aria-label="Play Video"
+            onClick={playVideo}
           />
         )}
         <IconButton
           icon={<IoPlaySkipForward />}
           aria-label="Next Track"
           onClick={nextTrack}
-          isDisabled={musicUrls.length <= 1}
+          isDisabled={videoUrls.length <= 1}
         />
       </HStack>
     </Flex>
