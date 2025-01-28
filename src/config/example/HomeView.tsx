@@ -14,7 +14,6 @@ import {
   useToast,
   Box,
   Input,
-  IconButton,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { config } from '@/config/common';
@@ -24,8 +23,9 @@ import Link from 'next/link';
 import { BsMusicNoteBeamed } from 'react-icons/bs';
 import { IoOpen, IoPricetag } from 'react-icons/io5';
 import { FaRobot } from 'react-icons/fa';
-import { MdVoiceChat, MdVisibility, MdVisibilityOff } from 'react-icons/md';
+import { MdVoiceChat } from 'react-icons/md';
 import { GuildSelect } from '@/pages/user/home';
+import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons'; // Icon mata dan mata tertutup dari Chakra UI
 
 export default function HomeView() {
   const t = dashboard.useTranslations();
@@ -298,6 +298,7 @@ function TestChart() {
 
 function VoiceChannelItem() {
   const [apiKey, setApiKey] = useState<string>('');
+  const [isApiKeyVisible, setIsApiKeyVisible] = useState<boolean>(false); // Status untuk toggle visibility
   const [expiryDate, setExpiryDate] = useState<string | null>(null);
   const [remainingRequests, setRemainingRequests] = useState<number | null>(null);
   const [apiStatus, setApiStatus] = useState<string | null>(null);
@@ -338,18 +339,9 @@ function VoiceChannelItem() {
       setApiStatus('Terjadi kesalahan saat memeriksa API Key.');
     }
   };
-  
-const ApiKeyCard = () => {
-  const [showApiKey, setShowApiKey] = useState(false); // State untuk mengontrol visibilitas API Key
 
-  const toggleApiKeyVisibility = () => {
-    setShowApiKey(!showApiKey);
-  };
-
-  const maskedApiKey = apiKey ? '•'.repeat(apiKey.length) : ''; // Mengonversi API Key menjadi titik
-        
   return (
-   <Flex direction="column" gap={4}>
+    <Flex direction="column" gap={4}>
       {/* Status Card */}
       <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
         <CardHeader as={HStack}>
@@ -369,19 +361,22 @@ const ApiKeyCard = () => {
 
       {/* API Key Card */}
       <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
-        <CardHeader as={HStack} justifyContent="space-between">
-          <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
-            {showApiKey ? apiKey : maskedApiKey}
-          </Text>
-          {apiKey && (
-            <IconButton
-              aria-label="Toggle API Key Visibility"
-              icon={showApiKey ? <MdVisibilityOff /> : <MdVisibility />}
-              onClick={toggleApiKeyVisibility}
+        <CardHeader>
+          <HStack justify="space-between" align="center">
+            <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
+              {isApiKeyVisible
+                ? apiKey
+                : '•'.repeat(apiKey.length)} {/* Tampilkan titik sesuai jumlah karakter */}
+            </Text>
+            <Button
               size="sm"
+              onClick={() => setIsApiKeyVisible(!isApiKeyVisible)} // Toggle visibility
               variant="ghost"
-            />
-          )}
+              p={0}
+            >
+              {isApiKeyVisible ? <ViewOffIcon /> : <ViewIcon />} {/* Icon mata */}
+            </Button>
+          </HStack>
         </CardHeader>
         <CardBody>
           {apiKey ? (
@@ -401,6 +396,4 @@ const ApiKeyCard = () => {
       </Card>
     </Flex>
   );
-};
-
-export default ApiKeyCard;
+}
