@@ -299,10 +299,11 @@ function TestChart() {
 
 function MusicPlayer() {
   const musicUrls = [
-    'https://music.youtube.com/watch?v=gXc5JeztwDY&si=ic_RZJUkpGt76SWN',
-    'https://music.youtube.com/watch?v=example1&si=abc',
-    'https://music.youtube.com/watch?v=example2&si=def',
-  ]; // Daftar URL lagu
+    { id: 'gXc5JeztwDY', title: 'Song 1' },
+    { id: 'example1', title: 'Song 2' },
+    { id: 'example2', title: 'Song 3' },
+  ]; // Daftar video ID dan judul
+
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0); // Index lagu saat ini
   const [isPlaying, setIsPlaying] = useState(false); // Status pemutaran
 
@@ -310,14 +311,14 @@ function MusicPlayer() {
 
   const playMusic = () => {
     setIsPlaying(true);
-    const audio = document.getElementById('music-player') as HTMLAudioElement;
-    if (audio) audio.play();
+    const iframe = document.getElementById('music-player') as HTMLIFrameElement;
+    iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
   };
 
   const pauseMusic = () => {
     setIsPlaying(false);
-    const audio = document.getElementById('music-player') as HTMLAudioElement;
-    if (audio) audio.pause();
+    const iframe = document.getElementById('music-player') as HTMLIFrameElement;
+    iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
   };
 
   const nextTrack = () => {
@@ -335,17 +336,21 @@ function MusicPlayer() {
   return (
     <Flex direction="column" align="center" gap={3}>
       <Text fontWeight="medium">Now Playing:</Text>
-      <Text
-        fontSize="sm"
-        color="TextSecondary"
-        wordBreak="break-word"
-        maxW="300px"
-        textAlign="center"
-      >
-        {currentTrack}
+      <Text fontSize="lg" fontWeight="bold" textAlign="center">
+        {currentTrack.title}
       </Text>
-      <audio id="music-player" src={currentTrack} preload="auto"></audio>
-      <HStack spacing={4}>
+      <Box w="100%" maxW="600px" rounded="lg" overflow="hidden" shadow="md">
+        <iframe
+          id="music-player"
+          width="100%"
+          height="300px"
+          src={`https://www.youtube.com/embed/${currentTrack.id}?enablejsapi=1&autoplay=0&controls=0`}
+          frameBorder="0"
+          allow="autoplay; encrypted-media"
+          allowFullScreen
+        ></iframe>
+      </Box>
+      <HStack spacing={4} mt={4}>
         <IconButton
           icon={<IoPlaySkipBack />}
           aria-label="Previous Track"
