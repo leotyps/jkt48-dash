@@ -15,6 +15,14 @@ import {
   Box,
   Input,
   IconButton,
+  useDisclosure,
+Modal,
+ModalOverlay,
+ModalContent,
+ModalHeader,
+ModalCloseButton,
+ModalBody,
+ModalFooter,
 } from '@chakra-ui/react';
 import { useState, useEffect, useRef } from 'react';
 import { config } from '@/config/common';
@@ -378,32 +386,41 @@ function MusicPlayer() {
   );
 }
 
-function VoiceChannelItem() {
-  const user = useSelfUser(); // Mendapatkan data user
-  const [apiKey, setApiKey] = useState<string>('');
-  const [isApiKeyVisible, setIsApiKeyVisible] = useState<boolean>(false);
-  const [expiryDate, setExpiryDate] = useState<string | null>(null);
-  const [remainingRequests, setRemainingRequests] = useState<number | null>(null);
-  const [apiStatus, setApiStatus] = useState<string | null>(null);
-  const [balance, setBalance] = useState<number | null>(null); // State untuk saldo
+export function VoiceChannelItem() {
+  const user = useSelfUser(); // Mendapatkan data user dari API
+  const [apiKey, setApiKey] = useState < string > ('');
+  const [isApiKeyVisible, setIsApiKeyVisible] = useState < boolean > (false);
+  const [balance, setBalance] = useState < number | null > (null);
+  const [inputApiKey, setInputApiKey] = useState < string > ('');
+  const [apiData, setApiData] = useState < any > (null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem('jkt48-api-key');
     if (storedApiKey) {
       setApiKey(storedApiKey);
-      checkApiKey(storedApiKey);
+      fetchBalance(user?.id);
     }
-    if (user?.id) {
-      fetchUserBalance(user.id); // Ambil saldo saat komponen dimuat jika user.id tersedia
-    }
-  }, [user?.id]); // Gunakan efek ini ketika user.id berubah
+  }, [user?.id]);
 
-  const checkApiKey = async (key: string) => {
-    if (!key) {
+  const fetchBalance = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/auth/get-user-data?id=${userId}`);
+      const data = await response.json();
+      if (data.user?.balance !== undefined) {
+        setBalance(Number(data.user.balance));
+      }
+    } catch (error) {
+      console.error('Gagal mengambil saldo:', error);
+    }
+  };
+
+  const checkApiKey = async () => {
+    if (!inputApiKey) {
       toast({
         title: 'Error',
-        description: 'API Key tidak boleh kosong!',
+        description: 'Harap masukkan API Key!',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -412,36 +429,46 @@ function VoiceChannelItem() {
     }
 
     try {
-      const response = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/${key}`);
+      const response = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/${inputApiKey}`);
       const data = await response.json();
 
       if (data.success) {
-        setExpiryDate(data.expiry_date);
-        setRemainingRequests(data.remaining_requests);
-        setApiStatus('API Key valid');
+        const premiumStatus = data.premium ? 'Ya' : 'Tidak';
+        const formattedCreatedAt = new Date(data.created_at)
+          .toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', hour12: false })
+          .replace(',', ' WIB');
+
+        setApiData({
+          username: user?.username,
+          id: user?.id,
+          apiKey: data.api_key,
+          limit: data.remaining_requests,
+          balance: data.balance,
+          sinceAt: formattedCreatedAt,
+          premium: premiumStatus,
+        });
+
+        onOpen();
       } else {
-        setApiStatus(data.message);
+        toast({
+          title: 'API Key Tidak Valid',
+          description: data.message,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
       }
     } catch (error) {
-      setApiStatus('Terjadi kesalahan saat memeriksa API Key.');
+      console.error('Gagal memeriksa API Key:', error);
+      toast({
+        title: 'Terjadi Kesalahan',
+        description: 'Tidak dapat menghubungi server API.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
-
-  const fetchUserBalance = async (userId: string) => {
-    try {
-      const response = await fetch(`/api/auth/get-user-data?id=${userId}`);
-      const data = await response.json();
-
-      if (data.user && data.user.balance !== undefined) {
-        setBalance(Number(data.user.balance)); // Konversi ke number
-      } else {
-        console.error('Gagal mendapatkan saldo:', data.message);
-      }
-    } catch (error) {
-      console.error('Terjadi kesalahan saat mengambil saldo:', error);
-    }
-  };
-
   return (
     <Flex direction="column" gap={4}>
       {/* Status API Key */}
@@ -504,6 +531,50 @@ function VoiceChannelItem() {
           </Text>
         </CardBody>
       </Card>
+            {/* Card Cek API Key */}
+      <Card rounded="2xl" variant="primary" p={4}>
+        <CardHeader as={HStack}>
+          <Text fontSize="lg">Cek API Key</Text>
+        </CardHeader>
+        <CardBody>
+          <Input
+            placeholder="Masukkan API Key Anda"
+            value={inputApiKey}
+            onChange={(e) => setInputApiKey(e.target.value)}
+            mb={3}
+          />
+          <Button colorScheme="blue" onClick={checkApiKey}>
+            Periksa API Key
+          </Button>
+        </CardBody>
+      </Card>
+
+      {/* Dialog Popup */}
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Detail API Key</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {apiData && (
+              <Flex direction="column" gap={2}>
+                <Text><strong>Username:</strong> {apiData.username}</Text>
+                <Text><strong>ID:</strong> {apiData.id}</Text>
+                <Text><strong>API Key:</strong> {apiData.apiKey}</Text>
+                <Text><strong>Limit:</strong> {apiData.limit}</Text>
+                <Text><strong>Saldo:</strong> Rp {apiData.balance.toLocaleString()}</Text>
+                <Text><strong>Sejak:</strong> {apiData.sinceAt}</Text>
+                <Text><strong>Premium:</strong> {apiData.premium}</Text>
+              </Flex>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={onClose}>
+              Tutup
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Flex>
   );
 }
