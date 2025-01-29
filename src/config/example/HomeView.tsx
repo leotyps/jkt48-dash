@@ -15,7 +15,6 @@ import {
   Box,
   Input,
   IconButton,
-  useDisclosure,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -399,6 +398,7 @@ function VoiceChannelItem() {
   const [isModalOpen, setIsModalOpen] = useState(false); // State untuk modal
   const toast = useToast();
 
+
   useEffect(() => {
     const storedApiKey = localStorage.getItem('jkt48-api-key');
     if (storedApiKey) {
@@ -408,7 +408,7 @@ function VoiceChannelItem() {
     if (user?.id) {
       fetchUserBalance(user.id); // Ambil saldo saat komponen dimuat jika user.id tersedia
     }
-  }, [user?.id]);
+  }, [user?.id]); // Gunakan efek ini ketika user.id berubah
 
   const checkApiKey = async (key: string) => {
     if (!key) {
@@ -443,8 +443,8 @@ function VoiceChannelItem() {
       const response = await fetch(`/api/auth/get-user-data?id=${userId}`);
       const data = await response.json();
 
-      if (data.user && data.user.balance !== undefined) {
-        setBalance(Number(data.user.balance));
+      if (data.success && data.balance !== undefined) {
+        setBalance(data.balance); // Simpan saldo ke state
       } else {
         console.error('Gagal mendapatkan saldo:', data.message);
       }
@@ -453,7 +453,7 @@ function VoiceChannelItem() {
     }
   };
 
-  const handleApiKeySubmit = async () => {
+const handleApiKeySubmit = async () => {
     if (!inputApiKey) {
       toast({
         title: 'Error',
@@ -470,18 +470,14 @@ function VoiceChannelItem() {
       const data = await response.json();
 
       if (data.success) {
-        // Ambil status premium
-        const premiumResponse = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/${inputApiKey}`);
-        const premiumData = await premiumResponse.json();
-
         setApiData({
           username: user?.username,
           userId: user?.id,
           apiKey: inputApiKey,
           limit: data.remaining_requests,
-          balance: balance,
+          balance: data.balance,
           sinceAt: formatDate(data.created_at),
-          premium: premiumData?.premium ? 'Yes' : 'No',
+          premium: data.premium ? 'Ya' : 'Tidak',
         });
 
         setIsModalOpen(true); // Buka modal
@@ -499,13 +495,81 @@ function VoiceChannelItem() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()} ${date.getHours()}:${date.getMinutes()} WIB`;
+  const formatDate = (isoString: string) => {
+    const date = new Date(isoString);
+    const options: Intl.DateTimeFormatOptions = {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Jakarta',
+    };
+    return date.toLocaleDateString('id-ID', options).replace('pukul', '').trim() + ' WIB';
   };
 
   return (
     <Flex direction="column" gap={4}>
+      {/* Status API Key */}
+      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+        <CardHeader as={HStack}>
+          <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
+          <Text fontSize={{ base: 'md', md: 'lg' }}>Status API Key</Text>
+        </CardHeader>
+        <CardBody>
+          <Text
+            fontSize={{ base: 'sm', md: 'md' }}
+            color={apiStatus?.includes('valid') ? 'green.500' : 'red.500'}
+            fontWeight="medium"
+          >
+            {apiStatus || 'Memeriksa API Key...'}
+          </Text>
+        </CardBody>
+      </Card>
+
+      {/* API Key */}
+      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+        <CardHeader>
+          <HStack justify="space-between" align="center">
+            <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
+              {isApiKeyVisible ? apiKey : '•'.repeat(apiKey.length)}
+            </Text>
+            <Button
+              size="sm"
+              onClick={() => setIsApiKeyVisible(!isApiKeyVisible)}
+              variant="ghost"
+              p={0}
+            >
+              {isApiKeyVisible ? <MdVisibilityOff /> : <MdVisibility />}
+            </Button>
+          </HStack>
+        </CardHeader>
+        <CardBody>
+          {apiKey ? (
+            <Text fontSize={{ base: 'sm', md: 'md' }} color="TextSecondary">
+              API Key
+            </Text>
+          ) : (
+            <Text color="TextSecondary">API Key belum tersedia. Silakan tambahkan API Key di profil.</Text>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* Saldo User */}
+      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+        <CardHeader as={HStack}>
+          <Icon as={MdAccountBalanceWallet} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
+          <Text fontSize={{ base: 'md', md: 'lg' }}>Saldo</Text>
+        </CardHeader>
+        <CardBody>
+          <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold">
+            {balance !== null ? `Rp ${balance.toLocaleString()}` : 'Memuat...'}
+          </Text>
+          <Text fontSize="sm" color="TextSecondary">
+            Saldo akun Anda yang tersisa
+          </Text>
+        </CardBody>
+      </Card>
       {/* Card Cek API Key */}
       <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
         <CardHeader as={HStack}>
@@ -525,7 +589,7 @@ function VoiceChannelItem() {
       </Card>
 
       {/* Modal untuk Menampilkan Data API */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="full">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="xl">
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Detail API Key</ModalHeader>
@@ -538,7 +602,7 @@ function VoiceChannelItem() {
                 <Text><strong>API Key:</strong> {apiData.apiKey}</Text>
                 <Text><strong>Limit:</strong> {apiData.limit}</Text>
                 <Text><strong>Saldo:</strong> Rp {apiData.balance?.toLocaleString()}</Text>
-                <Text><strong>Since At:</strong> {apiData.sinceAt}</Text>
+                <Text><strong>Sejak:</strong> {apiData.sinceAt}</Text>
                 <Text><strong>Premium:</strong> {apiData.premium}</Text>
               </Flex>
             ) : (
