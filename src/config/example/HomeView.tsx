@@ -15,13 +15,6 @@ import {
   Box,
   Input,
   IconButton,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
 } from '@chakra-ui/react';
 import { useState, useEffect, useRef } from 'react';
 import { config } from '@/config/common';
@@ -393,11 +386,7 @@ function VoiceChannelItem() {
   const [remainingRequests, setRemainingRequests] = useState<number | null>(null);
   const [apiStatus, setApiStatus] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null); // State untuk saldo
-  const [inputApiKey, setInputApiKey] = useState<string>(''); // State untuk input API Key
-  const [apiData, setApiData] = useState<any>(null); // Data dari API
-  const [isModalOpen, setIsModalOpen] = useState(false); // State untuk modal
   const toast = useToast();
-
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem('jkt48-api-key');
@@ -443,69 +432,14 @@ function VoiceChannelItem() {
       const response = await fetch(`/api/auth/get-user-data?id=${userId}`);
       const data = await response.json();
 
-      if (data.success && data.balance !== undefined) {
-        setBalance(data.balance); // Simpan saldo ke state
+      if (data.user.balance !== undefined) {
+        setBalance(data.user.balance); // Simpan saldo ke state
       } else {
         console.error('Gagal mendapatkan saldo:', data.message);
       }
     } catch (error) {
       console.error('Terjadi kesalahan saat mengambil saldo:', error);
     }
-  };
-
-const handleApiKeySubmit = async () => {
-    if (!inputApiKey) {
-      toast({
-        title: 'Error',
-        description: 'Masukkan API Key terlebih dahulu!',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      const response = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/${inputApiKey}`);
-      const data = await response.json();
-
-      if (data.success) {
-        setApiData({
-          username: user?.username,
-          userId: user?.id,
-          apiKey: inputApiKey,
-          limit: data.remaining_requests,
-          balance: data.balance,
-          sinceAt: formatDate(data.created_at),
-          premium: data.premium ? 'Ya' : 'Tidak',
-        });
-
-        setIsModalOpen(true); // Buka modal
-      } else {
-        toast({
-          title: 'API Key tidak valid',
-          description: data.message,
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
-      console.error('Gagal mengecek API Key:', error);
-    }
-  };
-
-  const formatDate = (isoString: string) => {
-    const date = new Date(isoString);
-    const options: Intl.DateTimeFormatOptions = {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'Asia/Jakarta',
-    };
-    return date.toLocaleDateString('id-ID', options).replace('pukul', '').trim() + ' WIB';
   };
 
   return (
@@ -570,52 +504,6 @@ const handleApiKeySubmit = async () => {
           </Text>
         </CardBody>
       </Card>
-      {/* Card Cek API Key */}
-      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
-        <CardHeader as={HStack}>
-          <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
-          <Text fontSize={{ base: 'md', md: 'lg' }}>Cek API Key</Text>
-        </CardHeader>
-        <CardBody>
-          <Input
-            placeholder="Masukkan API Key"
-            value={inputApiKey}
-            onChange={(e) => setInputApiKey(e.target.value)}
-          />
-          <Button mt={3} colorScheme="blue" onClick={handleApiKeySubmit}>
-            Cek API Key
-          </Button>
-        </CardBody>
-      </Card>
-
-      {/* Modal untuk Menampilkan Data API */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Detail API Key</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {apiData ? (
-              <Flex direction="column" gap={3}>
-                <Text><strong>Username:</strong> {apiData.username}</Text>
-                <Text><strong>ID:</strong> {apiData.userId}</Text>
-                <Text><strong>API Key:</strong> {apiData.apiKey}</Text>
-                <Text><strong>Limit:</strong> {apiData.limit}</Text>
-                <Text><strong>Saldo:</strong> Rp {apiData.balance?.toLocaleString()}</Text>
-                <Text><strong>Sejak:</strong> {apiData.sinceAt}</Text>
-                <Text><strong>Premium:</strong> {apiData.premium}</Text>
-              </Flex>
-            ) : (
-              <Text>Memuat data...</Text>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" onClick={() => setIsModalOpen(false)}>
-              Tutup
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </Flex>
   );
 }
