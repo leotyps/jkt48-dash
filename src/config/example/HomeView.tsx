@@ -32,7 +32,13 @@ import { useSelfUser } from '@/api/hooks';
 export default function HomeView() {
   const user = useSelfUser();
   const t = dashboard.useTranslations();
-
+  
+type User = {
+  id: string;
+  username: string;
+  // tambahkan properti lain yang Anda perlukan dari user
+};
+  
   
 function initializeApiKeyAndSaveUserData(user: User) {
   if (typeof window !== 'undefined') {
