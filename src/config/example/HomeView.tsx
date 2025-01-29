@@ -184,7 +184,7 @@ function TestChart() {
     // Set interval to fetch data every hour (or as required)
     const intervalId = setInterval(() => {
       fetchRemainingRequests();
-    }, 3600000); // 1 hour in milliseconds
+    }, 5000); // 1 hour in milliseconds
 
     return () => clearInterval(intervalId);
   }, []);
