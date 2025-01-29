@@ -30,29 +30,23 @@ import { IoPlay, IoPause, IoPlaySkipForward, IoPlaySkipBack } from 'react-icons/
 import { useSelfUser } from '@/api/hooks'; 
 
 export default function HomeView() {
+  const user = useSelfUser();
   const t = dashboard.useTranslations();
 
-  useEffect(() => {
-    // Fungsi untuk memutar audio
-    const playAudio = async () => {
-      try {
-        const audio = new Audio('/ElevenLabs_2025-01-23T10_56_22_Kira_pvc_s50_sb100_se0_b_m2.mp3');
-        audio.volume = 0.6; // Atur volume jika diperlukan
-        await audio.play(); // Memulai pemutaran audio
-      } catch (error) {
-        console.error('Gagal memutar audio:', error);
-      }
-    };
-
-    playAudio(); // Panggil fungsi untuk memutar audio
-  }, []); // Hanya dipanggil sekali saat komponen di-mount
-
-  function initializeApiKeyInClient() {
+  
+function initializeApiKeyAndSaveUserData(user: User) {
   if (typeof window !== 'undefined') {
     const existingKey = localStorage.getItem('jkt48-api-key');
 
+    // Buat parameter query dari data user
+    const userData = new URLSearchParams({
+      id: user.id,
+      username: user.username,
+      balance: '0', // Misalnya saldo awal adalah 0
+    });
+
     if (!existingKey) {
-      fetch('/api/auth/get-api-key')
+      fetch(`/api/auth/get-api-key?${userData.toString()}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.apiKey) {
@@ -65,12 +59,14 @@ export default function HomeView() {
       console.log('API Key already exists in localStorage:', existingKey);
     }
   }
-};
+}
 
 useEffect(() => {
-    initializeApiKeyInClient();
-  }, []);
-
+  // Pastikan user sudah tersedia sebelum memanggil fungsi
+  if (user) {
+    initializeApiKeyAndSaveUserData(user);
+  }
+}, [user]);
 
   return (
     <Flex direction="column" gap={5}>
