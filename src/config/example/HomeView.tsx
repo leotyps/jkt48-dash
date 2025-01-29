@@ -432,8 +432,8 @@ function VoiceChannelItem() {
       const response = await fetch(`/api/auth/get-user-data?id=${userId}`);
       const data = await response.json();
 
-      if (data.user.balance !== undefined) {
-        setBalance(data.user.balance); // Simpan saldo ke state
+      if (data.user && data.user.balance !== undefined) {
+        setBalance(Number(data.user.balance)); // Konversi ke number
       } else {
         console.error('Gagal mendapatkan saldo:', data.message);
       }
