@@ -394,9 +394,9 @@ function VoiceChannelItem() {
   const [remainingRequests, setRemainingRequests] = useState<number | null>(null);
   const [apiStatus, setApiStatus] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null); // State untuk saldo
-  const [inputApiKey, setInputApiKey] = useState<string>('');
-  const [userData, setUserData] = useState<any>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [inputApiKey, setInputApiKey] = useState<string>(''); // State untuk input API Key
+  const [apiData, setApiData] = useState<any>(null); // Data dari API
+  const [isModalOpen, setIsModalOpen] = useState(false); // State untuk modal
   const toast = useToast();
 
   useEffect(() => {
@@ -408,7 +408,7 @@ function VoiceChannelItem() {
     if (user?.id) {
       fetchUserBalance(user.id); // Ambil saldo saat komponen dimuat jika user.id tersedia
     }
-  }, [user?.id]); // Gunakan efek ini ketika user.id berubah
+  }, [user?.id]);
 
   const checkApiKey = async (key: string) => {
     if (!key) {
@@ -443,8 +443,8 @@ function VoiceChannelItem() {
       const response = await fetch(`/api/auth/get-user-data?id=${userId}`);
       const data = await response.json();
 
-      if (data.success && data.balance !== undefined) {
-        setBalance(data.balance); // Simpan saldo ke state
+      if (data.user && data.user.balance !== undefined) {
+        setBalance(Number(data.user.balance));
       } else {
         console.error('Gagal mendapatkan saldo:', data.message);
       }
@@ -453,27 +453,49 @@ function VoiceChannelItem() {
     }
   };
 
-const fetchUserData = async () => {
-    try {
-      const response = await fetch(`/api/auth/get-user-data?id=${user?.id}`);
-      const data = await response.json();
-      const premiumResponse = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/${inputApiKey}`);
-      const premiumData = await premiumResponse.json();
+  const handleApiKeySubmit = async () => {
+    if (!inputApiKey) {
+      toast({
+        title: 'Error',
+        description: 'Masukkan API Key terlebih dahulu!',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
 
-      if (data.user) {
-        setUserData({
+    try {
+      const response = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/${inputApiKey}`);
+      const data = await response.json();
+
+      if (data.success) {
+        // Ambil status premium
+        const premiumResponse = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/${inputApiKey}`);
+        const premiumData = await premiumResponse.json();
+
+        setApiData({
           username: user?.username,
-          id: user?.id,
-          api_key: data.user.api_key,
-          limit: data.user.balance, // Gunakan balance sebagai limit
-          balance: data.user.balance,
-          since_at: formatDate(data.user.created_at),
-          premium: premiumData.premium ? 'Ya' : 'Tidak',
+          userId: user?.id,
+          apiKey: inputApiKey,
+          limit: data.remaining_requests,
+          balance: balance,
+          sinceAt: formatDate(data.created_at),
+          premium: premiumData?.premium ? 'Yes' : 'No',
         });
-        setIsDialogOpen(true);
+
+        setIsModalOpen(true); // Buka modal
+      } else {
+        toast({
+          title: 'API Key tidak valid',
+          description: data.message,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
       }
     } catch (error) {
-      console.error('Gagal mengambil data user:', error);
+      console.error('Gagal mengecek API Key:', error);
     }
   };
 
@@ -484,108 +506,52 @@ const fetchUserData = async () => {
 
   return (
     <Flex direction="column" gap={4}>
-      {/* Status API Key */}
+      {/* Card Cek API Key */}
       <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
         <CardHeader as={HStack}>
           <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
-          <Text fontSize={{ base: 'md', md: 'lg' }}>Status API Key</Text>
+          <Text fontSize={{ base: 'md', md: 'lg' }}>Cek API Key</Text>
         </CardHeader>
         <CardBody>
-          <Text
-            fontSize={{ base: 'sm', md: 'md' }}
-            color={apiStatus?.includes('valid') ? 'green.500' : 'red.500'}
-            fontWeight="medium"
-          >
-            {apiStatus || 'Memeriksa API Key...'}
-          </Text>
+          <Input
+            placeholder="Masukkan API Key"
+            value={inputApiKey}
+            onChange={(e) => setInputApiKey(e.target.value)}
+          />
+          <Button mt={3} colorScheme="blue" onClick={handleApiKeySubmit}>
+            Cek API Key
+          </Button>
         </CardBody>
       </Card>
 
-      {/* API Key */}
-      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
-        <CardHeader>
-          <HStack justify="space-between" align="center">
-            <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
-              {isApiKeyVisible ? apiKey : '•'.repeat(apiKey.length)}
-            </Text>
-            <Button
-              size="sm"
-              onClick={() => setIsApiKeyVisible(!isApiKeyVisible)}
-              variant="ghost"
-              p={0}
-            >
-              {isApiKeyVisible ? <MdVisibilityOff /> : <MdVisibility />}
+      {/* Modal untuk Menampilkan Data API */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="full">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Detail API Key</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {apiData ? (
+              <Flex direction="column" gap={3}>
+                <Text><strong>Username:</strong> {apiData.username}</Text>
+                <Text><strong>ID:</strong> {apiData.userId}</Text>
+                <Text><strong>API Key:</strong> {apiData.apiKey}</Text>
+                <Text><strong>Limit:</strong> {apiData.limit}</Text>
+                <Text><strong>Saldo:</strong> Rp {apiData.balance?.toLocaleString()}</Text>
+                <Text><strong>Since At:</strong> {apiData.sinceAt}</Text>
+                <Text><strong>Premium:</strong> {apiData.premium}</Text>
+              </Flex>
+            ) : (
+              <Text>Memuat data...</Text>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={() => setIsModalOpen(false)}>
+              Tutup
             </Button>
-          </HStack>
-        </CardHeader>
-        <CardBody>
-          {apiKey ? (
-            <Text fontSize={{ base: 'sm', md: 'md' }} color="TextSecondary">
-              API Key
-            </Text>
-          ) : (
-            <Text color="TextSecondary">API Key belum tersedia. Silakan tambahkan API Key di profil.</Text>
-          )}
-        </CardBody>
-      </Card>
-
-      {/* Saldo User */}
-      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
-        <CardHeader as={HStack}>
-          <Icon as={MdAccountBalanceWallet} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
-          <Text fontSize={{ base: 'md', md: 'lg' }}>Saldo</Text>
-        </CardHeader>
-        <CardBody>
-          <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold">
-            {balance !== null ? `Rp ${balance.toLocaleString()}` : 'Memuat...'}
-          </Text>
-          <Text fontSize="sm" color="TextSecondary">
-            Saldo akun Anda yang tersisa
-          </Text>
-        </CardBody>
-      </Card>
-      {/* Card Cek API Key */}
-      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
-        <CardHeader>
-          <Text fontSize="lg" fontWeight="bold">Cek API Key</Text>
-        </CardHeader>
-        <CardBody>
-          <HStack>
-            <Input
-              placeholder="Masukkan API Key Anda"
-              value={inputApiKey}
-              onChange={(e) => setInputApiKey(e.target.value)}
-            />
-            <Button onClick={fetchUserData} colorScheme="blue">Cek</Button>
-          </HStack>
-        </CardBody>
-      </Card>
-
-      {/* Dialog Pop-up */}
-      {isDialogOpen && (
-        <Box
-          position="fixed"
-          top="50%"
-          left="50%"
-          transform="translate(-50%, -50%)"
-          bg="white"
-          p={6}
-          rounded="md"
-          shadow="xl"
-          zIndex={1000}
-        >
-          <Heading size="md">Informasi Pengguna</Heading>
-          <Text><strong>Username:</strong> {userData?.username}</Text>
-          <Text><strong>ID:</strong> {userData?.id}</Text>
-          <Text><strong>API Key:</strong> {userData?.api_key}</Text>
-          <Text><strong>Limit:</strong> {userData?.limit}</Text>
-          <Text><strong>Saldo:</strong> Rp {userData?.balance.toLocaleString()}</Text>
-          <Text><strong>Sejak:</strong> {userData?.since_at}</Text>
-          <Text><strong>Premium:</strong> {userData?.premium}</Text>
-          <Button mt={4} colorScheme="red" onClick={() => setIsDialogOpen(false)}>Tutup</Button>
-        </Box>
-      )}
-
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Flex>
   );
 }
