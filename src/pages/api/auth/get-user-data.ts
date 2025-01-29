@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Query untuk mengambil data berdasarkan id
     const query = `
-      SELECT id, username, api_key, balance
+      SELECT id, username, api_key, balance, created_at
       FROM users
       WHERE id = $1;
     `;
