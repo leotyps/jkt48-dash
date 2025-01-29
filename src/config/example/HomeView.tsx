@@ -202,7 +202,13 @@ function TestChart() {
 
   const fetchRemainingRequests = async () => {
     try {
-      const response = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/YOUR_API_KEY`);
+      const apiKey = localStorage.getItem('jkt48-api-key'); // Ambil API Key dari localStorage
+      if (!apiKey) {
+        console.error("API Key tidak ditemukan di localStorage");
+        return;
+      }
+
+      const response = await fetch(`https://api.jkt48connect.my.id/api/check-apikey/${apiKey}`);
       const data = await response.json();
 
       if (data.success && data.remaining_requests !== null) {
@@ -221,7 +227,8 @@ function TestChart() {
     } catch (error) {
       console.error("Failed to fetch remaining requests:", error);
     }
-  };
+};
+
 
   const updateChartData = (usage: number) => {
     setSeriesData((prevData) => {
