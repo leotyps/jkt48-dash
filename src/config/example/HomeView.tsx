@@ -24,9 +24,10 @@ import Link from 'next/link';
 import { BsMusicNoteBeamed } from 'react-icons/bs';
 import { IoOpen, IoPricetag } from 'react-icons/io5';
 import { FaRobot } from 'react-icons/fa';
-import { MdVoiceChat, MdVisibility, MdVisibilityOff } from 'react-icons/md';
+import { MdVoiceChat, MdVisibility, MdVisibilityOff, MdAccountBalanceWallet } from 'react-icons/md';
 import { GuildSelect } from '@/pages/user/home';
 import { IoPlay, IoPause, IoPlaySkipForward, IoPlaySkipBack } from 'react-icons/io5';
+import { useSelfUser } from '@/api/hooks'; 
 
 export default function HomeView() {
   const t = dashboard.useTranslations();
@@ -378,20 +379,25 @@ function MusicPlayer() {
 }
 
 function VoiceChannelItem() {
+  const user = useSelfUser(); // Mendapatkan data user
   const [apiKey, setApiKey] = useState<string>('');
-  const [isApiKeyVisible, setIsApiKeyVisible] = useState<boolean>(false); // Status untuk toggle visibility
+  const [isApiKeyVisible, setIsApiKeyVisible] = useState<boolean>(false);
   const [expiryDate, setExpiryDate] = useState<string | null>(null);
   const [remainingRequests, setRemainingRequests] = useState<number | null>(null);
   const [apiStatus, setApiStatus] = useState<string | null>(null);
+  const [balance, setBalance] = useState<number | null>(null); // State untuk saldo
   const toast = useToast();
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem('jkt48-api-key');
     if (storedApiKey) {
       setApiKey(storedApiKey);
-      checkApiKey(storedApiKey); // Check validity on mount if API key is already stored
+      checkApiKey(storedApiKey);
     }
-  }, []);
+    if (user?.id) {
+      fetchUserBalance(user.id); // Ambil saldo saat komponen dimuat jika user.id tersedia
+    }
+  }, [user?.id]); // Gunakan efek ini ketika user.id berubah
 
   const checkApiKey = async (key: string) => {
     if (!key) {
@@ -414,16 +420,31 @@ function VoiceChannelItem() {
         setRemainingRequests(data.remaining_requests);
         setApiStatus('API Key valid');
       } else {
-        setApiStatus(data.message); // Show error message from API response
+        setApiStatus(data.message);
       }
     } catch (error) {
       setApiStatus('Terjadi kesalahan saat memeriksa API Key.');
     }
   };
 
+  const fetchUserBalance = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/auth/get-user-data?id=${userId}`);
+      const data = await response.json();
+
+      if (data.success && data.balance !== undefined) {
+        setBalance(data.balance); // Simpan saldo ke state
+      } else {
+        console.error('Gagal mendapatkan saldo:', data.message);
+      }
+    } catch (error) {
+      console.error('Terjadi kesalahan saat mengambil saldo:', error);
+    }
+  };
+
   return (
     <Flex direction="column" gap={4}>
-      {/* Status Card */}
+      {/* Status API Key */}
       <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
         <CardHeader as={HStack}>
           <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
@@ -440,39 +461,47 @@ function VoiceChannelItem() {
         </CardBody>
       </Card>
 
-      {/* API Key Card */}
+      {/* API Key */}
       <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
         <CardHeader>
           <HStack justify="space-between" align="center">
             <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
-              {isApiKeyVisible
-                ? apiKey
-                : '•'.repeat(apiKey.length)} {/* Tampilkan titik sesuai jumlah karakter */}
+              {isApiKeyVisible ? apiKey : '•'.repeat(apiKey.length)}
             </Text>
             <Button
               size="sm"
-              onClick={() => setIsApiKeyVisible(!isApiKeyVisible)} // Toggle visibility
+              onClick={() => setIsApiKeyVisible(!isApiKeyVisible)}
               variant="ghost"
               p={0}
             >
-              {isApiKeyVisible ? <MdVisibilityOff /> : <MdVisibility />} {/* Icon mata */}
+              {isApiKeyVisible ? <MdVisibilityOff /> : <MdVisibility />}
             </Button>
           </HStack>
         </CardHeader>
         <CardBody>
           {apiKey ? (
-            <Text
-              fontSize={{ base: 'sm', md: 'md' }}
-              color="TextSecondary"
-              wordBreak="break-word"
-            >
+            <Text fontSize={{ base: 'sm', md: 'md' }} color="TextSecondary">
               API Key
             </Text>
           ) : (
-            <Text color="TextSecondary">
-              API Key belum tersedia. Silakan tambahkan API Key di profil.
-            </Text>
+            <Text color="TextSecondary">API Key belum tersedia. Silakan tambahkan API Key di profil.</Text>
           )}
+        </CardBody>
+      </Card>
+
+      {/* Saldo User */}
+      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+        <CardHeader as={HStack}>
+          <Icon as={MdAccountBalanceWallet} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
+          <Text fontSize={{ base: 'md', md: 'lg' }}>Saldo</Text>
+        </CardHeader>
+        <CardBody>
+          <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold">
+            {balance !== null ? `Rp ${balance.toLocaleString()}` : 'Memuat...'}
+          </Text>
+          <Text fontSize="sm" color="TextSecondary">
+            Saldo akun Anda yang tersisa
+          </Text>
         </CardBody>
       </Card>
     </Flex>
