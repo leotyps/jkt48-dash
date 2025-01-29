@@ -169,16 +169,17 @@ function TestChart() {
   const [seriesData, setSeriesData] = useState([
     {
       name: "Requests",
-      data: [0, 0, 0, 0, 0, 0], // Data awal
+      data: [0], // Data awal untuk menit 1
     },
   ]);
+  const [minute, setMinute] = useState(1); // Mulai dari menit 1
   const [today, setToday] = useState<string>(getFormattedDate());
 
   useEffect(() => {
-    // Set interval untuk menambah data secara acak setiap 1 detik
+    // Set interval untuk menambah data secara acak setiap menit
     const intervalId = setInterval(() => {
       addRandomData();
-    }, 1000);
+    }, 60000); // Interval setiap 1 menit (60000 ms)
 
     return () => clearInterval(intervalId);
   }, []);
@@ -191,29 +192,29 @@ function TestChart() {
         resetDailyData();
         setToday(currentDay);
       }
-    }, 60000);
+    }, 60000); // Setiap 1 menit cek jika hari berubah
 
     return () => clearInterval(intervalId);
   }, [today]);
 
   const addRandomData = () => {
     const randomRequests = Math.floor(Math.random() * 10); // Angka acak antara 0 dan 9
+
     setSeriesData((prevData) => {
       const updatedData = [...prevData[0].data];
-      updatedData[updatedData.length - 1] += randomRequests; // Tambahkan data acak ke hari ini
+      updatedData.push(randomRequests); // Tambahkan data acak ke menit berikutnya
 
       return [{ name: "Requests", data: updatedData }];
     });
+
+    // Tambahkan 1 menit setiap kali data ditambahkan
+    setMinute((prevMinute) => prevMinute + 1);
   };
 
   const resetDailyData = () => {
     setSeriesData((prevData) => {
       const updatedData = [...prevData[0].data];
       updatedData.push(0); // Reset pemakaian ke 0 untuk hari baru
-
-      if (updatedData.length > 6) {
-        updatedData.shift();
-      }
 
       return [{ name: "Requests", data: updatedData }];
     });
@@ -236,7 +237,7 @@ function TestChart() {
           width: 2,
         },
         xaxis: {
-          categories: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Today"],
+          categories: Array.from({ length: minute }, (_, i) => `Menit ${i + 1}`), // Kategori berdasarkan menit
         },
         yaxis: {
           labels: {
