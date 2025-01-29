@@ -115,9 +115,6 @@ useEffect(() => {
   gap={4}
 >
        <Flex direction="column" gap={3}>
-          <Text fontSize="lg" fontWeight="600">
-            JKT48Connect Section
-          </Text>
           <VoiceChannelItem />
         </Flex>
       </Grid>
