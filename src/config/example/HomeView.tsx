@@ -159,45 +159,28 @@ useEffect(() => {
   );
 }
 
-function TestChart() {
-  const getFormattedDate = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
-  };
 
+function TestChart() {
   const [seriesData, setSeriesData] = useState([
     {
       name: "Requests",
-      data: [0, 0, 0, 0, 0, 0], // Data awal
+      data: Array(20).fill(0), // Menyimpan data hingga 20 titik terakhir
     },
   ]);
   const [remainingRequests, setRemainingRequests] = useState<number | null>(null);
   const [lastCheckedRequests, setLastCheckedRequests] = useState<number | null>(null);
-  const [today, setToday] = useState<string>(getFormattedDate());
 
   useEffect(() => {
+    // Panggil pertama kali untuk fetch data awal
     fetchRemainingRequests();
 
-    // Set interval untuk fetch data setiap 5 detik
+    // Update data setiap 5 detik
     const intervalId = setInterval(() => {
       fetchRemainingRequests();
     }, 5000);
 
     return () => clearInterval(intervalId);
   }, []);
-
-  useEffect(() => {
-    // Cek perubahan hari setiap 1 menit
-    const intervalId = setInterval(() => {
-      const currentDay = getFormattedDate();
-      if (currentDay !== today) {
-        resetDailyData();
-        setToday(currentDay);
-      }
-    }, 60000);
-
-    return () => clearInterval(intervalId);
-  }, [today]);
 
   const fetchRemainingRequests = async () => {
     try {
@@ -214,8 +197,10 @@ function TestChart() {
         const newRemainingRequests = data.remaining_requests;
 
         if (lastCheckedRequests !== null && newRemainingRequests < lastCheckedRequests) {
-          const usage = lastCheckedRequests - newRemainingRequests; // Hitung pemakaian
+          const usage = lastCheckedRequests - newRemainingRequests;
           updateChartData(usage);
+        } else {
+          updateChartData(0); // Jika tidak ada perubahan, tambahkan titik data 0
         }
 
         setLastCheckedRequests(newRemainingRequests);
@@ -229,25 +214,15 @@ function TestChart() {
   const updateChartData = (usage: number) => {
     setSeriesData((prevData) => {
       const updatedData = [...prevData[0].data];
-      updatedData[updatedData.length - 1] += usage; // Tambahkan penggunaan hari ini
+      updatedData.push(usage); // Tambahkan data baru
 
-      return [{ name: "Requests", data: updatedData }];
-    });
-  };
-
-  const resetDailyData = () => {
-    setSeriesData((prevData) => {
-      const updatedData = [...prevData[0].data];
-      updatedData.push(0); // Reset pemakaian ke 0 untuk hari baru
-
-      if (updatedData.length > 6) {
+      // Batasi hanya 20 titik terakhir agar grafik selalu bergerak
+      if (updatedData.length > 20) {
         updatedData.shift();
       }
 
       return [{ name: "Requests", data: updatedData }];
     });
-
-    setLastCheckedRequests(remainingRequests);
   };
 
   return (
@@ -259,7 +234,7 @@ function TestChart() {
           animations: {
             enabled: true,
             easing: "easeinout",
-            speed: 1000,
+            speed: 500, // Kecepatan animasi
           },
         },
         stroke: {
@@ -267,11 +242,11 @@ function TestChart() {
           width: 2,
         },
         xaxis: {
-          categories: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Today"],
+          categories: Array.from({ length: 20 }, (_, i) => `T-${20 - i}s`), // Label waktu mundur
         },
         yaxis: {
           labels: {
-            formatter: (value) => `${value} requests`,
+            formatter: (value) => `${value} req`,
           },
         },
         grid: {
@@ -288,7 +263,6 @@ function TestChart() {
     />
   );
 }
-
 
 function MusicPlayer() {
   const videoUrls = [
