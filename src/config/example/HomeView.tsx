@@ -159,13 +159,11 @@ useEffect(() => {
   );
 }
 
-
 function TestChart() {
-    const getFormattedDate = () => {
+  const getFormattedDate = () => {
     const now = new Date();
     return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
   };
-
 
   const [seriesData, setSeriesData] = useState([
     {
@@ -178,33 +176,32 @@ function TestChart() {
   const [today, setToday] = useState<string>(getFormattedDate());
 
   useEffect(() => {
-    // Fetch initial data
     fetchRemainingRequests();
 
-    // Set interval to fetch data every hour (or as required)
+    // Set interval untuk fetch data setiap 5 detik
     const intervalId = setInterval(() => {
       fetchRemainingRequests();
-    }, 5000); // 1 hour in milliseconds
+    }, 5000);
 
     return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
-    // Check for day change
+    // Cek perubahan hari setiap 1 menit
     const intervalId = setInterval(() => {
       const currentDay = getFormattedDate();
       if (currentDay !== today) {
         resetDailyData();
         setToday(currentDay);
       }
-    }, 60000); // Check every minute
+    }, 60000);
 
     return () => clearInterval(intervalId);
   }, [today]);
 
   const fetchRemainingRequests = async () => {
     try {
-      const apiKey = localStorage.getItem('jkt48-api-key'); // Ambil API Key dari localStorage
+      const apiKey = localStorage.getItem("jkt48-api-key");
       if (!apiKey) {
         console.error("API Key tidak ditemukan di localStorage");
         return;
@@ -216,11 +213,9 @@ function TestChart() {
       if (data.success && data.remaining_requests !== null) {
         const newRemainingRequests = data.remaining_requests;
 
-        if (lastCheckedRequests !== null) {
-          const usage = lastCheckedRequests - newRemainingRequests;
-          if (usage > 0) {
-            updateChartData(usage);
-          }
+        if (lastCheckedRequests !== null && newRemainingRequests < lastCheckedRequests) {
+          const usage = lastCheckedRequests - newRemainingRequests; // Hitung pemakaian
+          updateChartData(usage);
         }
 
         setLastCheckedRequests(newRemainingRequests);
@@ -229,18 +224,12 @@ function TestChart() {
     } catch (error) {
       console.error("Failed to fetch remaining requests:", error);
     }
-};
-
+  };
 
   const updateChartData = (usage: number) => {
     setSeriesData((prevData) => {
       const updatedData = [...prevData[0].data];
-      updatedData.push(usage);
-
-      // Keep only the last 6 days of data
-      if (updatedData.length > 6) {
-        updatedData.shift();
-      }
+      updatedData[updatedData.length - 1] += usage; // Tambahkan penggunaan hari ini
 
       return [{ name: "Requests", data: updatedData }];
     });
@@ -249,9 +238,8 @@ function TestChart() {
   const resetDailyData = () => {
     setSeriesData((prevData) => {
       const updatedData = [...prevData[0].data];
-      updatedData.push(0); // Reset daily usage to 0
+      updatedData.push(0); // Reset pemakaian ke 0 untuk hari baru
 
-      // Keep only the last 6 days of data
       if (updatedData.length > 6) {
         updatedData.shift();
       }
@@ -259,13 +247,13 @@ function TestChart() {
       return [{ name: "Requests", data: updatedData }];
     });
 
-    setLastCheckedRequests(remainingRequests); // Reset last checked requests
+    setLastCheckedRequests(remainingRequests);
   };
 
   return (
     <StyledChart
       options={{
-        colors: ["#4318FF"], // Line color
+        colors: ["#4318FF"],
         chart: {
           type: "line",
           animations: {
@@ -279,7 +267,7 @@ function TestChart() {
           width: 2,
         },
         xaxis: {
-          categories: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Today"], // Example labels
+          categories: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Today"],
         },
         yaxis: {
           labels: {
