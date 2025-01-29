@@ -395,7 +395,10 @@ export function VoiceChannelItem() {
   const [apiData, setApiData] = useState < any > (null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
-
+const [expiryDate, setExpiryDate] = useState<string | null>(null);
+const [remainingRequests, setRemainingRequests] = useState<number | null>(null);
+  const [apiStatus, setApiStatus] = useState<string | null>(null);
+  
   useEffect(() => {
     const storedApiKey = localStorage.getItem('jkt48-api-key');
     if (storedApiKey) {
@@ -575,6 +578,10 @@ export function VoiceChannelItem() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+    </Flex>
+  );
+}
+
     </Flex>
   );
 }
