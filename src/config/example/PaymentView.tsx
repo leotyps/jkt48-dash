@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Image, Tag, Text, VStack, Flex } from "@chakra-ui/react";
+import { Box, Flex, Heading, Image, Tag, Text, VStack } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 
 export default function PaymentList() {
