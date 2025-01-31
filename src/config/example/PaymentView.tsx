@@ -11,51 +11,69 @@ export default function PaymentList() {
   };
 
   return (
-    <Flex direction="column" align="center" p={8}>
-      <Heading size="xl" mb={6}>
+    <Flex direction="column" align="center" p={6}>
+      <Heading size="lg" mb={5}>
         Pilih Metode Pembayaran
       </Heading>
 
-      <Flex direction="column" gap={6} w="90vw">
+      <Flex direction="column" gap={4} w="90vw">
         {/* Card QRIS */}
         <Flex
-          bg="blue.400"
-          p={8}
+          bg="blue.500"
+          p={4}
           borderRadius="lg"
           justify="space-between"
           align="center"
           w="100%"
-          h="120px"
+          h="90px"
           cursor="pointer"
-          _hover={{ bg: "blue.500" }}
+          _hover={{ bg: "blue.600" }}
           onClick={() => handlePaymentClick("qris")}
         >
-          <Text fontSize="2xl" fontWeight="bold" color="white">
-            QRIS
-          </Text>
-          <Image src="https://8030.us.kg/file/MkZ4yUJAu6Zd.png" alt="QRIS Logo" boxSize="100px" />
+          <Box>
+            <Text fontSize="lg" fontWeight="bold" color="white">
+              QRIS
+            </Text>
+            <Text fontSize="sm" color="white">
+              Bayar dengan QRIS dari berbagai aplikasi e-wallet dan bank.
+            </Text>
+          </Box>
+          <Image
+            src="https://8030.us.kg/file/MkZ4yUJAu6Zd.png"
+            alt="QRIS Logo"
+            boxSize="70px"
+          />
         </Flex>
 
         {/* Card PayPal */}
         <Flex
-          bg="gray.400"
-          p={8}
+          bg="gray.500"
+          p={4}
           borderRadius="lg"
           justify="space-between"
           align="center"
           w="100%"
-          h="120px"
+          h="90px"
           opacity={0.7} // PayPal masih Coming Soon
         >
-          <Flex align="center">
-            <Text fontSize="2xl" fontWeight="bold" mr={3}>
-              PayPal
+          <Box>
+            <Flex align="center">
+              <Text fontSize="lg" fontWeight="bold" mr={2} color="white">
+                PayPal
+              </Text>
+              <Tag colorScheme="red" size="sm">
+                Coming Soon
+              </Tag>
+            </Flex>
+            <Text fontSize="sm" color="white">
+              Segera hadir, pembayaran mudah dengan PayPal.
             </Text>
-            <Tag colorScheme="red" size="lg">
-              Coming Soon
-            </Tag>
-          </Flex>
-          <Image src="https://8030.us.kg/file/IIqCNN4mm3br.png" alt="PayPal Logo" boxSize="100px" />
+          </Box>
+          <Image
+            src="https://8030.us.kg/file/IIqCNN4mm3br.png"
+            alt="PayPal Logo"
+            boxSize="70px"
+          />
         </Flex>
       </Flex>
     </Flex>
