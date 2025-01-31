@@ -11,7 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { config } from '@/config/common';
 import { useGuilds } from '@/api/hooks';
-import DocsView from '@/config/example/DocsView';
+import PaymentView from '@/config/example/PaymentView';
 import { NextPageWithLayout } from '@/pages/_app';
 import AppLayout from '@/components/layout/app';
 import { iconUrl } from '@/api/discord';
@@ -20,7 +20,7 @@ import Head from 'next/head'; // Import Head untuk menambahkan script ke <head>
 
 const HomePage: NextPageWithLayout = () => {
   //used for example only, you should remove it
-  return <DocsView />;
+  return <PaymentView />;
 
   return <GuildSelect />;
 };
