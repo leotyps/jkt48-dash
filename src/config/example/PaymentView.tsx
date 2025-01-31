@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Image, Tag, Text, VStack } from "@chakra-ui/react";
+import { Box, Flex, Heading, Image, Tag, Text, VStack, Flex } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 
 export default function PaymentList() {
@@ -15,7 +15,7 @@ export default function PaymentList() {
       <Heading size="xl" textAlign="center">
         Pilih Metode Pembayaran
       </Heading>
-
+    <Flex direction="column" gap={5}>
       {/* Card QRIS */}
       <Box
         bg="blue.400"
@@ -59,5 +59,6 @@ export default function PaymentList() {
         <Image src="https://8030.us.kg/file/IIqCNN4mm3br.png" alt="PayPal Logo" boxSize="80px" />
       </Box>
     </VStack>
+  </Flex>
   );
 }
