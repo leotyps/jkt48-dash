@@ -11,11 +11,11 @@ export default function PaymentList() {
   };
 
   return (
+   <Flex direction="column" gap={5}>
     <VStack spacing={6} align="stretch" p={8}>
       <Heading size="xl" textAlign="center">
         Pilih Metode Pembayaran
       </Heading>
-    <Flex direction="column" gap={5}>
       {/* Card QRIS */}
       <Box
         bg="blue.400"
