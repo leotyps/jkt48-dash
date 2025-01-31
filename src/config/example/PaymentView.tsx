@@ -6,53 +6,53 @@ export default function PaymentList() {
 
   const handlePaymentClick = (method: string) => {
     if (method === "qris") {
-      router.push("/payment/qris"); // Ganti dengan endpoint yang sesuai
+      router.push("/deposit/qris"); // Ganti dengan endpoint yang sesuai
     }
   };
 
   return (
-    <VStack spacing={5} align="stretch" p={5}>
-      <Heading size="lg" textAlign="center">
+    <VStack spacing={6} align="stretch" p={8}>
+      <Heading size="xl" textAlign="center">
         Pilih Metode Pembayaran
       </Heading>
 
       {/* Card QRIS */}
       <Box
-        bg="blue.300"
-        p={4}
-        borderRadius="md"
+        bg="blue.400"
+        p={6}
+        borderRadius="lg"
         display="flex"
         justifyContent="space-between"
         alignItems="center"
         cursor="pointer"
         onClick={() => handlePaymentClick("qris")}
-        _hover={{ bg: "blue.400" }}
+        _hover={{ bg: "blue.500" }}
       >
-        <Text fontSize="lg" fontWeight="bold" color="white">
+        <Text fontSize="xl" fontWeight="bold" color="white">
           QRIS
         </Text>
-        <Image src="/qris-logo.png" alt="QRIS Logo" boxSize="40px" />
+        <Image src="https://8030.us.kg/file/MkZ4yUJAu6Zd.png" alt="QRIS Logo" boxSize="60px" />
       </Box>
 
       {/* Card PayPal */}
       <Box
-        bg="gray.300"
-        p={4}
-        borderRadius="md"
+        bg="gray.400"
+        p={6}
+        borderRadius="lg"
         display="flex"
         justifyContent="space-between"
         alignItems="center"
-        opacity={0.6} // PayPal masih Coming Soon
+        opacity={0.7} // PayPal masih Coming Soon
       >
         <Flex align="center">
-          <Text fontSize="lg" fontWeight="bold" mr={2}>
+          <Text fontSize="xl" fontWeight="bold" mr={3}>
             PayPal
           </Text>
-          <Tag colorScheme="red" size="sm">
+          <Tag colorScheme="red" size="md">
             Coming Soon
           </Tag>
         </Flex>
-        <Image src="/paypal-logo.png" alt="PayPal Logo" boxSize="40px" />
+        <Image src="https://8030.us.kg/file/IIqCNN4mm3br.png" alt="PayPal Logo" boxSize="60px" />
       </Box>
     </VStack>
   );
