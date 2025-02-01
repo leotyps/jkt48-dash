@@ -1,17 +1,13 @@
-import { useState } from "react";
-import { Box, Button, Flex, Grid, Heading, Image, Tag, Text } from "@chakra-ui/react";
-import { motion } from "framer-motion";
+import { Box, Button, Flex, Heading, Image, Tag, Text } from "@chakra-ui/react";
 import { useRouter } from "next/router";
+import { useState } from "react";
 
-// Buat komponen motion untuk membungkus elemen Chakra UI
-const MotionBox = motion(Box);
-
-export default function DepositView() {
+export default function PaymentList() {
   const router = useRouter();
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
 
   const handleCardClick = (method: string) => {
-    // Hanya metode QRIS yang bisa dipilih karena PayPal masih Coming Soon
+    // Hanya QRIS yang dapat diklik
     if (method === "qris") {
       setSelectedMethod(method);
     }
@@ -19,88 +15,82 @@ export default function DepositView() {
 
   const handleProceed = () => {
     if (selectedMethod === "qris") {
-      router.push("/payment/qris"); // Endpoint khusus untuk pembayaran QRIS
+      router.push("/payment/qris");
     }
   };
 
   return (
-    <Flex direction="column" align="center" justify="center" p={6} minH="100vh" bg="gray.50">
-      <Heading mb={8} size="xl">
-        Deposit / Top-Up Saldo
+    <Flex direction="column" align="center" p={6}>
+      <Heading size="lg" mb={5}>
+        Pilih Metode Pembayaran
       </Heading>
 
-      <Grid
-        templateColumns={["1fr", "1fr 1fr"]}
-        gap={6}
-        w={["90vw", "80vw"]}
-        mb={12}
-      >
+      <Flex direction="column" gap={4} w="90vw">
         {/* Card QRIS */}
-        <MotionBox
-          as={Flex}
-          direction="column"
+        <Flex
           bg={selectedMethod === "qris" ? "blue.600" : "blue.500"}
-          p={6}
+          p={4}
           borderRadius="lg"
           justify="space-between"
           align="center"
-          h="150px"
+          w="100%"
+          h="90px"
           cursor="pointer"
-          whileHover={{ scale: 1.03 }}
-          transition={{ duration: 0.3 }}
+          transition="all 0.3s ease"
+          transform={selectedMethod === "qris" ? "scale(1.03)" : "scale(1)"}
+          boxShadow={selectedMethod === "qris" ? "md" : "none"}
           onClick={() => handleCardClick("qris")}
         >
-          <Box textAlign="center">
-            <Text fontSize="2xl" fontWeight="bold" color="white">
+          <Box>
+            <Text fontSize="lg" fontWeight="bold" color="white">
               QRIS
             </Text>
-            <Text fontSize="md" color="whiteAlpha.900" mt={1}>
+            <Text fontSize="sm" color="white">
               Bayar dengan QRIS dari berbagai aplikasi e-wallet dan bank.
             </Text>
           </Box>
           <Image
             src="https://8030.us.kg/file/MkZ4yUJAu6Zd.png"
             alt="QRIS Logo"
-            boxSize="80px"
+            boxSize="70px"
           />
-        </MotionBox>
+        </Flex>
 
         {/* Card PayPal (Coming Soon, tidak dapat diklik) */}
-        <MotionBox
-          as={Flex}
-          direction="column"
+        <Flex
           bg="gray.500"
-          p={6}
+          p={4}
           borderRadius="lg"
           justify="space-between"
           align="center"
-          h="150px"
-          opacity={0.6}
+          w="100%"
+          h="90px"
+          opacity={0.7}
           cursor="not-allowed"
-          whileHover={{ scale: 1.0 }} // Tidak ada animasi karena tidak bisa diklik
+          pointerEvents="none"
         >
-          <Box textAlign="center">
-            <Flex align="center" justify="center">
-              <Text fontSize="2xl" fontWeight="bold" color="white" mr={2}>
+          <Box>
+            <Flex align="center">
+              <Text fontSize="lg" fontWeight="bold" mr={2} color="white">
                 PayPal
               </Text>
-              <Tag colorScheme="red" size="md">
+              <Tag colorScheme="red" size="sm">
                 Coming Soon
               </Tag>
             </Flex>
-            <Text fontSize="md" color="whiteAlpha.900" mt={1}>
+            <Text fontSize="sm" color="white">
               Segera hadir, pembayaran mudah dengan PayPal.
             </Text>
           </Box>
           <Image
             src="https://8030.us.kg/file/IIqCNN4mm3br.png"
             alt="PayPal Logo"
-            boxSize="80px"
+            boxSize="70px"
           />
-        </MotionBox>
-      </Grid>
+        </Flex>
+      </Flex>
 
-      {/* Navbar Button (muncul saat metode dipilih) */}
+      {/* Navbar button yang muncul setelah memilih metode */}
       {selectedMethod && (
         <Flex
           position="fixed"
@@ -112,7 +102,7 @@ export default function DepositView() {
           align="center"
           zIndex={10}
         >
-          <Button colorScheme="teal" size="lg" onClick={handleProceed}>
+          <Button colorScheme="teal" onClick={handleProceed}>
             Lanjut ke {selectedMethod.toUpperCase()}
           </Button>
         </Flex>
