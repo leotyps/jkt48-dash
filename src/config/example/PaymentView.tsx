@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Heading, Image, Tag, Text, VStack } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Image, Tag, Text } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
@@ -7,15 +7,15 @@ export default function PaymentList() {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
 
   const handleCardClick = (method: string) => {
-    // Set selected method (animasi dan perubahan warna dilakukan melalui kondisi styling)
-    setSelectedMethod(method);
+    // Hanya QRIS yang dapat diklik
+    if (method === "qris") {
+      setSelectedMethod(method);
+    }
   };
 
   const handleProceed = () => {
     if (selectedMethod === "qris") {
       router.push("/payment/qris");
-    } else if (selectedMethod === "paypal") {
-      router.push("/payment/paypal");
     }
   };
 
@@ -56,21 +56,18 @@ export default function PaymentList() {
           />
         </Flex>
 
-        {/* Card PayPal */}
+        {/* Card PayPal (Coming Soon, tidak dapat diklik) */}
         <Flex
-          bg={selectedMethod === "paypal" ? "gray.600" : "gray.500"}
+          bg="gray.500"
           p={4}
           borderRadius="lg"
           justify="space-between"
           align="center"
           w="100%"
           h="90px"
-          cursor="pointer"
-          transition="all 0.3s ease"
-          transform={selectedMethod === "paypal" ? "scale(1.03)" : "scale(1)"}
-          boxShadow={selectedMethod === "paypal" ? "md" : "none"}
-          onClick={() => handleCardClick("paypal")}
-          opacity={0.7} // Tetap ada efek coming soon
+          opacity={0.7}
+          cursor="not-allowed"
+          pointerEvents="none"
         >
           <Box>
             <Flex align="center">
@@ -93,14 +90,13 @@ export default function PaymentList() {
         </Flex>
       </Flex>
 
-      {/* Navbar button yang muncul setelah memilih salah satu metode */}
+      {/* Navbar button yang muncul setelah memilih metode */}
       {selectedMethod && (
         <Flex
           position="fixed"
           bottom={0}
           left={0}
           w="100%"
-          bg="gray.800"
           p={4}
           justify="center"
           align="center"
