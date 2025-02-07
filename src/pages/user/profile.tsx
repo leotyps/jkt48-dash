@@ -41,7 +41,7 @@ const names = {
  * User info and general settings here
  */
 const ProfilePage: NextPageWithLayout = () => {
- const user = useSelfUser();
+  const user = useSelfUser();
   const logout = useLogoutMutation();
   const t = profile.useTranslations();
 
@@ -49,211 +49,265 @@ const ProfilePage: NextPageWithLayout = () => {
   const { lang, setLang } = useLang();
   //const { user, isLoading, isError } = useSelfUser();
   const [devMode, setDevMode] = useSettingsStore((s) => [s.devMode, s.setDevMode]);
-  const [apiKey, setApiKey] = useState<string>('');
-  const [apiStatus, setApiStatus] = useState<string | null>(null);
-  const [linkedGmail, setLinkedGmail] = useState<boolean>(false);
-  const [linkedEmail, setLinkedEmail] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState < string > ('');
+  const [apiStatus, setApiStatus] = useState < string | null > (null);
+  const [linkedGmail, setLinkedGmail] = useState < boolean > (false);
+  const [linkedEmail, setLinkedEmail] = useState < string | null > (null);
+  const [whatsAppNumber, setWhatsAppNumber] = useState < string > (''); // State untuk nomor WhatsApp
+  const [whatsAppStatus, setWhatsAppStatus] = useState < string | null > (null); // Status nomor WhatsApp
   const toast = useToast();
   const [isChecking, setIsChecking] = useState(true); // Mulai dengan pengecekan
-const [isPremium, setIsPremium] = useState(false); // Status premium
-
-useEffect(() => {
-  const apiKey = localStorage.getItem('jkt48-api-key');
-
-  if (apiKey) {
-    // Lakukan fetch ke API untuk memeriksa status premium
-    fetch(`https://api.jkt48connect.my.id/api/check-apikey/${apiKey}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.premium !== undefined) {
-          setIsPremium(data.premium);
-        } else {
-          setIsPremium(false);
-        }
-      })
-      .catch((err) => {
-        console.error('Error fetching premium status:', err);
-        setIsPremium(false);
-      })
-      .finally(() => {
-        // Pastikan isChecking diatur ke false setelah selesai memeriksa
-        setIsChecking(false);
-      });
-  } else {
-    // Jika API key tidak ditemukan, anggap bukan premium
-    setIsPremium(false);
-    setIsChecking(false);
-  }
-}, []);
+  const [isPremium, setIsPremium] = useState(false); // Status premium
 
   useEffect(() => {
-  // Check if the user has linked their Gmail account
-  const storedEmail = localStorage.getItem('linked-gmail-email');
-  if (storedEmail) {
-    setLinkedGmail(true);
-    setLinkedEmail(storedEmail);
-  }
+    const apiKey = localStorage.getItem('jkt48-api-key');
 
-  // Check if ts-apikey cookie exists and set it to localStorage
-  const apiKeyFromCookie = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith('ts-apikey='))
-    ?.split('=')[1];
-  if (apiKeyFromCookie) {
-    localStorage.setItem('jkt48-api-key', apiKeyFromCookie);
-    setApiKey(apiKeyFromCookie);
-  } else {
-    const storedApiKey = localStorage.getItem('jkt48-api-key');
-    if (storedApiKey) {
-      setApiKey(storedApiKey);
-    }
-  }
-}, []);
-
-type User = {
-  id: string;
-  username: string;
-  // tambahkan properti lain yang Anda perlukan dari user
-};
-
-
-
-function initializeApiKeyAndSaveUserData(user: User) {
-  if (typeof window !== 'undefined') {
-    const existingKey = localStorage.getItem('jkt48-api-key');
-
-    // Buat parameter query dari data user
-    const userData = new URLSearchParams({
-      id: user.id,
-      username: user.username,
-      balance: '0', // Misalnya saldo awal adalah 0
-    });
-
-    if (!existingKey) {
-      fetch(`/api/auth/get-api-key?${userData.toString()}`)
+    if (apiKey) {
+      // Lakukan fetch ke API untuk memeriksa status premium
+      fetch(`https://api.jkt48connect.my.id/api/check-apikey/${apiKey}`)
         .then((res) => res.json())
         .then((data) => {
-          if (data.apiKey) {
-            localStorage.setItem('jkt48-api-key', data.apiKey);
-            console.log('API Key saved to localStorage:', data.apiKey);
+          if (data && data.premium !== undefined) {
+            setIsPremium(data.premium);
+          } else {
+            setIsPremium(false);
           }
         })
-        .catch((err) => console.error('Failed to fetch API key:', err));
+        .catch((err) => {
+          console.error('Error fetching premium status:', err);
+          setIsPremium(false);
+        })
+        .finally(() => {
+          // Pastikan isChecking diatur ke false setelah selesai memeriksa
+          setIsChecking(false);
+        });
     } else {
-      console.log('API Key already exists in localStorage:', existingKey);
+      // Jika API key tidak ditemukan, anggap bukan premium
+      setIsPremium(false);
+      setIsChecking(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Check if the user has linked their Gmail account
+    const storedEmail = localStorage.getItem('linked-gmail-email');
+    if (storedEmail) {
+      setLinkedGmail(true);
+      setLinkedEmail(storedEmail);
+    }
+
+    // Check if ts-apikey cookie exists and set it to localStorage
+    const apiKeyFromCookie = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('ts-apikey='))
+      ?.split('=')[1];
+    if (apiKeyFromCookie) {
+      localStorage.setItem('jkt48-api-key', apiKeyFromCookie);
+      setApiKey(apiKeyFromCookie);
+    } else {
+      const storedApiKey = localStorage.getItem('jkt48-api-key');
+      if (storedApiKey) {
+        setApiKey(storedApiKey);
+      }
+    }
+  }, []);
+
+  type User = {
+    id: string;
+    username: string;
+    // tambahkan properti lain yang Anda perlukan dari user
+  };
+
+
+
+  function initializeApiKeyAndSaveUserData(user: User) {
+    if (typeof window !== 'undefined') {
+      const existingKey = localStorage.getItem('jkt48-api-key');
+
+      // Buat parameter query dari data user
+      const userData = new URLSearchParams({
+        id: user.id,
+        username: user.username,
+        balance: '0', // Misalnya saldo awal adalah 0
+      });
+
+      if (!existingKey) {
+        fetch(`/api/auth/get-api-key?${userData.toString()}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.apiKey) {
+              localStorage.setItem('jkt48-api-key', data.apiKey);
+              console.log('API Key saved to localStorage:', data.apiKey);
+            }
+          })
+          .catch((err) => console.error('Failed to fetch API key:', err));
+      } else {
+        console.log('API Key already exists in localStorage:', existingKey);
+      }
     }
   }
-}
 
-useEffect(() => {
-  // Pastikan user sudah tersedia sebelum memanggil fungsi
-  if (user) {
-    initializeApiKeyAndSaveUserData(user);
-  }
-}, [user]);
+  useEffect(() => {
+    // Pastikan user sudah tersedia sebelum memanggil fungsi
+    if (user) {
+      initializeApiKeyAndSaveUserData(user);
+    }
+  }, [user]);
 
-  
-  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handleApiKeyChange = (e: React.ChangeEvent < HTMLInputElement > ) => {
     setApiKey(e.target.value);
   };
 
   const saveApiKey = async () => {
-  if (!apiKey) {
-    toast({
-      title: 'Error',
-      description: 'API Key tidak boleh kosong!',
-      status: 'error',
-      duration: 3000,
-      isClosable: true,
-    });
-    return;
-  }
-
-  try {
-    // Simpan API Key ke localStorage
-    localStorage.setItem('jkt48-api-key', apiKey);
-
-    // Kirim permintaan untuk mengedit API Key pada server
-    const response = await fetch(`/api/auth/edit-user-data?id=${user.id}&apiKey=${apiKey}`, {
-      method: 'GET',
-    });
-
-    if (response.ok) {
-      setApiStatus('API Key berhasil disimpan');
+    if (!apiKey) {
       toast({
-        title: 'Success',
-        description: 'API Key berhasil disimpan dan diperbarui di server!',
-        status: 'success',
+        title: 'Error',
+        description: 'API Key tidak boleh kosong!',
+        status: 'error',
         duration: 3000,
         isClosable: true,
       });
-    } else {
-      const errorData = await response.json();
+      return;
+    }
+
+    try {
+      // Simpan API Key ke localStorage
+      localStorage.setItem('jkt48-api-key', apiKey);
+
+      // Kirim permintaan untuk mengedit API Key pada server
+      const response = await fetch(`/api/auth/edit-user-data?id=${user.id}&apiKey=${apiKey}`, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        setApiStatus('API Key berhasil disimpan');
+        toast({
+          title: 'Success',
+          description: 'API Key berhasil disimpan dan diperbarui di server!',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: 'Error',
+          description: errorData.error || 'Gagal memperbarui API Key di server!',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error saving API Key:', error);
       toast({
         title: 'Error',
-        description: errorData.error || 'Gagal memperbarui API Key di server!',
+        description: 'Terjadi kesalahan saat menyimpan API Key.',
         status: 'error',
         duration: 3000,
         isClosable: true,
       });
     }
-  } catch (error) {
-    console.error('Error saving API Key:', error);
-    toast({
-      title: 'Error',
-      description: 'Terjadi kesalahan saat menyimpan API Key.',
-      status: 'error',
-      duration: 3000,
-      isClosable: true,
-    });
-  }
-};
+  };
 
-const linkGmailAccount = async () => {
-  const provider = new GoogleAuthProvider();
-  try {
-    // Trigger the Google sign-in popup
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
+  const linkGmailAccount = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      // Trigger the Google sign-in popup
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
 
-    // Handle the case where email might be null
-    const email = user.email || 'Email tidak ditemukan';
+      // Handle the case where email might be null
+      const email = user.email || 'Email tidak ditemukan';
 
-    // Store the Gmail email in localStorage and set linked status
-    localStorage.setItem('linked-gmail', 'true');
-    localStorage.setItem('linked-gmail-email', email);
-    setLinkedGmail(true);
-    setLinkedEmail(email);
+      // Store the Gmail email in localStorage and set linked status
+      localStorage.setItem('linked-gmail', 'true');
+      localStorage.setItem('linked-gmail-email', email);
+      setLinkedGmail(true);
+      setLinkedEmail(email);
 
-    toast({
-      title: 'Gmail Linked',
-      description: email === 'Email tidak ditemukan'
-        ? 'Gmail berhasil ditautkan, tetapi email tidak dapat ditemukan.'
-        : `Gmail berhasil ditautkan (${email}).`,
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
+      toast({
+        title: 'Gmail Linked',
+        description: email === 'Email tidak ditemukan' ?
+          'Gmail berhasil ditautkan, tetapi email tidak dapat ditemukan.' : `Gmail berhasil ditautkan (${email}).`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
 
-    // Optionally, store user's Gmail in the user database on the server
-    await fetch('/api/auth/linkGmail', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email }),
-    });
-  } catch (error) {
-    console.error('Error linking Gmail:', error);
-    toast({
-      title: 'Error',
-      description: 'Failed to link Gmail account.',
-      status: 'error',
-      duration: 3000,
-      isClosable: true,
-    });
-  }
-};
+      // Optionally, store user's Gmail in the user database on the server
+      await fetch('/api/auth/linkGmail', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+    } catch (error) {
+      console.error('Error linking Gmail:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to link Gmail account.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleWhatsAppNumberChange = (e: React.ChangeEvent < HTMLInputElement > ) => {
+    setWhatsAppNumber(e.target.value);
+  };
+
+  const saveWhatsAppNumber = async () => {
+    if (!whatsAppNumber) {
+      toast({
+        title: 'Error',
+        description: 'Nomor WhatsApp tidak boleh kosong!',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/auth/edit-phone-number?id=${user.id}&phoneNumber=${whatsAppNumber}`, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        setWhatsAppStatus('Nomor WhatsApp berhasil disimpan');
+        toast({
+          title: 'Success',
+          description: 'Nomor WhatsApp berhasil disimpan dan diperbarui di server!',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: 'Error',
+          description: errorData.error || 'Gagal memperbarui nomor WhatsApp di server!',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error saving WhatsApp number:', error);
+      toast({
+        title: 'Error',
+        description: 'Terjadi kesalahan saat menyimpan nomor WhatsApp.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
 
   return (
     <Grid templateColumns={{ base: '1fr', lg: 'minmax(0, 800px) auto' }} gap={{ base: 3, lg: 6 }}>
@@ -329,6 +383,27 @@ const linkGmailAccount = async () => {
               }))}
             />
           </FormControl>
+          
+              { /* WhatsApp Number Settings */ }
+    <FormControl>
+            <Box mb={2}>
+              <FormLabel fontSize="md" fontWeight="medium" m={0}>
+                Nomor WhatsApp
+              </FormLabel>
+              <Text color="TextSecondary">Simpan nomor WhatsAppmu disini</Text>
+            </Box>
+            <Input
+              value={whatsAppNumber}
+              onChange={handleWhatsAppNumberChange}
+              placeholder="Masukkan nomor WhatsApp"
+              size="lg"
+            />
+            {whatsAppStatus && <Text mt={2}>{whatsAppStatus}</Text>}
+          </FormControl> <
+    Button colorScheme = "blue"
+    onClick = { saveWhatsAppNumber } >
+      Simpan Nomor WhatsApp <
+      /Button>
 
           {/* API Key Settings */}
           <FormControl>
