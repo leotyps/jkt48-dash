@@ -56,7 +56,57 @@ const ProfilePage: NextPageWithLayout = () => {
   const toast = useToast();
   const [isChecking, setIsChecking] = useState(true); // Mulai dengan pengecekan
 const [isPremium, setIsPremium] = useState(false); // Status premium
+const [phoneNumber, setPhoneNumber] = useState < string > ('');
+const [phoneNumberStatus, setPhoneNumberStatus] = useState < string | null > (null);
 
+const savePhoneNumber = async () => {
+  if (!phoneNumber) {
+    toast({
+      title: 'Error',
+      description: 'Nomor WhatsApp tidak boleh kosong!',
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    });
+    return;
+  }
+
+  try {
+    // Kirim permintaan untuk mengedit nomor WhatsApp pada server
+    const response = await fetch(`/api/auth/edit-phone-number?id=${user.id}&phoneNumber=${phoneNumber}`, {
+      method: 'GET',
+    });
+
+    if (response.ok) {
+      setPhoneNumberStatus('Nomor WhatsApp berhasil disimpan');
+      toast({
+        title: 'Success',
+        description: 'Nomor WhatsApp berhasil disimpan dan diperbarui di server!',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } else {
+      const errorData = await response.json();
+      toast({
+        title: 'Error',
+        description: errorData.error || 'Gagal memperbarui nomor WhatsApp di server!',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  } catch (error) {
+    console.error('Error saving phone number:', error);
+    toast({
+      title: 'Error',
+      description: 'Terjadi kesalahan saat menyimpan nomor WhatsApp.',
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+};
 
 useEffect(() => {
   const apiKey = localStorage.getItem('jkt48-api-key');
