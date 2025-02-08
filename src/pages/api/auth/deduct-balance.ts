@@ -3,12 +3,12 @@ import { connectToDatabase } from '@/utils/db'; // Koneksi ke database
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    if (req.method !== 'POST') {
+    if (req.method !== 'GET') {
       return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    // Ambil phone_number dan amount dari body request
-    const { phone_number, amount } = req.body;
+    // Ambil phone_number dan amount dari query parameter
+    const { phone_number, amount } = req.query;
 
     if (!phone_number || !amount) {
       return res.status(400).json({ error: 'Missing required fields: phone_number and amount' });
