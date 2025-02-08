@@ -1,4 +1,3 @@
-// api/auth/get-user-data.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { connectToDatabase } from '@/utils/db'; // Koneksi ke database
 
@@ -35,17 +34,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Insufficient balance' });
     }
 
-    // Kurangi balance pengguna sebanyak 5
-    const updateQuery = `
-      UPDATE users
-      SET balance = balance - 5
-      WHERE phone_number = $1
-      RETURNING balance;
-    `;
-    const updateResult = await db.query(updateQuery, values);
-    
-    // Kembalikan data user dengan balance yang telah diperbarui
-    res.status(200).json({ user: { ...user, balance: updateResult.rows[0].balance } });
+    // Kembalikan data user tanpa mengurangi balance
+    res.status(200).json({ user });
 
   } catch (error) {
     console.error('Error handling request:', error);
