@@ -27,8 +27,8 @@ const items: SidebarItemInfo[] = [
     icon: <Icon as={FaKey} />,
   },
   {
-    name: "JKT48 Section", // Tambahkan item Documentation
-    path: '/user/jkt48',
+    name: "Deposit", // Tambahkan item Documentation
+    path: '/payment/qris',
     icon: <Icon as={TbTheater} />,
   },
 ];
