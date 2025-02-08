@@ -14,28 +14,38 @@ import {
   ModalFooter,
   Image,
   Spinner,
-  Textarea,
   Checkbox,
+  Textarea,
+  Badge,
+  Tag,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
-export default function DepositView() {
+export default function HomeView() {
   const [nominal, setNominal] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [paymentPopup, setPaymentPopup] = useState<boolean>(false);
   const [paymentDetails, setPaymentDetails] = useState<any | null>(null);
   const [isLoadingPayment, setIsLoadingPayment] = useState<boolean>(false);
-  const [requests, setRequests] = useState<any[]>([]);
+  const [deletePopup, setDeletePopup] = useState<boolean>(false);
+  const [deleteReason, setDeleteReason] = useState<string>("");
+  const [deleteConfirmation, setDeleteConfirmation] = useState<boolean>(false);
+  const [depositHistory, setDepositHistory] = useState<any[]>([]);
   const toast = useToast();
 
   const webhookUrl =
     "https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C";
 
+  useEffect(() => {
+    const savedDeposits = localStorage.getItem("deposit-history");
+    if (savedDeposits) setDepositHistory(JSON.parse(savedDeposits));
+  }, []);
+
   const handleSubmit = async () => {
     if (!nominal || !phoneNumber) {
       toast({
         title: "Error",
-        description: "Nominal dan Nomor Telepon harus diisi!",
+        description: "Semua input wajib diisi!",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -43,21 +53,22 @@ export default function DepositView() {
       return;
     }
 
-    const randomFee = Math.floor(Math.random() * 250) + 1;
+    const fee = 4; // Fee tetap
     const amount = parseInt(nominal);
+    const totalAmount = amount + fee; // Jumlah total dengan fee
 
     try {
       setIsLoadingPayment(true);
       const response = await fetch(
-        `https://api.jkt48connect.my.id/api/orkut/createpayment?amount=${amount}&qris=00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214149391352933240303UMI51440014ID.CO.QRIS.WWW0215ID20233077025890303UMI5204541153033605802ID5919VALZSTORE OK14535636006SERANG61054211162070703A016304DCD2&includeFee=true&fee=${randomFee}&api_key=JKTCONNECT`
+        `https://api.jkt48connect.my.id/api/orkut/createpayment?amount=${totalAmount}&qris=00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214149391352933240303UMI51440014ID.CO.QRIS.WWW0215ID20233077025890303UMI5204541153033605802ID5919VALZSTORE OK14535636006SERANG61054211162070703A016304DCD2&includeFee=true&fee=${fee}&api_key=JKTCONNECT`
       );
       const data = await response.json();
 
       if (response.ok && data.dynamicQRIS) {
         setPaymentDetails({
           qrImageUrl: data.qrImageUrl,
-          totalAmount: amount + randomFee,
-          fee: randomFee,
+          totalAmount,
+          fee,
           phoneNumber,
           nominal,
         });
@@ -107,74 +118,43 @@ export default function DepositView() {
         ) {
           toast({
             title: "Success",
-            description: "Pembayaran berhasil. Deposit dalam status Pending.",
+            description: "Pembayaran berhasil, saldo akan ditambahkan.",
             status: "success",
             duration: 3000,
             isClosable: true,
           });
 
-          // Tambahkan riwayat deposit dengan status Pending
-          const newRequest = {
-            phoneNumber: paymentDetails.phoneNumber,
-            nominal: paymentDetails.nominal,
-            status: "Pending",
-          };
-          const updatedRequests = [...requests, newRequest];
-          setRequests(updatedRequests);
-          localStorage.setItem("deposit-requests", JSON.stringify(updatedRequests));
+          // Tambahkan saldo menggunakan API
+          const addBalanceResponse = await fetch(
+            `https://dash.jkt48connect.my.id/api/auth/add-balance?phone_number=${phoneNumber}&amount=${nominal}`,
+            { method: "GET" }
+          );
+          const addBalanceData = await addBalanceResponse.json();
 
-          // Kirim webhook dengan status Pending
-          await fetch(webhookUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              embeds: [
-                {
-                  title: "Deposit Dibuat (Pending)",
-                  fields: [
-                    { name: "Nominal", value: paymentDetails.nominal, inline: true },
-                    { name: "Nomor Telepon", value: paymentDetails.phoneNumber, inline: true },
-                    { name: "Total Pembayaran", value: paymentDetails.totalAmount.toString(), inline: true },
-                  ],
-                  color: 15105570, // Warna kuning
-                },
-              ],
-            }),
-          });
+          if (addBalanceResponse.ok && addBalanceData.success) {
+            // Tambahkan riwayat deposit
+            const newDeposit = {
+              phoneNumber,
+              nominal,
+              status: "Success",
+              date: new Date().toLocaleString(),
+            };
+            const updatedDeposits = [...depositHistory, newDeposit];
+            setDepositHistory(updatedDeposits);
+            localStorage.setItem("deposit-history", JSON.stringify(updatedDeposits));
 
-          // Ubah status ke Sukses setelah 2-3 menit
-          setTimeout(async () => {
-            const updatedRequestsAfterActivation = updatedRequests.map((r) =>
-              r.phoneNumber === paymentDetails.phoneNumber
-                ? { ...r, status: "Success" }
-                : r
-            );
-            setRequests(updatedRequestsAfterActivation);
-            localStorage.setItem(
-              "deposit-requests",
-              JSON.stringify(updatedRequestsAfterActivation)
-            );
-
-            // Tambahkan saldo ke pengguna
-            await fetch(
-              `https://dash.jkt48connect.my.id/api/auth/add-balance?phone_number=${paymentDetails.phoneNumber}&amount=${paymentDetails.nominal}`
-            );
-
-            // Kirim webhook dengan status Sukses
+            // Kirim webhook deposit sukses
             await fetch(webhookUrl, {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 embeds: [
                   {
                     title: "Deposit Sukses",
                     fields: [
-                      { name: "Nominal", value: paymentDetails.nominal, inline: true },
-                      { name: "Nomor Telepon", value: paymentDetails.phoneNumber, inline: true },
+                      { name: "Nominal", value: nominal, inline: true },
+                      { name: "Nomor", value: phoneNumber, inline: true },
+                      { name: "Status", value: "Success", inline: true },
                     ],
                     color: 3066993, // Warna hijau
                   },
@@ -182,16 +162,16 @@ export default function DepositView() {
               }),
             });
 
+            setPaymentPopup(false);
+          } else {
             toast({
-              title: "Success",
-              description: "Deposit berhasil ditambahkan.",
-              status: "success",
+              title: "Error",
+              description: "Gagal menambahkan saldo.",
+              status: "error",
               duration: 3000,
               isClosable: true,
             });
-          }, 2 * 60 * 1000); // 2 menit (dapat diubah menjadi 3 menit jika diperlukan)
-
-          setPaymentPopup(false);
+          }
         } else {
           toast({
             title: "Error",
@@ -213,11 +193,58 @@ export default function DepositView() {
     }
   };
 
+  const handleDelete = async (depositToDelete: any) => {
+    if (!deleteConfirmation || !deleteReason) {
+      toast({
+        title: "Error",
+        description: "Anda harus menyetujui kebijakan dan mengisi alasan.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const updatedDeposits = depositHistory.filter(
+      (deposit) => deposit.phoneNumber !== depositToDelete.phoneNumber
+    );
+    setDepositHistory(updatedDeposits);
+    localStorage.setItem("deposit-history", JSON.stringify(updatedDeposits));
+
+    // Kirim webhook penghapusan deposit
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        embeds: [
+          {
+            title: "Deposit Dihapus",
+            fields: [
+              { name: "Nominal", value: depositToDelete.nominal, inline: true },
+              { name: "Nomor", value: depositToDelete.phoneNumber, inline: true },
+              { name: "Alasan", value: deleteReason, inline: false },
+            ],
+            color: 15158332, // Warna merah
+          },
+        ],
+      }),
+    });
+
+    setDeletePopup(false);
+    toast({
+      title: "Success",
+      description: "Deposit berhasil dihapus.",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
   return (
     <Flex direction="column" gap={5}>
-      <Heading>Deposit Saldo</Heading>
+      <Heading>Top Up Deposit</Heading>
 
-      {/* Form untuk Deposit */}
+      {/* Form untuk deposit */}
       <VStack spacing={4} align="stretch">
         <Input
           type="number"
@@ -226,7 +253,8 @@ export default function DepositView() {
           onChange={(e) => setNominal(e.target.value)}
         />
         <Input
-          placeholder="Masukkan Nomor Telepon"
+          type="text"
+          placeholder="Masukkan Nomor Pengguna"
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
         />
@@ -241,7 +269,8 @@ export default function DepositView() {
         <ModalContent>
           <ModalHeader>Konfirmasi Pembayaran QRIS</ModalHeader>
           <ModalBody>
-            <Text>Total Pembayaran: {paymentDetails?.totalAmount}</Text>
+            <Text>Nominal: {paymentDetails?.nominal}</Text>
+            <Text>Total: {paymentDetails?.totalAmount}</Text>
             <Image src={paymentDetails?.qrImageUrl} alt="QRIS" />
             <Text>
               Harap scan QRIS dan tekan &rdquo;Konfirmasi&rdquo; untuk mengecek status
@@ -256,16 +285,49 @@ export default function DepositView() {
         </ModalContent>
       </Modal>
 
-      {/* Riwayat Deposit */}
-      {requests.map((req, idx) => (
-        <Flex key={idx} justify="space-between" p={4} borderWidth={1} align="center">
-          <Flex direction="column">
-            <Text fontWeight="bold">{req.phoneNumber}</Text>
-            <Text>Status: {req.status}</Text>
-            <Text>Nominal: {req.nominal}</Text>
-          </Flex>
+      {/* Daftar deposit */}
+      {depositHistory.map((deposit, idx) => (
+        <Flex key={idx} justify="space-between" p={4} borderWidth={1}>
+          <VStack align="start">
+            <Text>{deposit.phoneNumber}</Text>
+            <Text>{deposit.nominal}</Text>
+            <Tag colorScheme="green">{deposit.status}</Tag>
+            <Text>{deposit.date}</Text>
+          </VStack>
+          <Button colorScheme="red" onClick={() => setDeletePopup(true)}>
+            Hapus
+          </Button>
         </Flex>
       ))}
+
+      {/* Popup untuk penghapusan */}
+      <Modal isOpen={deletePopup} onClose={() => setDeletePopup(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Hapus Deposit</ModalHeader>
+          <ModalBody>
+            <Textarea
+              placeholder="Alasan penghapusan"
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+            />
+            <Checkbox
+              isChecked={deleteConfirmation}
+              onChange={() => setDeleteConfirmation(!deleteConfirmation)}
+            >
+              Saya setuju dengan kebijakan
+            </Checkbox>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="red"
+              onClick={() => handleDelete(depositHistory[0])}
+            >
+              Hapus
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Flex>
   );
 }
