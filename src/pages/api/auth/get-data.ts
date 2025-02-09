@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const user = result.rows[0];
 
     // Jika saldo kurang dari 5, tidak boleh digunakan
-    if (user.balance < 5) {
+    if (user.balance < 0) {
       return res.status(400).json({ error: 'Insufficient balance' });
     }
 
