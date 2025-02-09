@@ -29,6 +29,7 @@
     "@mui/system": "^6.4.0",
     "@tanstack/react-query": "^4.2.3",
     "apexcharts": "^3.36.3",
+    "axios": "^1.7.9",
     "chakra-react-select": "^4.4.2",
     "cookies-next": "^2.1.1",
     "deepmerge-ts": "^4.2.2",
