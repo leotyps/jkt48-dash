@@ -14,10 +14,7 @@ import {
   ModalFooter,
   Image,
   Spinner,
-  Checkbox,
-  Textarea,
   Badge,
-  Tag,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
@@ -28,10 +25,6 @@ export default function HomeView() {
   const [paymentPopup, setPaymentPopup] = useState<boolean>(false);
   const [paymentDetails, setPaymentDetails] = useState<any | null>(null);
   const [isLoadingPayment, setIsLoadingPayment] = useState<boolean>(false);
-  const [deletePopup, setDeletePopup] = useState<boolean>(false);
-  const [deleteReason, setDeleteReason] = useState<string>("");
-  const [selectedDepositRequest, setSelectedDepositRequest] = useState<any | null>(null);
-  const [deleteConfirmation, setDeleteConfirmation] = useState<boolean>(false);
   const toast = useToast();
 
   const webhookUrl =
@@ -54,21 +47,20 @@ export default function HomeView() {
       return;
     }
 
-    const fee = 4;
-    const totalAmount = parseInt(depositAmount) + fee;
-
     try {
       setIsLoadingPayment(true);
+
+      // Panggil API untuk mendapatkan QRIS dan total harga yang benar
       const response = await fetch(
-        `https://api.jkt48connect.my.id/api/orkut/createpayment?amount=${totalAmount}&qris=00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214149391352933240303UMI51440014ID.CO.QRIS.WWW0215ID20233077025890303UMI5204541153033605802ID5919VALZSTORE OK14535636006SERANG61054211162070703A016304DCD2&includeFee=true&fee=${fee}&api_key=JKTCONNECT`
+        `https://api.jkt48connect.my.id/api/orkut/createpayment?amount=${depositAmount}&qris=00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214149391352933240303UMI51440014ID.CO.QRIS.WWW0215ID20233077025890303UMI5204541153033605802ID5919VALZSTORE OK14535636006SERANG61054211162070703A016304DCD2&includeFee=true&api_key=JKTCONNECT`
       );
       const data = await response.json();
 
       if (response.ok && data.dynamicQRIS) {
         setPaymentDetails({
           qrImageUrl: data.qrImageUrl,
-          totalAmount: totalAmount,
-          fee,
+          totalAmount: data.totalAmount, // Menggunakan jumlah dari API
+          fee: data.fee,
           phoneNumber,
           depositAmount,
         });
@@ -104,21 +96,19 @@ export default function HomeView() {
       const data = await response.json();
 
       if (response.ok && data.status === "success") {
+        // Ambil transaksi terbaru
         const latestTransaction = data.data.sort(
           (a: { date: string }, b: { date: string }) =>
             new Date(b.date).getTime() - new Date(a.date).getTime()
         )[0];
 
-        const latestTransactionDate = new Date(latestTransaction.date).getTime();
-        const paymentDate = new Date().getTime();
+        const latestTransactionAmount = parseInt(latestTransaction.amount, 10);
+        const expectedAmount = paymentDetails?.totalAmount;
 
-        if (
-          latestTransaction.amount === paymentDetails?.totalAmount.toString() &&
-          Math.abs(latestTransactionDate - paymentDate) <= 5 * 60 * 1000
-        ) {
-          // Add balance to the user's account
+        if (latestTransactionAmount === expectedAmount) {
+          // Tambah saldo ke akun pengguna
           const addBalanceResponse = await fetch(
-            `https://dash.jkt48connect.my.id/api/auth/add-balance?phone_number=${paymentDetails.phoneNumber}&amount=${depositAmount}`
+            `https://dash.jkt48connect.my.id/api/auth/add-balance?phone_number=${paymentDetails.phoneNumber}&amount=${paymentDetails.depositAmount}`
           );
           const addBalanceData = await addBalanceResponse.json();
 
@@ -131,7 +121,7 @@ export default function HomeView() {
               isClosable: true,
             });
 
-            // Update deposit request status
+            // Simpan riwayat deposit
             const newDepositRequest = {
               phoneNumber: paymentDetails.phoneNumber,
               depositAmount: paymentDetails.depositAmount,
@@ -142,7 +132,7 @@ export default function HomeView() {
             setDepositRequests(updatedRequests);
             localStorage.setItem("deposit-requests", JSON.stringify(updatedRequests));
 
-            // Send webhook notification
+            // Kirim notifikasi ke webhook
             await fetch(webhookUrl, {
               method: "POST",
               headers: {
@@ -176,7 +166,7 @@ export default function HomeView() {
         } else {
           toast({
             title: "Error",
-            description: "Pembayaran belum terverifikasi atau tidak valid.",
+            description: "Pembayaran tidak sesuai dengan jumlah yang diharapkan.",
             status: "error",
             duration: 3000,
             isClosable: true,
@@ -194,57 +184,9 @@ export default function HomeView() {
     }
   };
 
-  const handleDelete = async (phoneNumberToDelete: string) => {
-    if (!deleteConfirmation || !deleteReason) {
-      toast({
-        title: "Error",
-        description: "Anda harus menyetujui kebijakan dan mengisi alasan.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    const updatedRequests = depositRequests.filter(
-      (req) => req.phoneNumber !== phoneNumberToDelete
-    );
-    setDepositRequests(updatedRequests);
-    localStorage.setItem("deposit-requests", JSON.stringify(updatedRequests));
-
-    // Kirim webhook penghapusan
-    await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        embeds: [
-          {
-            title: "Deposit Dihapus",
-            fields: [
-              { name: "Nomor", value: phoneNumberToDelete, inline: true },
-              { name: "Alasan", value: deleteReason, inline: false },
-            ],
-            color: 15158332, // Red
-          },
-        ],
-      }),
-    });
-
-    setDeletePopup(false);
-    toast({
-      title: "Success",
-      description: "Deposit berhasil dihapus.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-  };
-
   return (
     <Flex direction="column" gap={5}>
       <Heading>Top Up Deposit</Heading>
-
-      {/* Form untuk Deposit */}
       <VStack spacing={4} align="stretch">
         <Input
           type="number"
@@ -260,62 +202,6 @@ export default function HomeView() {
         <Button colorScheme="blue" onClick={handleSubmit}>
           {isLoadingPayment ? <Spinner /> : "Ajukan Top Up Deposit"}
         </Button>
-      </VStack>
-
-      {/* Modal untuk konfirmasi pembayaran */}
-      <Modal isOpen={paymentPopup} onClose={() => setPaymentPopup(false)}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Konfirmasi Pembayaran</ModalHeader>
-          <ModalBody>
-            {paymentDetails && (
-              <>
-                <Text>
-                  Nomor: {paymentDetails.phoneNumber} <br />
-                  Nominal: Rp{paymentDetails.depositAmount} <br />
-                  Total Pembayaran: Rp{paymentDetails.totalAmount}
-                </Text>
-                <Image src={paymentDetails.qrImageUrl} alt="QRIS" boxSize="200px" />
-              </>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="green" onClick={confirmPayment}>
-              Konfirmasi Pembayaran
-            </Button>
-            <Button variant="ghost" onClick={() => setPaymentPopup(false)}>
-              Batal
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Deposit Requests Table */}
-      <VStack align="stretch">
-        <Heading size="md">Riwayat Deposit</Heading>
-        {depositRequests.length === 0 ? (
-          <Text>No deposit requests yet.</Text>
-        ) : (
-          depositRequests.map((request, index) => (
-            <Flex
-              key={index}
-              align="center"
-              justify="space-between"
-              border="1px solid #ccc"
-              p={3}
-              borderRadius="md"
-            >
-              <Text>
-                {request.phoneNumber} <br />
-                Nominal: Rp{request.depositAmount} <br />
-                Status:{" "}
-                <Badge colorScheme={request.status === "Success" ? "green" : "red"}>
-                  {request.status}
-                </Badge>
-              </Text>
-            </Flex>
-          ))
-        )}
       </VStack>
     </Flex>
   );
