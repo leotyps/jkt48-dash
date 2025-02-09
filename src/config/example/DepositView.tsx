@@ -14,28 +14,32 @@ import {
   ModalFooter,
   Image,
   Spinner,
-  Textarea,
-  Checkbox,
+  Tag,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
 export default function DepositView() {
-  const [nominal, setNominal] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [amount, setAmount] = useState<string>("");
   const [paymentPopup, setPaymentPopup] = useState<boolean>(false);
   const [paymentDetails, setPaymentDetails] = useState<any | null>(null);
   const [isLoadingPayment, setIsLoadingPayment] = useState<boolean>(false);
-  const [requests, setRequests] = useState<any[]>([]);
+  const [depositHistory, setDepositHistory] = useState<any[]>([]);
   const toast = useToast();
 
   const webhookUrl =
     "https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C";
 
-  const handleSubmit = async () => {
-    if (!nominal || !phoneNumber) {
+  useEffect(() => {
+    const savedDeposits = localStorage.getItem("deposit-history");
+    if (savedDeposits) setDepositHistory(JSON.parse(savedDeposits));
+  }, []);
+
+  const handleDeposit = async () => {
+    if (!phoneNumber || !amount) {
       toast({
         title: "Error",
-        description: "Nominal dan Nomor Telepon harus diisi!",
+        description: "Nomor telepon dan nominal harus diisi!",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -43,8 +47,8 @@ export default function DepositView() {
       return;
     }
 
-    const randomFee = Math.floor(Math.random() * 250) + 1;
-    const amount = parseInt(nominal);
+    const randomFee = Math.floor(Math.random() * 29) + 4; // Fee antara 4 - 32
+    const totalAmount = parseInt(amount) + randomFee;
 
     try {
       setIsLoadingPayment(true);
@@ -56,10 +60,10 @@ export default function DepositView() {
       if (response.ok && data.dynamicQRIS) {
         setPaymentDetails({
           qrImageUrl: data.qrImageUrl,
-          totalAmount: amount + randomFee,
+          totalAmount,
           fee: randomFee,
           phoneNumber,
-          nominal,
+          amount,
         });
 
         setPaymentPopup(true);
@@ -98,104 +102,57 @@ export default function DepositView() {
             new Date(b.date).getTime() - new Date(a.date).getTime()
         )[0];
 
-        const latestTransactionDate = new Date(latestTransaction.date).getTime();
-        const paymentDate = new Date().getTime();
-
         if (
-          latestTransaction.amount === paymentDetails?.totalAmount.toString() &&
-          Math.abs(latestTransactionDate - paymentDate) <= 5 * 60 * 1000
+          latestTransaction.amount === paymentDetails?.totalAmount.toString()
         ) {
-          toast({
-            title: "Success",
-            description: "Pembayaran berhasil. Deposit dalam status Pending.",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-          });
+          // Tambahkan saldo dengan API
+          await fetch(
+            `https://dash.jkt48connect.my.id/api/auth/add-balance?phone_number=${paymentDetails.phoneNumber}&amount=${paymentDetails.amount}`
+          );
 
-          // Tambahkan riwayat deposit dengan status Pending
-          const newRequest = {
+          // Simpan riwayat deposit
+          const newDeposit = {
             phoneNumber: paymentDetails.phoneNumber,
-            nominal: paymentDetails.nominal,
-            status: "Pending",
+            amount: paymentDetails.amount,
+            fee: paymentDetails.fee,
+            status: "Success",
           };
-          const updatedRequests = [...requests, newRequest];
-          setRequests(updatedRequests);
-          localStorage.setItem("deposit-requests", JSON.stringify(updatedRequests));
+          const updatedDeposits = [...depositHistory, newDeposit];
+          setDepositHistory(updatedDeposits);
+          localStorage.setItem("deposit-history", JSON.stringify(updatedDeposits));
 
-          // Kirim webhook dengan status Pending
+          // Kirim webhook dengan status Success
           await fetch(webhookUrl, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               embeds: [
                 {
-                  title: "Deposit Dibuat (Pending)",
+                  title: "Deposit Berhasil",
                   fields: [
-                    { name: "Nominal", value: paymentDetails.nominal, inline: true },
-                    { name: "Nomor Telepon", value: paymentDetails.phoneNumber, inline: true },
-                    { name: "Total Pembayaran", value: paymentDetails.totalAmount.toString(), inline: true },
+                    { name: "Nomor", value: paymentDetails.phoneNumber, inline: true },
+                    { name: "Nominal", value: paymentDetails.amount, inline: true },
+                    { name: "Fee", value: paymentDetails.fee, inline: true },
                   ],
-                  color: 15105570, // Warna kuning
+                  color: 3066993, // Warna hijau
                 },
               ],
             }),
           });
 
-          // Ubah status ke Sukses setelah 2-3 menit
-          setTimeout(async () => {
-            const updatedRequestsAfterActivation = updatedRequests.map((r) =>
-              r.phoneNumber === paymentDetails.phoneNumber
-                ? { ...r, status: "Success" }
-                : r
-            );
-            setRequests(updatedRequestsAfterActivation);
-            localStorage.setItem(
-              "deposit-requests",
-              JSON.stringify(updatedRequestsAfterActivation)
-            );
-
-            // Tambahkan saldo ke pengguna
-            await fetch(
-              `https://dash.jkt48connect.my.id/api/auth/add-balance?phone_number=${paymentDetails.phoneNumber}&amount=${paymentDetails.nominal}`
-            );
-
-            // Kirim webhook dengan status Sukses
-            await fetch(webhookUrl, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                embeds: [
-                  {
-                    title: "Deposit Sukses",
-                    fields: [
-                      { name: "Nominal", value: paymentDetails.nominal, inline: true },
-                      { name: "Nomor Telepon", value: paymentDetails.phoneNumber, inline: true },
-                    ],
-                    color: 3066993, // Warna hijau
-                  },
-                ],
-              }),
-            });
-
-            toast({
-              title: "Success",
-              description: "Deposit berhasil ditambahkan.",
-              status: "success",
-              duration: 3000,
-              isClosable: true,
-            });
-          }, 2 * 60 * 1000); // 2 menit (dapat diubah menjadi 3 menit jika diperlukan)
+          toast({
+            title: "Success",
+            description: "Saldo telah ditambahkan.",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
 
           setPaymentPopup(false);
         } else {
           toast({
             title: "Error",
-            description: "Pembayaran belum terverifikasi atau tidak valid.",
+            description: "Pembayaran tidak valid atau belum terverifikasi.",
             status: "error",
             duration: 3000,
             isClosable: true,
@@ -217,52 +174,47 @@ export default function DepositView() {
     <Flex direction="column" gap={5}>
       <Heading>Deposit Saldo</Heading>
 
-      {/* Form untuk Deposit */}
       <VStack spacing={4} align="stretch">
         <Input
-          type="number"
-          placeholder="Masukkan Nominal Top Up"
-          value={nominal}
-          onChange={(e) => setNominal(e.target.value)}
-        />
-        <Input
+          type="tel"
           placeholder="Masukkan Nomor Telepon"
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
         />
-        <Button colorScheme="blue" onClick={handleSubmit}>
-          {isLoadingPayment ? <Spinner /> : "Ajukan Deposit"}
+        <Input
+          type="number"
+          placeholder="Masukkan Nominal Deposit"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+        <Button colorScheme="blue" onClick={handleDeposit}>
+          {isLoadingPayment ? <Spinner /> : "Top Up Saldo"}
         </Button>
       </VStack>
 
-      {/* Modal untuk konfirmasi pembayaran */}
       <Modal isOpen={paymentPopup} onClose={() => setPaymentPopup(false)}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Konfirmasi Pembayaran QRIS</ModalHeader>
+          <ModalHeader>QRIS Pembayaran</ModalHeader>
           <ModalBody>
-            <Text>Total Pembayaran: {paymentDetails?.totalAmount}</Text>
-            <Image src={paymentDetails?.qrImageUrl} alt="QRIS" />
-            <Text>
-              Harap scan QRIS dan tekan &rdquo;Konfirmasi&rdquo; untuk mengecek status
-              pembayaran.
-            </Text>
+            <Text>Nomor: {paymentDetails?.phoneNumber}</Text>
+            <Text>Total Pembayaran: Rp{paymentDetails?.totalAmount}</Text>
+            <Image src={paymentDetails?.qrImageUrl} alt="QRIS" boxSize="300px" />
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" onClick={confirmPayment}>
-              Konfirmasi
+              Konfirmasi Pembayaran
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
 
-      {/* Riwayat Deposit */}
-      {requests.map((req, idx) => (
+      {depositHistory.map((deposit, idx) => (
         <Flex key={idx} justify="space-between" p={4} borderWidth={1} align="center">
           <Flex direction="column">
-            <Text fontWeight="bold">{req.phoneNumber}</Text>
-            <Text>Status: {req.status}</Text>
-            <Text>Nominal: {req.nominal}</Text>
+            <Text fontWeight="bold">Nomor: {deposit.phoneNumber}</Text>
+            <Text>Nominal: Rp{deposit.amount}</Text>
+            <Tag size="sm" colorScheme="green">{deposit.status}</Tag>
           </Flex>
         </Flex>
       ))}
