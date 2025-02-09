@@ -14,17 +14,16 @@ import {
   ModalFooter,
   Image,
   Spinner,
-  Badge,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
 export default function HomeView() {
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
-  const [depositAmount, setDepositAmount] = useState<string>("");
-  const [depositRequests, setDepositRequests] = useState<any[]>([]);
-  const [paymentPopup, setPaymentPopup] = useState<boolean>(false);
-  const [paymentDetails, setPaymentDetails] = useState<any | null>(null);
-  const [isLoadingPayment, setIsLoadingPayment] = useState<boolean>(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [depositRequests, setDepositRequests] = useState([]);
+  const [paymentPopup, setPaymentPopup] = useState(false);
+  const [paymentDetails, setPaymentDetails] = useState(null);
+  const [isLoadingPayment, setIsLoadingPayment] = useState(false);
   const toast = useToast();
 
   const webhookUrl =
@@ -50,7 +49,6 @@ export default function HomeView() {
     try {
       setIsLoadingPayment(true);
 
-      // Panggil API untuk mendapatkan QRIS dan total harga yang benar
       const response = await fetch(
         `https://api.jkt48connect.my.id/api/orkut/createpayment?amount=${depositAmount}&qris=00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214149391352933240303UMI51440014ID.CO.QRIS.WWW0215ID20233077025890303UMI5204541153033605802ID5919VALZSTORE OK14535636006SERANG61054211162070703A016304DCD2&includeFee=true&api_key=JKTCONNECT`
       );
@@ -59,7 +57,7 @@ export default function HomeView() {
       if (response.ok && data.dynamicQRIS) {
         setPaymentDetails({
           qrImageUrl: data.qrImageUrl,
-          totalAmount: data.totalAmount, // Menggunakan jumlah dari API
+          totalAmount: data.totalAmount,
           fee: data.fee,
           phoneNumber,
           depositAmount,
@@ -96,19 +94,16 @@ export default function HomeView() {
       const data = await response.json();
 
       if (response.ok && data.status === "success") {
-        // Ambil transaksi terbaru
         const latestTransaction = data.data.sort(
-          (a: { date: string }, b: { date: string }) =>
-            new Date(b.date).getTime() - new Date(a.date).getTime()
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         )[0];
 
         const latestTransactionAmount = parseInt(latestTransaction.amount, 10);
         const expectedAmount = paymentDetails?.totalAmount;
 
         if (latestTransactionAmount === expectedAmount) {
-          // Tambah saldo ke akun pengguna
           const addBalanceResponse = await fetch(
-            `https://dash.jkt48connect.my.id/api/auth/add-balance?phone_number=${paymentDetails.phoneNumber}&amount=${paymentDetails.depositAmount}`
+            `https://api.jkt48connect.my.id/api/auth/add-balance?phone_number=${paymentDetails.phoneNumber}&amount=${paymentDetails.depositAmount}`
           );
           const addBalanceData = await addBalanceResponse.json();
 
@@ -121,7 +116,6 @@ export default function HomeView() {
               isClosable: true,
             });
 
-            // Simpan riwayat deposit
             const newDepositRequest = {
               phoneNumber: paymentDetails.phoneNumber,
               depositAmount: paymentDetails.depositAmount,
@@ -130,9 +124,11 @@ export default function HomeView() {
             };
             const updatedRequests = [...depositRequests, newDepositRequest];
             setDepositRequests(updatedRequests);
-            localStorage.setItem("deposit-requests", JSON.stringify(updatedRequests));
+            localStorage.setItem(
+              "deposit-requests",
+              JSON.stringify(updatedRequests)
+            );
 
-            // Kirim notifikasi ke webhook
             await fetch(webhookUrl, {
               method: "POST",
               headers: {
@@ -147,7 +143,7 @@ export default function HomeView() {
                       { name: "Nominal", value: `Rp${paymentDetails.depositAmount}`, inline: true },
                       { name: "Total Pembayaran", value: `Rp${paymentDetails.totalAmount}`, inline: true },
                     ],
-                    color: 3066993, // Green
+                    color: 3066993,
                   },
                 ],
               }),
@@ -203,6 +199,28 @@ export default function HomeView() {
           {isLoadingPayment ? <Spinner /> : "Ajukan Top Up Deposit"}
         </Button>
       </VStack>
+
+      <Modal isOpen={paymentPopup} onClose={() => setPaymentPopup(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Scan QRIS untuk Membayar</ModalHeader>
+          <ModalBody>
+            {paymentDetails && (
+              <>
+                <Image src={paymentDetails.qrImageUrl} alt="QR Code" />
+                <Text mt={3}>
+                  Total: <strong>Rp{paymentDetails.totalAmount}</strong>
+                </Text>
+              </>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="green" onClick={confirmPayment}>
+              Konfirmasi Pembayaran
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Flex>
   );
 }
