@@ -1,5 +1,6 @@
-import { Box, Heading, Text, Divider, Flex, Icon, Tag, TagLabel } from '@chakra-ui/react';
+import { Box, Heading, Text, Divider, VStack, HStack, Icon, Badge } from '@chakra-ui/react';
 import { IoIosArrowForward } from 'react-icons/io';
+import { FaCrown } from 'react-icons/fa';
 const SwaggerUI = require('swagger-ui-react').default;
 import 'swagger-ui-react/swagger-ui.css';
 
@@ -21,7 +22,7 @@ function DocsView() {
     { name: 'Get Birthday Members', url: '/birthday-members', premium: false },
     { name: 'Download TikTok', url: '/downloader/tiktok', premium: false },
   ];
-  
+
   return (
     <Box p={6}>
       <Heading size="lg" fontWeight="bold" mb={4} color="gray.800">
@@ -31,30 +32,33 @@ function DocsView() {
         Explore the API endpoints for JKT48 content and downloader services.
       </Text>
       <Divider my={4} />
-      <Flex wrap="wrap" gap={4}>
+      
+      <VStack spacing={4} align="stretch">
         {features.map((feature, index) => (
-          <Box
+          <HStack
             key={index}
             p={4}
-            borderWidth="1px"
-            borderRadius="lg"
-            width="200px"
-            cursor="pointer"
-            _hover={{ bg: 'gray.50' }}
-            onClick={() => window.open(feature.url, '_blank')}
+            borderRadius="md"
+            width="100%"
+            justifyContent="space-between"
+            alignItems="center"
+            bg="gray.50"
+            boxShadow="sm"
+            transition="all 0.3s"
+            _hover={{ bg: 'gray.100' }}
           >
-            <Flex justify="space-between" align="center">
+            <HStack>
               <Text fontWeight="medium">{feature.name}</Text>
-              <Icon as={IoIosArrowForward} />
-            </Flex>
-            {feature.premium && (
-              <Tag size="sm" colorScheme="purple" mt={2}>
-                <TagLabel>Premium</TagLabel>
-              </Tag>
-            )}
-          </Box>
+              {feature.premium && (
+                <Badge colorScheme="purple" display="flex" alignItems="center">
+                  <Icon as={FaCrown} w={3} h={3} mr={1} /> Premium
+                </Badge>
+              )}
+            </HStack>
+            <Icon as={IoIosArrowForward} cursor="pointer" onClick={() => window.open(feature.url, '_blank')} />
+          </HStack>
         ))}
-      </Flex>
+      </VStack>
     </Box>
   );
 }
