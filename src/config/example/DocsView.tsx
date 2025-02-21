@@ -1,5 +1,5 @@
 import { Box, Heading, Text, Divider, Flex, Icon, Tag, TagLabel } from '@chakra-ui/react';
-import { ArrowForwardIcon } from '@chakra-ui/icons';
+import { IoIosArrowForward } from 'react-icons/io';
 const SwaggerUI = require('swagger-ui-react').default;
 import 'swagger-ui-react/swagger-ui.css';
 
@@ -21,7 +21,7 @@ function DocsView() {
     { name: 'Get Birthday Members', url: '/birthday-members', premium: false },
     { name: 'Download TikTok', url: '/downloader/tiktok', premium: false },
   ];
-
+  
   return (
     <Box p={6}>
       <Heading size="lg" fontWeight="bold" mb={4} color="gray.800">
@@ -45,7 +45,7 @@ function DocsView() {
           >
             <Flex justify="space-between" align="center">
               <Text fontWeight="medium">{feature.name}</Text>
-              <Icon as={ArrowForwardIcon} />
+              <Icon as={IoIosArrowForward} />
             </Flex>
             {feature.premium && (
               <Tag size="sm" colorScheme="purple" mt={2}>
