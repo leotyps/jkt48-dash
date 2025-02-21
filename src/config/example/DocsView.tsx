@@ -8,21 +8,21 @@ function DocsView() {
   const apiKey = localStorage.getItem('jkt48-api-key') || '';
   
   const features = [
-    { name: 'Check API Key', url: '/api/check-apikey/{apiKey}', premium: false },
-    { name: 'Get Theater Schedule JKT48', url: '/api/theater?api_key={apiKey}', premium: true },
-    { name: 'Get Theater Detail JKT48', url: '/api/theater/2840?api_key={apiKey}', premium: true },
-    { name: 'Get Events JKT48', url: '/api/events?api_key={apiKey}', premium: true },
-    { name: 'Get Event Detail JKT48', url: '/api/events/{id}?api_key={apiKey}', premium: true },
+    { name: 'Check API Key', url: '/api/check-apikey/', premium: false },
+    { name: 'Get Theater Schedule JKT48', url: '/api/theater', premium: true },
+    { name: 'Get Theater Detail JKT48', url: '/api/theater/2840', premium: true },
+    { name: 'Get Events JKT48', url: '/api/events', premium: true },
+    { name: 'Get Event Detail JKT48', url: '/api/events/{id}', premium: true },
     { name: 'Get Member Detail JKT48', url: '/api/members/{id}', premium: true },
-    { name: 'Get All Members JKT48', url: '/api/members?api_key={apiKey}', premium: false },
-    { name: 'Get Live Schedule JKT48', url: '/api/live?api_key={apiKey}', premium: true },
-    { name: 'Get Recent Live JKT48', url: '/api/recent?api_key={apiKey}', premium: true },
-    { name: 'Create Payment Qris ORKUT', url: '/api/create-payment?amount=xxx&qris=xxx&api_key{apiKey}', premium: false },
-    { name: 'Check Payment Status ORKUT', url: '/api/check-payment-status?merchant=xxxx&keyorkut=xxxx&amount=xxxx&api_key={apiKey}', premium: false },
-    { name: 'Get News JKT48', url: '/api/news?api_key={apiKey}', premium: true },
-    { name: 'Get News Detail JKT48', url: '/api/news/{id}?api_key={apiKey}', premium: true },
-    { name: 'Get Birthday Members JKT48', url: '/api/next-birthday?api_key={apiKey}', premium: false },
-    { name: 'Download TikTok Video', url: '/api/downloader/tiktok?url=xxxx&api_key{apiKey}', premium: false },
+    { name: 'Get All Members JKT48', url: '/api/members', premium: false },
+    { name: 'Get Live Schedule JKT48', url: '/api/live', premium: true },
+    { name: 'Get Recent Live JKT48', url: '/api/recent', premium: true },
+    { name: 'Create Payment Qris ORKUT', url: '/api/create-payment?amount=xxx&qris=xxx', premium: false },
+    { name: 'Check Payment Status ORKUT', url: '/api/check-payment-status?merchant=xxxx&keyorkut=xxxx&amount=xxxx', premium: false },
+    { name: 'Get News JKT48', url: '/api/news', premium: true },
+    { name: 'Get News Detail JKT48', url: '/api/news/{id}', premium: true },
+    { name: 'Get Birthday Members JKT48', url: '/api/next-birthday', premium: false },
+    { name: 'Download TikTok Video', url: '/api/downloader/tiktok?url=xxxx', premium: false },
   ];
 
   return (
@@ -37,7 +37,7 @@ function DocsView() {
       
       <VStack spacing={4} align="stretch">
         {features.map((feature, index) => {
-          const urlWithApiKey = `https://api.jkt48connect.my.id${feature.url}`;
+          const urlWithApiKey = `https://api.jkt48connect.my.id${feature.url}${feature.url.includes('?') ? '&' : '?'}api_key=${apiKey}`;
           return (
             <HStack
               key={index}
