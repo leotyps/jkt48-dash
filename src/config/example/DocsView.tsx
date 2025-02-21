@@ -5,22 +5,24 @@ const SwaggerUI = require('swagger-ui-react').default;
 import 'swagger-ui-react/swagger-ui.css';
 
 function DocsView() {
+  const apiKey = localStorage.getItem('jkt48-api-key') || '';
+  
   const features = [
-    { name: 'Check API Key', url: '/check-api-key', premium: false },
-    { name: 'Get Theater Schedule', url: '/theater', premium: true },
-    { name: 'Get Theater Detail', url: '/theater/{id}', premium: true },
-    { name: 'Get Events', url: '/events', premium: true },
-    { name: 'Get Event Detail', url: '/events/{id}', premium: true },
-    { name: 'Get Member Detail', url: '/members/{id}', premium: true },
-    { name: 'Get All Members', url: '/members', premium: false },
-    { name: 'Get Live Schedule', url: '/live', premium: true },
-    { name: 'Get Recent Live', url: '/recent-live', premium: true },
-    { name: 'Create Payment', url: '/create-payment', premium: false },
-    { name: 'Check Payment Status', url: '/check-payment-status', premium: false },
-    { name: 'Get News', url: '/news', premium: true },
-    { name: 'Get News Detail', url: '/news/{id}', premium: true },
-    { name: 'Get Birthday Members', url: '/birthday-members', premium: false },
-    { name: 'Download TikTok', url: '/downloader/tiktok', premium: false },
+    { name: 'Check API Key', url: '/api/check-apikey/{apiKey}', premium: false },
+    { name: 'Get Theater Schedule JKT48', url: '/api/theater?api_key={apiKey}', premium: true },
+    { name: 'Get Theater Detail JKT48', url: '/api/theater/2840?api_key={apiKey}', premium: true },
+    { name: 'Get Events JKT48', url: '/api/events?api_key={apiKey}', premium: true },
+    { name: 'Get Event Detail JKT48', url: '/api/events/{id}?api_key={apiKey}', premium: true },
+    { name: 'Get Member Detail JKT48', url: '/api/members/{id}', premium: true },
+    { name: 'Get All Members JKT48', url: '/api/members?api_key={apiKey}', premium: false },
+    { name: 'Get Live Schedule JKT48', url: '/api/live?api_key={apiKey}', premium: true },
+    { name: 'Get Recent Live JKT48', url: '/api/recent?api_key={apiKey}', premium: true },
+    { name: 'Create Payment Qris ORKUT', url: '/api/create-payment?amount=xxx&qris=xxx&api_key{apiKey}', premium: false },
+    { name: 'Check Payment Status ORKUT', url: '/api/check-payment-status?merchant=xxxx&keyorkut=xxxx&amount=xxxx&api_key={apiKey}', premium: false },
+    { name: 'Get News JKT48', url: '/api/news?api_key={apiKey}', premium: true },
+    { name: 'Get News Detail JKT48', url: '/api/news/{id}?api_key={apiKey}', premium: true },
+    { name: 'Get Birthday Members JKT48', url: '/api/next-birthday?api_key={apiKey}', premium: false },
+    { name: 'Download TikTok Video', url: '/api/downloader/tiktok?url=xxxx&api_key{apiKey}', premium: false },
   ];
 
   return (
@@ -34,30 +36,33 @@ function DocsView() {
       <Divider my={4} />
       
       <VStack spacing={4} align="stretch">
-        {features.map((feature, index) => (
-          <HStack
-            key={index}
-            p={4}
-            borderRadius="xl"
-            width="100%"
-            justifyContent="space-between"
-            alignItems="center"
-            bg={feature.premium ? 'purple.100' : 'blue.100'}
-            boxShadow="md"
-            transition="all 0.3s ease-in-out"
-            _hover={{ bg: feature.premium ? 'purple.200' : 'blue.200', transform: 'scale(1.05)' }}
-          >
-            <HStack>
-              <Text fontWeight="medium">{feature.name}</Text>
-              {feature.premium && (
-                <Badge colorScheme="purple" display="flex" alignItems="center">
-                  <Icon as={FaCrown} w={3} h={3} mr={1} /> Premium
-                </Badge>
-              )}
+        {features.map((feature, index) => {
+          const urlWithApiKey = `https://api.jkt48connect.my.id${feature.url}`;
+          return (
+            <HStack
+              key={index}
+              p={4}
+              borderRadius="xl"
+              width="100%"
+              justifyContent="space-between"
+              alignItems="center"
+              bg={feature.premium ? 'purple.100' : 'blue.100'}
+              boxShadow="md"
+              transition="all 0.3s ease-in-out"
+              _hover={{ bg: feature.premium ? 'purple.200' : 'blue.200', transform: 'scale(1.05)' }}
+            >
+              <HStack>
+                <Text fontWeight="medium">{feature.name}</Text>
+                {feature.premium && (
+                  <Badge colorScheme="purple" display="flex" alignItems="center">
+                    <Icon as={FaCrown} w={3} h={3} mr={1} /> Premium
+                  </Badge>
+                )}
+              </HStack>
+              <Icon as={IoIosArrowForward} cursor="pointer" onClick={() => window.open(urlWithApiKey, '_blank')} />
             </HStack>
-            <Icon as={IoIosArrowForward} cursor="pointer" onClick={() => window.open(feature.url, '_blank')} />
-          </HStack>
-        ))}
+          );
+        })}
       </VStack>
     </Box>
   );
