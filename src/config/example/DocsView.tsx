@@ -38,14 +38,14 @@ function DocsView() {
           <HStack
             key={index}
             p={4}
-            borderRadius="md"
+            borderRadius="xl"
             width="100%"
             justifyContent="space-between"
             alignItems="center"
-            bg="gray.50"
-            boxShadow="sm"
-            transition="all 0.3s"
-            _hover={{ bg: 'gray.100' }}
+            bg={feature.premium ? 'purple.100' : 'blue.100'}
+            boxShadow="md"
+            transition="all 0.3s ease-in-out"
+            _hover={{ bg: feature.premium ? 'purple.200' : 'blue.200', transform: 'scale(1.05)' }}
           >
             <HStack>
               <Text fontWeight="medium">{feature.name}</Text>
