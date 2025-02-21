@@ -1,4 +1,4 @@
-import { Box, Heading, Text, Divider, SimpleGrid, Icon, Badge } from '@chakra-ui/react';
+import { Box, Heading, Text, Divider, VStack, HStack, Icon, Badge } from '@chakra-ui/react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { FaCrown } from 'react-icons/fa';
 const SwaggerUI = require('swagger-ui-react').default;
@@ -33,32 +33,31 @@ function DocsView() {
       </Text>
       <Divider my={4} />
       
-      <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4}>
+      <VStack spacing={2} align="stretch">
         {features.map((feature, index) => (
-          <Box
+          <HStack
             key={index}
-            p={2}
+            p={3}
             borderBottomWidth="1px"
             borderColor="gray.300"
-            cursor="pointer"
-            _hover={{ bg: 'gray.50' }}
-            onClick={() => window.open(feature.url, '_blank')}
-            display="flex"
             justifyContent="space-between"
             alignItems="center"
+            bg="gray.50"
+            borderRadius="md"
+            width="100%"
           >
-            <Text fontWeight="medium">{feature.name}</Text>
-            <Box display="flex" alignItems="center">
+            <HStack>
+              <Text fontWeight="medium">{feature.name}</Text>
               {feature.premium && (
-                <Badge colorScheme="purple" mr={2} display="flex" alignItems="center">
+                <Badge colorScheme="purple" display="flex" alignItems="center">
                   <Icon as={FaCrown} w={3} h={3} mr={1} /> Premium
                 </Badge>
               )}
-              <Icon as={IoIosArrowForward} />
-            </Box>
-          </Box>
+            </HStack>
+            <Icon as={IoIosArrowForward} cursor="pointer" onClick={() => window.open(feature.url, '_blank')} />
+          </HStack>
         ))}
-      </SimpleGrid>
+      </VStack>
     </Box>
   );
 }
