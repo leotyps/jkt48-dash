@@ -1,4 +1,3 @@
-// api/auth/add-balance.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { connectToDatabase } from '@/utils/db'; // Koneksi ke database
 
@@ -8,11 +7,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    // Ambil phone_number dan amount dari query parameter
-    const { phone_number, amount } = req.query;
+    // Ambil phone_number, id, dan amount dari query parameter
+    const { phone_number, id, amount } = req.query;
 
-    if (!phone_number || !amount) {
-      return res.status(400).json({ error: 'Missing required fields: phone_number and amount' });
+    if ((!phone_number && !id) || !amount) {
+      return res.status(400).json({ error: 'Missing required fields: provide either phone_number or id, and amount' });
     }
 
     const amountNumber = Number(amount);
@@ -23,9 +22,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Koneksi ke database
     const db = await connectToDatabase();
 
-    // Periksa apakah pengguna ada
-    const checkUserQuery = `SELECT id, balance FROM users WHERE phone_number = $1;`;
-    const checkUserResult = await db.query(checkUserQuery, [phone_number]);
+    // Periksa apakah pengguna ada berdasarkan phone_number atau id
+    let userQuery = `SELECT id, balance FROM users WHERE `;
+    let userParam;
+
+    if (id) {
+      userQuery += `id = $1`;
+      userParam = [id];
+    } else {
+      userQuery += `phone_number = $1`;
+      userParam = [phone_number];
+    }
+
+    const checkUserResult = await db.query(userQuery, userParam);
 
     if (checkUserResult.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
@@ -35,10 +44,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const updateQuery = `
       UPDATE users
       SET balance = balance + $1
-      WHERE phone_number = $2
+      WHERE id = $2
       RETURNING balance;
     `;
-    const updateResult = await db.query(updateQuery, [amountNumber, phone_number]);
+    const updateResult = await db.query(updateQuery, [amountNumber, checkUserResult.rows[0].id]);
 
     res.status(200).json({ message: 'Balance updated successfully', balance: updateResult.rows[0].balance });
 
