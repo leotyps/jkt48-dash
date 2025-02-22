@@ -37,10 +37,10 @@ export default function DepositView() {
   }, []);
 
   const handleDeposit = async () => {
-    if (!user?.id || !amount) {
+    if (!amount) {
       toast({
         title: "Error",
-        description: "User ID dan nominal harus diisi!",
+        description: "Nominal harus diisi!",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -170,6 +170,7 @@ export default function DepositView() {
       });
     }
   };
+}
 
   return (
     <Flex direction="column" gap={5}>
@@ -186,6 +187,33 @@ export default function DepositView() {
           {isLoadingPayment ? <Spinner /> : "Top Up Saldo"}
         </Button>
       </VStack>
+
+      <Modal isOpen={paymentPopup} onClose={() => setPaymentPopup(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>QRIS Pembayaran</ModalHeader>
+          <ModalBody>
+            <Text>Nomor: {paymentDetails?.phoneNumber}</Text>
+            <Text>Total Pembayaran: Rp{paymentDetails?.totalAmount}</Text>
+            <Image src={paymentDetails?.qrImageUrl} alt="QRIS" boxSize="300px" />
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={confirmPayment}>
+              Konfirmasi Pembayaran
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {depositHistory.map((deposit, idx) => (
+        <Flex key={idx} justify="space-between" p={4} borderWidth={1} align="center">
+          <Flex direction="column">
+            <Text fontWeight="bold">Nomor: {deposit.phoneNumber}</Text>
+            <Text>Nominal: Rp{deposit.amount}</Text>
+            <Tag size="sm" colorScheme="green">{deposit.status}</Tag>
+          </Flex>
+        </Flex>
+      ))}
     </Flex>
   );
 }
