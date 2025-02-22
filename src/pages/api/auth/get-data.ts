@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Query untuk mengambil data berdasarkan phone_number
     const query = `
-      SELECT id, username, api_key, balance, seller, created_at
+      SELECT id, username, api_key, balance, seller, created_at, is_premium, phone_number
       FROM users
       WHERE phone_number = $1;
     `;
