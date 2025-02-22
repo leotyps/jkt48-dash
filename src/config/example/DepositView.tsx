@@ -55,7 +55,7 @@ export default function DepositView() {
       return;
     }
 
-    const randomFee = Math.floor(Math.random() * 29) + 4; // Fee antara 4 - 32
+    const randomFee = Math.floor(Math.random() * 29) + 4;
     const totalAmount = parseInt(amount) + randomFee;
 
     try {
