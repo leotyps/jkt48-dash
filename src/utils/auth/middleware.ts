@@ -1,6 +1,6 @@
 // ./utils/auth/middleware.ts
 import { NextMiddleware, NextResponse } from 'next/server';
-import { middleware_hasServerSession } from './github';  // Impor sesi dari server
+import { middleware_hasServerSession } from './server';  // Impor sesi dari server
 import { middleware_hasGoogleServerSession } from './googleServer';  // Impor sesi dari Google
 
 export const withAuth = (authUrl: string, middleware: NextMiddleware): NextMiddleware => {
