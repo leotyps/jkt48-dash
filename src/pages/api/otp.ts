@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { connectToDatabase } from "@/utils/db";
+import { connectToDatabase } from "@/utils/db2";
 
 /**
  * Fungsi untuk generate OTP dengan tepat 6 digit
