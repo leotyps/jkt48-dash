@@ -12,7 +12,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     'https://github.com/login/oauth/authorize?' +
     new URLSearchParams({
       client_id: CLIENT_ID,
-      redirect_uri: `${getAbsoluteUrl()}/api/auth/callback`, // Pastikan URL callback sesuai
+      redirect_uri: `${getAbsoluteUrl()}/api/auth/callback-github`, // Pastikan URL callback sesuai
       response_type: 'code',
       scope: 'user user:email', // Scope untuk akses profil, username, dan email
       state: locale ?? '', // Gunakan locale sebagai state
