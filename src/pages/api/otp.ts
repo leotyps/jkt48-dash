@@ -1,39 +1,49 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { connectToDatabase } from "@/utils/db";
 
+/**
+ * Fungsi untuk generate OTP dengan tepat 6 digit
+ */
+const generateOTP = (): string => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // Selalu 6 digit
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const db = await connectToDatabase();
     const otpCollection = db.collection("otps");
 
     if (req.method === "POST") {
-      // Simpan OTP
-      const { phone, otp } = req.body;
+      // Simpan OTP baru
+      const { phone } = req.body;
 
-      if (!phone || !otp) {
-        return res.status(400).json({ error: "Nomor telepon dan OTP wajib diisi" });
+      if (!phone) {
+        return res.status(400).json({ error: "Nomor telepon wajib diisi" });
       }
 
-      // Simpan OTP ke database dengan waktu penyimpanan
+      // Generate OTP baru dengan 6 digit
+      const newOtp = generateOTP();
+
+      // Simpan OTP ke database (nomor yang sama bisa memiliki OTP berbeda)
       await otpCollection.insertOne({
         phone,
-        otp,
+        otp: newOtp,
         createdAt: new Date(),
       });
 
-      console.log(`✅ OTP ${otp} untuk nomor ${phone} disimpan.`);
+      console.log(`✅ OTP ${newOtp} untuk nomor ${phone} disimpan.`);
 
       // Jadwalkan penghapusan otomatis setelah 5 menit
       setTimeout(async () => {
-        await otpCollection.deleteOne({ phone });
-        console.log(`🗑️ OTP ${otp} untuk nomor ${phone} telah dihapus.`);
+        await otpCollection.deleteOne({ phone, otp: newOtp });
+        console.log(`🗑️ OTP ${newOtp} untuk nomor ${phone} telah dihapus.`);
       }, 5 * 60 * 1000); // 5 menit dalam milidetik
 
-      return res.status(200).json({ message: "OTP berhasil disimpan" });
+      return res.status(200).json({ message: "OTP berhasil dibuat", phone, otp: newOtp });
     }
 
     if (req.method === "GET") {
-      // Ambil semua OTP yang tersedia
+      // Ambil semua OTP yang masih aktif
       const allOtps = await otpCollection.find({}).toArray();
 
       if (allOtps.length === 0) {
