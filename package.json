@@ -37,6 +37,7 @@
     "firebase-admin": "^13.0.2",
     "framer-motion": "^6.5.1",
     "jkt48connect-cli": "^3.0.9",
+    "mongodb": "^6.13.1",
     "next": "^13.2.1",
     "next-auth": "^4.24.11",
     "nodemailer": "^6.8.0",
