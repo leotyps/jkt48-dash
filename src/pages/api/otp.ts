@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { connectToDatabase } from "@/utils/db2";
+import { connectToDatabase } from "@/utils/db";
 
 /**
  * Fungsi untuk generate OTP dengan tepat 6 digit
@@ -11,7 +11,6 @@ const generateOTP = (): string => {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const db = await connectToDatabase();
-    const otpCollection = db.collection("otps");
 
     if (req.method === "POST") {
       // Simpan OTP baru
@@ -25,17 +24,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const newOtp = generateOTP();
 
       // Simpan OTP ke database (nomor yang sama bisa memiliki OTP berbeda)
-      await otpCollection.insertOne({
-        phone,
-        otp: newOtp,
-        createdAt: new Date(),
-      });
+      await db.query(
+        `INSERT INTO otps (phone, otp, created_at) VALUES ($1, $2, NOW())`,
+        [phone, newOtp]
+      );
 
       console.log(`✅ OTP ${newOtp} untuk nomor ${phone} disimpan.`);
 
       // Jadwalkan penghapusan otomatis setelah 5 menit
       setTimeout(async () => {
-        await otpCollection.deleteOne({ phone, otp: newOtp });
+        await db.query(`DELETE FROM otps WHERE phone = $1 AND otp = $2`, [phone, newOtp]);
         console.log(`🗑️ OTP ${newOtp} untuk nomor ${phone} telah dihapus.`);
       }, 5 * 60 * 1000); // 5 menit dalam milidetik
 
@@ -44,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === "GET") {
       // Ambil semua OTP yang masih aktif
-      const allOtps = await otpCollection.find({}).toArray();
+      const { rows: allOtps } = await db.query(`SELECT * FROM otps`);
 
       if (allOtps.length === 0) {
         return res.status(404).json({ error: "Tidak ada OTP yang tersedia" });
