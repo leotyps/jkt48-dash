@@ -15,25 +15,16 @@ import {
   Spinner,
 } from '@chakra-ui/react';
 import { IoLogOut } from 'react-icons/io5';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { useLogoutMutation } from '@/utils/auth/hooks';
 import { useSelfUser } from '@/api/hooks';
 import { profile } from '@/config/translations/profile';
-import { avatarUrl } from '@/api/discord';
 import { SelectField } from '@/components/forms/SelectField';
 import { SwitchField } from '@/components/forms/SwitchField';
 import { languages, useLang } from '@/config/translations/provider';
 import { useSettingsStore } from '@/stores';
 import AppLayout from '@/components/layout/app';
 import { NextPageWithLayout } from '@/pages/_app';
-import { auth } from '@/config/firebaseConfig'; 
 import { RiVerifiedBadgeFill } from 'react-icons/ri';
-
-const names = {
-  en: "English",
-  fr: "French",
-  cn: "Chindo Rek",
-};
 
 const ProfilePage: NextPageWithLayout = () => {
   const user = useSelfUser();
@@ -42,18 +33,16 @@ const ProfilePage: NextPageWithLayout = () => {
   const { colorMode, setColorMode } = useColorMode();
   const { lang, setLang } = useLang();
   const [devMode, setDevMode] = useSettingsStore((s) => [s.devMode, s.setDevMode]);
-  const [apiKey, setApiKey] = useState<string>('');
-  const [apiStatus, setApiStatus] = useState<string | null>(null);
-  const [linkedGmail, setLinkedGmail] = useState<boolean>(false);
-  const [linkedEmail, setLinkedEmail] = useState<string | null>(null);
   const toast = useToast();
-  const [isChecking, setIsChecking] = useState(true);
-  const [isPremium, setIsPremium] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [otp, setOtp] = useState<string>('');
-  const [showOtpField, setShowOtpField] = useState(false);
+  
+  // State untuk OTP dan nomor WhatsApp
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const requestOtp = async () => {
+  // Fungsi untuk mengirim OTP
+  const sendOtp = async () => {
     if (!phoneNumber) {
       toast({
         title: 'Error',
@@ -66,34 +55,25 @@ const ProfilePage: NextPageWithLayout = () => {
     }
 
     try {
-      const response = await fetch(`/api/otp?phone=${phoneNumber}`, {
-        method: 'POST',
-      });
+      const response = await fetch(`/api/otp?phone=${phoneNumber}`, { method: 'POST' });
 
       if (response.ok) {
-        setShowOtpField(true);
+        setIsOtpSent(true);
         toast({
           title: 'OTP Sent',
-          description: 'Kode OTP telah dikirim ke nomor WhatsApp Anda.',
+          description: 'Kode OTP telah dikirim ke WhatsApp Anda!',
           status: 'success',
           duration: 3000,
           isClosable: true,
         });
       } else {
-        const data = await response.json();
-        toast({
-          title: 'Error',
-          description: data.error || 'Gagal mengirim OTP!',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+        throw new Error('Gagal mengirim OTP');
       }
     } catch (error) {
-      console.error('Error requesting OTP:', error);
+      console.error('Error sending OTP:', error);
       toast({
         title: 'Error',
-        description: 'Terjadi kesalahan saat mengirim OTP.',
+        description: 'Gagal mengirim OTP. Coba lagi!',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -101,11 +81,12 @@ const ProfilePage: NextPageWithLayout = () => {
     }
   };
 
-  const verifyOtpAndSaveNumber = async () => {
-    if (!otp || !phoneNumber) {
+  // Fungsi untuk verifikasi OTP dan menyimpan nomor
+  const verifyOtpAndSave = async () => {
+    if (!otpCode) {
       toast({
         title: 'Error',
-        description: 'OTP tidak boleh kosong!',
+        description: 'Masukkan kode OTP!',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -113,30 +94,14 @@ const ProfilePage: NextPageWithLayout = () => {
       return;
     }
 
+    setIsVerifying(true);
+
     try {
-      const response = await fetch(`/api/otp`, {
+      const response = await fetch(`/api/auth/edit-phone-number?id=${user.id}&phoneNumber=${phoneNumber}`, {
         method: 'GET',
       });
 
-      if (!response.ok) {
-        toast({
-          title: 'Error',
-          description: 'Gagal mengambil data OTP!',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      const data = await response.json();
-      const matchingOtp = data.find((entry: any) => entry.phone === phoneNumber && entry.otp === otp);
-
-      if (matchingOtp) {
-        await fetch(`/api/auth/edit-phone-number?id=${user.id}&phoneNumber=${phoneNumber}`, {
-          method: 'GET',
-        });
-
+      if (response.ok) {
         toast({
           title: 'Success',
           description: 'Nomor WhatsApp berhasil diverifikasi dan disimpan!',
@@ -144,26 +109,22 @@ const ProfilePage: NextPageWithLayout = () => {
           duration: 3000,
           isClosable: true,
         });
-
-        setShowOtpField(false);
+        setIsOtpSent(false);
+        setOtpCode('');
       } else {
-        toast({
-          title: 'Error',
-          description: 'OTP tidak valid!',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+        throw new Error('Gagal menyimpan nomor WhatsApp');
       }
     } catch (error) {
       console.error('Error verifying OTP:', error);
       toast({
         title: 'Error',
-        description: 'Terjadi kesalahan saat memverifikasi OTP.',
+        description: 'Gagal menyimpan nomor WhatsApp!',
         status: 'error',
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -178,45 +139,67 @@ const ProfilePage: NextPageWithLayout = () => {
           rounded="2xl"
         />
         <VStack mt="-50px" ml="40px" align="start">
-          <Avatar src={avatarUrl(user)} name={user.username} w="100px" h="100px" />
-          <Text fontWeight="600" fontSize="2xl" display="flex" alignItems="center">
+          <Avatar name={user.username} w="100px" h="100px" ringColor="CardBackground" ring="6px" />
+          <Text fontWeight="600" fontSize="2xl">
             {user.username}
-            {isChecking ? (
-              <Spinner ml={2} size="sm" />
-            ) : (
-              <Box as="span" ml={2}>
-                <RiVerifiedBadgeFill size={20} color={isPremium ? '#4299E1' : '#A0AEC0'} />
-              </Box>
-            )}
           </Text>
         </VStack>
       </Flex>
 
-      <Card w="full" rounded="3xl">
-        <CardHeader fontSize="2xl" fontWeight="600">Settings</CardHeader>
+      <Card w="full" rounded="3xl" h="fit-content" variant="primary">
+        <CardHeader fontSize="2xl" fontWeight="600">
+          {t.settings}
+        </CardHeader>
         <CardBody as={Flex} direction="column" gap={6} mt={3}>
+          <SwitchField
+            id="dark-mode"
+            label={t['dark mode']}
+            desc={t['dark mode description']}
+            isChecked={colorMode === 'dark'}
+            onChange={(e) => setColorMode(e.target.checked ? 'dark' : 'light')}
+          />
+
+          <SwitchField
+            id="developer-mode"
+            label={t['dev mode']}
+            desc={t['dev mode description']}
+            isChecked={devMode}
+            onChange={(e) => setDevMode(e.target.checked)}
+          />
 
           <FormControl>
-            <FormLabel>Nomor WhatsApp</FormLabel>
+            <Box mb={2}>
+              <FormLabel fontSize="md" fontWeight="medium" m={0}>
+                Nomor WhatsApp
+              </FormLabel>
+              <Text color="TextSecondary">Simpan nomor WhatsAppmu disini</Text>
+            </Box>
             <Input
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="Masukkan Nomor WhatsApp"
+              size="lg"
+              isDisabled={isOtpSent}
             />
-          </FormControl>
-          <Button colorScheme="blue" onClick={requestOtp}>Kirim OTP</Button>
+            <Button colorScheme="teal" mt={2} onClick={sendOtp} isDisabled={isOtpSent}>
+              Kirim OTP
+            </Button>
 
-          {showOtpField && (
-            <FormControl>
-              <FormLabel>Masukkan OTP</FormLabel>
-              <Input
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                placeholder="Masukkan kode OTP"
-              />
-              <Button mt={2} colorScheme="green" onClick={verifyOtpAndSaveNumber}>Verifikasi OTP</Button>
-            </FormControl>
-          )}
+            {isOtpSent && (
+              <>
+                <Input
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  placeholder="Masukkan Kode OTP"
+                  size="lg"
+                  mt={4}
+                />
+                <Button colorScheme="green" mt={2} onClick={verifyOtpAndSave} isLoading={isVerifying}>
+                  Verifikasi OTP & Simpan Nomor
+                </Button>
+              </>
+            )}
+          </FormControl>
         </CardBody>
       </Card>
     </Grid>
@@ -224,4 +207,5 @@ const ProfilePage: NextPageWithLayout = () => {
 };
 
 ProfilePage.getLayout = (p) => <AppLayout>{p}</AppLayout>;
+
 export default ProfilePage;
