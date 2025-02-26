@@ -15,7 +15,7 @@ function DocsView() {
     { name: 'Get Event Detail JKT48', url: '/api/events/{id}', premium: true },
     { name: 'Get Member Detail JKT48', url: '/api/member/michie', premium: true },
     { name: 'Get All Members JKT48', url: '/api/member', premium: false },
-    { name: 'Get Live Schedule JKT48', url: '/api/live', premium: true },
+    { name: 'Get Live Member JKT48', url: '/api/live', premium: true },
     { name: 'Get Recent Live JKT48', url: '/api/recent', premium: true },
     { name: 'Create Payment Qris ORKUT', url: '/api/orkut/createpayment?amount=xxx&qris=xxx', premium: false },
     { name: 'Check Payment Status ORKUT', url: '/api/orkut/cekstatus?merchant=xxxx&keyorkut=xxxx&amount=xxxx', premium: false },
