@@ -1,11 +1,10 @@
 import { Flex, Grid, Text, VStack, Box } from "@chakra-ui/layout";
 import {
-  Image,
   Card,
   CardBody,
   CardHeader,
-  useColorMode,
   Button,
+  Divider,
 } from "@chakra-ui/react";
 import { RiVipCrownFill } from "react-icons/ri";
 import { FaServer, FaCoins, FaBug, FaCogs, FaKey } from "react-icons/fa";
@@ -25,59 +24,63 @@ const features = [
 ];
 
 const ProfilePage: NextPageWithLayout = () => {
-  const { colorMode } = useColorMode();
-
   return (
     <Flex direction="column" align="center" p={5}>
-      {/* Banner Image */}
-      <Image
-        alt="banner"
-        src="https://8030.us.kg/file/3gjp59rB7bs8.jpg"
-        sx={{ aspectRatio: "1100 / 440" }}
-        objectFit="cover"
-        rounded="2xl"
-        mb={5}
-      />
-
-      {/* Features Section */}
-      <Card w="full" maxW="800px" rounded="3xl" p={5} shadow="xl">
-        <CardHeader fontSize="2xl" fontWeight="600" textAlign="center">
-          Fitur Utama
-        </CardHeader>
-        <CardBody>
-          <Grid templateColumns="repeat(2, 1fr)" gap={6}>
-            {features.map((feature, index) => (
-              <Flex key={index} align="center" gap={3}>
-                <Box as={feature.icon} size="24px" color="blue.400" />
-                <Text fontSize="lg" fontWeight="medium">
-                  {feature.title}
-                </Text>
-              </Flex>
-            ))}
-          </Grid>
-        </CardBody>
-      </Card>
-
-      {/* Pricing Section */}
+      {/* Card Utama */}
       <Card
         w="full"
-        maxW="800px"
-        rounded="3xl"
-        p={5}
+        maxW="700px"
+        rounded="2xl"
         shadow="xl"
-        mt={5}
-        textAlign="center"
+        p={5}
+        border="2px solid #E2E8F0"
       >
-        <CardHeader fontSize="2xl" fontWeight="600">
-          Harga
+        <CardHeader textAlign="center">
+          <Text fontSize="2xl" fontWeight="bold">Profil</Text>
+          <Divider my={2} />
         </CardHeader>
         <CardBody>
-          <Text fontSize="3xl" fontWeight="bold" color="green.500">
-            250,000 HCoins
-          </Text>
-          <Button mt={4} colorScheme="blue" size="lg">
-            Beli Sekarang
-          </Button>
+          <VStack spacing={4} align="stretch">
+            {/* Card Harga */}
+            <Card
+              w="full"
+              p={4}
+              rounded="lg"
+              shadow="md"
+              border="1px solid #CBD5E0"
+            >
+              <Text fontSize="lg" fontWeight="bold" textAlign="center">
+                Harga
+              </Text>
+              <Text fontSize="2xl" fontWeight="bold" color="green.500" textAlign="center">
+                250,000 HCoins
+              </Text>
+              <Button mt={3} colorScheme="blue" size="lg" w="full">
+                Beli Sekarang
+              </Button>
+            </Card>
+
+            {/* Card Fitur */}
+            <Card
+              w="full"
+              p={4}
+              rounded="lg"
+              shadow="md"
+              border="1px solid #CBD5E0"
+            >
+              <Text fontSize="lg" fontWeight="bold" textAlign="center">
+                Fitur Utama
+              </Text>
+              <Grid templateColumns="repeat(2, 1fr)" gap={3} mt={3}>
+                {features.map((feature, index) => (
+                  <Flex key={index} align="center" gap={2}>
+                    <Box as={feature.icon} size="18px" color="blue.400" />
+                    <Text fontSize="md">{feature.title}</Text>
+                  </Flex>
+                ))}
+              </Grid>
+            </Card>
+          </VStack>
         </CardBody>
       </Card>
     </Flex>
