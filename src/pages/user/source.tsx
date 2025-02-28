@@ -21,6 +21,9 @@ const features = [
   { title: "📛 Anti-Bot System", desc: "Blocks external bots in group" },
   { title: "⚔️ RPG Adventure", desc: "100+ RPG battle system features" },
   { title: "🏦 Integrated Payment", desc: "Supports Gopay, Dana, Ovo" },
+  { title: "🟢 JKT48 Live Notif", desc: "Real-time notification when members go live" },
+  { title: "🔴 JKT48 End Live Notif", desc: "Real-time notification when live ends" },
+  { title: "📸 JKT48 Photo Member", desc: "Fetch latest photos of members" },
 ];
 
 const ProfilePage: NextPageWithLayout = () => {
@@ -29,7 +32,6 @@ const ProfilePage: NextPageWithLayout = () => {
       {/* Card Utama */}
       <Card w="full" rounded="2xl" shadow="xl" p={5} border="2px solid #E2E8F0">
         <CardHeader textAlign="center">
-          <Text fontSize="2xl" fontWeight="bold">SELL SCRIPT ZENOVA V.3.6.5</Text>
           <Image src="https://files.catbox.moe/p3n8vg.jpg" alt="Script Zenova" rounded="lg" mt={3} />
           <Text fontSize="xl" fontWeight="bold" color="green.500" mt={3}>🏷️ Price: Rp. 35.000</Text>
           <Divider my={3} />
