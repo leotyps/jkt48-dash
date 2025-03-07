@@ -24,6 +24,8 @@ function DocsView() {
     { name: 'Get News JKT48', url: '/api/news', premium: true },
     { name: 'Get News Detail JKT48', url: '/api/news/1891', premium: true },
     { name: 'Get Birthday Members JKT48', url: '/api/next-birthday', premium: false },
+    { name: 'Brat', url: '/api/brat?q=Valzyy Ganteng', premium: false },
+    { name: 'Pinterest', url: '/api/pin?query=Adeline Wijaya', premium: false },
     { name: 'Download TikTok Video', url: '/api/downloader/tiktok?url=xxxx', premium: false },
   ];
 
