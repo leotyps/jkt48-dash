@@ -84,12 +84,12 @@ function generateApiKey() {
 
 // Fungsi untuk menyimpan API key di dashboard JKT48 Connect
 async function saveApiKeyToJkt48Connect(apiKey: string) {
-  const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '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';
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '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';
   const remainingRequests = 30;
   const maxRequests = 30;
   
   try {
-    const url = `https://dash.jkt48connect.my.id/api/auth/edit-github-apikey?githubToken=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&apiKey=${apiKey}&remainingRequests=${remainingRequests}&maxRequests=${maxRequests}`;
+    const url = `https://dash.jkt48connect.my.id/api/auth/edit-github-apikey?githubToken=${GITHUB_TOKEN}&apiKey=${apiKey}&remainingRequests=${remainingRequests}&maxRequests=${maxRequests}`;
     
     const response = await fetch(url, {
       method: 'GET',
