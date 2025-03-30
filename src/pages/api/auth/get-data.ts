@@ -6,36 +6,48 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Ambil parameter phone_number dari query
     const { phone_number } = req.query;
 
-    if (!phone_number) {
-      return res.status(400).json({ error: 'Missing required field: phone_number' });
-    }
-
     // Koneksi ke database
     const db = await connectToDatabase();
 
-    // Query untuk mengambil data berdasarkan phone_number
-    const query = `
-      SELECT id, username, api_key, balance, seller, created_at, is_premium, phone_number
-      FROM users
-      WHERE phone_number = $1;
-    `;
-    const values = [phone_number];
-    const result = await db.query(query, values);
+    let query: string;
+    let values: any[] = [];
+    let result;
 
-    // Jika data tidak ditemukan
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+    // Jika phone_number disediakan, ambil user spesifik
+    if (phone_number) {
+      query = `
+        SELECT id, username, api_key, balance, seller, created_at, is_premium, phone_number
+        FROM users
+        WHERE phone_number = $1;
+      `;
+      values = [phone_number];
+      result = await db.query(query, values);
+
+      // Jika data tidak ditemukan
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const user = result.rows[0];
+
+      // Jika saldo kurang dari 0, tidak boleh digunakan
+      if (user.balance < 0) {
+        return res.status(400).json({ error: 'Insufficient balance' });
+      }
+
+      // Kembalikan data user spesifik
+      return res.status(200).json({ user });
+    } else {
+      // Jika phone_number tidak disediakan, ambil semua users
+      query = `
+        SELECT id, username, api_key, balance, seller, created_at, is_premium, phone_number
+        FROM users;
+      `;
+      result = await db.query(query);
+
+      // Kembalikan semua data users
+      return res.status(200).json({ users: result.rows });
     }
-
-    const user = result.rows[0];
-
-    // Jika saldo kurang dari 5, tidak boleh digunakan
-    if (user.balance < 0) {
-      return res.status(400).json({ error: 'Insufficient balance' });
-    }
-
-    // Kembalikan data user tanpa mengurangi balance
-    res.status(200).json({ user });
 
   } catch (error) {
     console.error('Error handling request:', error);
