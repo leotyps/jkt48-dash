@@ -12,6 +12,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Extract data from body request for POST or query params for GET
     const data = req.method === 'POST' ? req.body : req.query;
     
+    // Log the request type and data (sanitized)
+    console.log(`Processing ${req.method} request`);
+    console.log('Request includes apiKey:', data.apiKey ? 'Yes' : 'No');
+    console.log('Request includes githubToken:', data.githubToken ? 'Yes (hidden)' : 'No');
+    
     const { 
       githubToken, 
       apiKey, 
@@ -28,8 +33,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Initialize Octokit with GitHub token
+    // Ensure the token is properly formatted
+    const formattedToken = githubToken.trim();
+    console.log('Using GitHub token (first few chars):', formattedToken.substring(0, 5) + '...');
+    
     const octokit = new Octokit({
-      auth: githubToken
+      auth: formattedToken,
+      request: {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      }
     });
 
     // Repository configuration - use master branch instead of main
@@ -117,11 +131,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
       return res.status(404).json({ error: 'File not found or is a directory' });
     }
-  } catch (error: any) { // Type assertion for error
+  }   catch (error: any) { // Type assertion for error
     console.error('Error updating API key:', error);
-    return res.status(500).json({ 
-      error: 'Internal Server Error', 
-      details: error.message ? error.message : 'Unknown error' 
+    
+    // Provide more detailed error information
+    const errorMessage = error.message || 'Unknown error';
+    const statusCode = error.status || 500;
+    
+    // Check for specific GitHub API errors
+    if (errorMessage.includes('Bad credentials')) {
+      return res.status(401).json({ 
+        error: 'GitHub Authentication Failed', 
+        details: 'The GitHub token provided is invalid or has expired. Please check your token and try again.',
+        originalError: errorMessage
+      });
+    }
+    
+    return res.status(statusCode).json({ 
+      error: 'Error Processing Request', 
+      details: errorMessage,
+      hint: 'Make sure your GitHub token has the necessary permissions to access and update repositories.'
     });
   }
 }
