@@ -409,8 +409,8 @@ function VoiceChannelItem() {
   };
 
   return (
-    <Flex gap={4} mt={3} direction="column">
-      {/* Status API Key */}
+    <Flex direction="column" gap={1} mt={3}>
+        {/* Status API Key */}
       <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
         <CardHeader as={HStack}>
           <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
