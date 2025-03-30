@@ -1,17 +1,17 @@
-// pages/api/edit-github-apikey.ts
-
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Octokit } from '@octokit/rest';
 import { format } from 'date-fns';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Hanya menerima metode POST
-  if (req.method !== 'POST') {
+  // Support for both GET and POST methods
+  if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
-    // Ekstrak data dari body request
+    // Extract data from body request for POST or query params for GET
+    const data = req.method === 'POST' ? req.body : req.query;
+    
     const { 
       githubToken, 
       apiKey, 
@@ -20,25 +20,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       maxRequests = 250, 
       premium = false,
       seller = false
-    } = req.body;
+    } = data;
 
-    // Validasi input
+    // Validate input
     if (!githubToken || !apiKey) {
       return res.status(400).json({ error: 'Missing required fields: githubToken and apiKey must be provided' });
     }
 
-    // Inisialisasi Octokit dengan token GitHub
+    // Initialize Octokit with GitHub token
     const octokit = new Octokit({
       auth: githubToken
     });
 
-    // Konfigurasi repository
+    // Repository configuration - use master branch instead of main
     const owner = 'Valzyys';
     const repo = 'api-jkt48connect';
     const path = 'apiKeys.js';
-    const branch = 'main'; // atau branch lain yang sesuai
+    const branch = 'master'; // Changed from 'main' to 'master'
 
-    // Ambil file dari GitHub
+    // Get file from GitHub
     const { data: fileData } = await octokit.repos.getContent({
       owner,
       repo,
@@ -47,10 +47,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     if ('content' in fileData) {
-      // Decode content dari base64
+      // Decode content from base64
       const content = Buffer.from(fileData.content, 'base64').toString();
       
-      // Memproses content untuk mendapatkan konten apiKeys
+      // Process content to get apiKeys content
       const apiKeysStart = content.indexOf('const apiKeys = {');
       const apiKeysEnd = content.lastIndexOf('};');
       
@@ -58,21 +58,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(500).json({ error: 'Invalid apiKeys.js format' });
       }
       
-      // Mendapatkan konten apiKeys object
+      // Get apiKeys object content
       const apiKeysObjectContent = content.substring(apiKeysStart + 'const apiKeys = '.length, apiKeysEnd + 1);
       
-      // Parse apiKeys object content menjadi JavaScript object
-      // (Ini adalah pendekatan sederhana, pendekatan yang lebih baik adalah menggunakan parser AST)
+      // Parse apiKeys object content into JavaScript object
       let apiKeysObject;
       try {
-        // Convert string ke object dengan eval (hanya untuk contoh, perhatikan keamanan!)
-        // Dalam produksi, gunakan parser yang lebih aman
+        // Convert string to object with eval (example only, consider security!)
+        // In production, use a safer parser
         apiKeysObject = eval(`(${apiKeysObjectContent})`);
       } catch (error) {
         return res.status(500).json({ error: 'Failed to parse apiKeys object' });
       }
       
-      // Tambahkan atau update apiKey baru
+      // Add or update new apiKey
       const today = format(new Date(), 'yyyy-MM-dd');
       apiKeysObject[apiKey] = {
         expiryDate: expiryDate,
@@ -83,10 +82,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ...(seller && { seller: true })
       };
       
-      // Membuat konten file baru
+      // Create new file content
       let newContent = content;
       
-      // Ganti objek apiKeys lama dengan yang baru
+      // Replace old apiKeys object with the new one
       const updatedApiKeysString = JSON.stringify(apiKeysObject, null, 2)
         .replace(/"parseCustomDate\("([^"]*)"\)"/g, 'parseCustomDate("$1")')
         .replace(/"∞"/g, '"∞"')
@@ -94,12 +93,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .replace(/"true"/g, 'true')
         .replace(/"false"/g, 'false');
       
-      // Membuat konten file baru
+      // Create new file content
       newContent = content.substring(0, apiKeysStart) + 
                   'const apiKeys = ' + updatedApiKeysString + 
                   content.substring(apiKeysEnd + 1);
       
-      // Commit perubahan ke GitHub
+      // Commit changes to GitHub
       await octokit.repos.createOrUpdateFileContents({
         owner,
         repo,
@@ -118,8 +117,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
       return res.status(404).json({ error: 'File not found or is a directory' });
     }
-  } catch (error) {
+  } catch (error: any) { // Type assertion for error
     console.error('Error updating API key:', error);
-    return res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    return res.status(500).json({ 
+      error: 'Internal Server Error', 
+      details: error.message ? error.message : 'Unknown error' 
+    });
   }
 }
