@@ -76,12 +76,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       // Create a new entry for the apiKey
       const today = format(new Date(), 'yyyy-MM-dd');
-      const newApiKeyEntry = `  "${apiKey}": {
+      const newApiKeyEntry = `
+      "${apiKey}": {
     expiryDate: "${expiryDate}",
     remainingRequests: ${remainingRequests},
     maxRequests: ${maxRequests},
     lastAccessDate: "${today}"${premium ? ',\n    premium: true' : ''}${seller ? ',\n    seller: true' : ''}
-  }`;
+  },`;
       
       // Check if the API key already exists
       const existingApiKeyRegex = new RegExp(`"${apiKey}"\\s*:\\s*\\{[\\s\\S]*?\\}`, 'g');
