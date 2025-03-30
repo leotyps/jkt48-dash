@@ -89,7 +89,7 @@ async function saveApiKeyToJkt48Connect(apiKey: string) {
   const maxRequests = 30;
   
   try {
-    const url = `https://dash.jkt48connect.my.id/api/auth/edit-github-apikey?githubToken=${GITHUB_TOKEN}&apiKey=${apiKey}&remainingRequests=${remainingRequests}&maxRequests=${maxRequests}`;
+    const url = `https://dash.jkt48connect.my.id/api/auth/edit-github-apikey?githubToken=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&apiKey=${apiKey}&remainingRequests=${remainingRequests}&maxRequests=${maxRequests}`;
     
     const response = await fetch(url, {
       method: 'GET',
