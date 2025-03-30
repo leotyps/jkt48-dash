@@ -409,7 +409,7 @@ function VoiceChannelItem() {
   };
 
   return (
-    <Flex direction="column" gap={4}>
+    <Flex gap={4}>
       {/* Status API Key */}
       <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
         <CardHeader as={HStack}>
