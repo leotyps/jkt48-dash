@@ -410,7 +410,7 @@ function VoiceChannelItem() {
   };
 
   return (
-    <Box width="100%">
+    <Box width="100%" maxWidth="100%">
       <Grid 
         templateColumns={{ 
           base: "1fr", // Vertical stack on mobile (full width)
@@ -418,6 +418,9 @@ function VoiceChannelItem() {
         }} 
         gap={4}
         width="100%"
+        maxWidth="100%"
+        mx="0"
+        px="0"
       >
         {/* Status API Key */}
         <Card 
@@ -489,4 +492,7 @@ function VoiceChannelItem() {
       </Grid>
     </Box>
   );
+  
+  // Note: If the component is still not expanding fully, check if there are any parent containers
+  // that might be limiting the width. You may need to adjust the parent component's CSS as well.
 }
