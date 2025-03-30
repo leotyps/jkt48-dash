@@ -15,7 +15,6 @@ import {
   Box,
   Input,
   IconButton,
-  SimpleGrid,
 } from '@chakra-ui/react';
 import { useState, useEffect, useRef } from 'react';
 import { config } from '@/config/common';
@@ -410,82 +409,67 @@ function VoiceChannelItem() {
   };
 
   return (
-    <Box width="100%" maxWidth="100%">
-     <Grid
-  templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }}
-  gap={4}
->
-       {/* Status API Key */}
-        <Card 
-          rounded="2xl" 
-          variant="primary" 
-          p={{ base: 4, md: 4 }}
-          width="100%"
-        >
-          <CardHeader as={HStack} pb={2}>
-            <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'lg', md: 'xl' }} />
-            <Text fontSize={{ base: 'sm', md: 'md' }}>Status API Key</Text>
-          </CardHeader>
-          <CardBody pt={0}>
-            <Text
-              fontSize={{ base: 'sm', md: 'md' }}
-              color={apiStatus?.includes('valid') ? 'green.500' : 'red.500'}
-              fontWeight="medium"
-            >
-              {apiStatus || 'Memeriksa API Key...'}
-            </Text>
-          </CardBody>
-        </Card>
+    <Flex direction="column" gap={4}>
+      {/* Status API Key */}
+      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+        <CardHeader as={HStack}>
+          <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
+          <Text fontSize={{ base: 'md', md: 'lg' }}>Status API Key</Text>
+        </CardHeader>
+        <CardBody>
+          <Text
+            fontSize={{ base: 'sm', md: 'md' }}
+            color={apiStatus?.includes('valid') ? 'green.500' : 'red.500'}
+            fontWeight="medium"
+          >
+            {apiStatus || 'Memeriksa API Key...'}
+          </Text>
+        </CardBody>
+      </Card>
 
-        {/* API Key */}
-        <Card rounded="2xl" variant="primary" p={{ base: 3, md: 4 }} width="100%">
-          <CardHeader pb={2}>
-            <HStack justify="space-between" align="center">
-              <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="bold" isTruncated>
-                {isApiKeyVisible ? apiKey : '•'.repeat(Math.min(apiKey.length, 15))}
-              </Text>
-              <Button
-                size="sm"
-                onClick={() => setIsApiKeyVisible(!isApiKeyVisible)}
-                variant="ghost"
-                p={0}
-              >
-                {isApiKeyVisible ? <MdVisibilityOff /> : <MdVisibility />}
-              </Button>
-            </HStack>
-          </CardHeader>
-          <CardBody pt={0}>
-            {apiKey ? (
-              <Text fontSize={{ base: 'xs', md: 'sm' }} color="TextSecondary">
-                API Key
-              </Text>
-            ) : (
-              <Text fontSize={{ base: 'xs', md: 'sm' }} color="TextSecondary">
-                API Key belum tersedia
-              </Text>
-            )}
-          </CardBody>
-        </Card>
-
-        {/* Saldo User */}
-        <Card rounded="2xl" variant="primary" p={{ base: 3, md: 4 }} width="100%">
-          <CardHeader as={HStack} pb={2}>
-            <Icon as={MdAccountBalanceWallet} color="Brand" fontSize={{ base: 'lg', md: 'xl' }} />
-            <Text fontSize={{ base: 'sm', md: 'md' }}>Saldo</Text>
-          </CardHeader>
-          <CardBody pt={0}>
+      {/* API Key */}
+      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+        <CardHeader>
+          <HStack justify="space-between" align="center">
             <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
-              {balance !== null ? `Rp ${balance.toLocaleString()}` : 'Memuat...'}
+              {isApiKeyVisible ? apiKey : '•'.repeat(apiKey.length)}
             </Text>
-            <Text fontSize={{ base: 'xs', md: 'sm' }} color="TextSecondary">
-              Saldo tersisa
+            <Button
+              size="sm"
+              onClick={() => setIsApiKeyVisible(!isApiKeyVisible)}
+              variant="ghost"
+              p={0}
+            >
+              {isApiKeyVisible ? <MdVisibilityOff /> : <MdVisibility />}
+            </Button>
+          </HStack>
+        </CardHeader>
+        <CardBody>
+          {apiKey ? (
+            <Text fontSize={{ base: 'sm', md: 'md' }} color="TextSecondary">
+              API Key
             </Text>
-          </CardBody>
-        </Card>
-      </Grid>
-    </Box>
+          ) : (
+            <Text color="TextSecondary">API Key belum tersedia. Silakan tambahkan API Key di profil.</Text>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* Saldo User */}
+      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+        <CardHeader as={HStack}>
+          <Icon as={MdAccountBalanceWallet} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
+          <Text fontSize={{ base: 'md', md: 'lg' }}>Saldo</Text>
+        </CardHeader>
+        <CardBody>
+          <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold">
+            {balance !== null ? `Rp ${balance.toLocaleString()}` : 'Memuat...'}
+          </Text>
+          <Text fontSize="sm" color="TextSecondary">
+            Saldo akun Anda yang tersisa
+          </Text>
+        </CardBody>
+      </Card>
+    </Flex>
   );
-  
-  // Note: If the component is still not expanding fully, check if there are any parent containers
-  // that might be limiting the width. You may need to adjust the parent component's CSS as well.
 }
