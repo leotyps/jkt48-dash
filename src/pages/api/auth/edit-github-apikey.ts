@@ -134,7 +134,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         updatedApiKeysBlock = 
           apiKeysBlock.substring(0, lastBraceIndex) + 
-          (needsComma ? ',\n' : '\n') + 
+          (needsComma ? '\n' : '\n') + 
           newApiKeyEntry + '\n' + 
           apiKeysBlock.substring(lastBraceIndex);
       }
