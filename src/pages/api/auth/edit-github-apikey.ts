@@ -50,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const owner = 'Valzyys';
     const repo = 'api-jkt48connect';
     const path = 'apiKeys.js';
-    const branch = 'main'; // Changed from 'main' to 'master'
+    const branch = 'master'; // Changed from 'main' to 'master'
 
     // Get file from GitHub
     const { data: fileData } = await octokit.repos.getContent({
@@ -64,53 +64,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Decode content from base64
       const content = Buffer.from(fileData.content, 'base64').toString();
       
-      // Process content to get apiKeys content
-      const apiKeysStart = content.indexOf('const apiKeys = {');
-      const apiKeysEnd = content.lastIndexOf('};');
+      // Instead of trying to parse the JS directly, we'll use regex to find and update the apiKeys object
+      const apiKeysMatch = content.match(/const apiKeys = \{([\s\S]*?)\};/);
       
-      if (apiKeysStart === -1 || apiKeysEnd === -1) {
+      if (!apiKeysMatch) {
         return res.status(500).json({ error: 'Invalid apiKeys.js format' });
       }
       
-      // Get apiKeys object content
-      const apiKeysObjectContent = content.substring(apiKeysStart + 'const apiKeys = '.length, apiKeysEnd + 1);
+      // Manually parse the existing apiKeys object structure
+      const apiKeysContent = apiKeysMatch[0];
       
-      // Parse apiKeys object content into JavaScript object
-      let apiKeysObject;
-      try {
-        // Convert string to object with eval (example only, consider security!)
-        // In production, use a safer parser
-        apiKeysObject = eval(`(${apiKeysObjectContent})`);
-      } catch (error) {
-        return res.status(500).json({ error: 'Failed to parse apiKeys object' });
-      }
-      
-      // Add or update new apiKey
+      // Create a new entry for the apiKey
       const today = format(new Date(), 'yyyy-MM-dd');
-      apiKeysObject[apiKey] = {
-        expiryDate: expiryDate,
-        remainingRequests: remainingRequests,
-        maxRequests: maxRequests,
-        lastAccessDate: today,
-        ...(premium && { premium: true }),
-        ...(seller && { seller: true })
-      };
+      const newApiKeyEntry = `  "${apiKey}": {
+    expiryDate: "${expiryDate}",
+    remainingRequests: ${remainingRequests},
+    maxRequests: ${maxRequests},
+    lastAccessDate: "${today}"${premium ? ',\n    premium: true' : ''}${seller ? ',\n    seller: true' : ''}
+  }`;
       
-      // Create new file content
-      let newContent = content;
+      // Check if the API key already exists
+      const existingApiKeyRegex = new RegExp(`"${apiKey}"\\s*:\\s*\\{[\\s\\S]*?\\}`, 'g');
+      let newContent;
       
-      // Replace old apiKeys object with the new one
-      const updatedApiKeysString = JSON.stringify(apiKeysObject, null, 2)
-        .replace(/"parseCustomDate\("([^"]*)"\)"/g, 'parseCustomDate("$1")')
-        .replace(/"∞"/g, '"∞"')
-        .replace(/"unli"/g, '"unli"')
-        .replace(/"true"/g, 'true')
-        .replace(/"false"/g, 'false');
-      
-      // Create new file content
-      newContent = content.substring(0, apiKeysStart) + 
-                  'const apiKeys = ' + updatedApiKeysString + 
-                  content.substring(apiKeysEnd + 1);
+      if (existingApiKeyRegex.test(apiKeysContent)) {
+        // Update existing API key
+        newContent = content.replace(existingApiKeyRegex, newApiKeyEntry);
+      } else {
+        // Add new API key at the end of the object before the closing brace
+        const lastBraceIndex = apiKeysContent.lastIndexOf('}');
+        newContent = content.substring(0, lastBraceIndex) + 
+                    (lastBraceIndex > 0 && content[lastBraceIndex-1] !== '{' ? ',\n' : '') + 
+                    newApiKeyEntry + 
+                    content.substring(lastBraceIndex);
+      }
       
       // Commit changes to GitHub
       await octokit.repos.createOrUpdateFileContents({
@@ -123,10 +110,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         branch
       });
       
+      // Create a simple representation of the API key for the response
+      const apiKeyDetails = {
+        expiryDate,
+        remainingRequests,
+        maxRequests,
+        lastAccessDate: today,
+        ...(premium && { premium: true }),
+        ...(seller && { seller: true })
+      };
+      
       return res.status(200).json({ 
         message: 'API key updated successfully', 
         apiKey, 
-        details: apiKeysObject[apiKey] 
+        details: apiKeyDetails 
       });
     } else {
       return res.status(404).json({ error: 'File not found or is a directory' });
