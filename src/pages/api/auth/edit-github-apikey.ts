@@ -85,7 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     remainingRequests: ${remainingRequests},
     maxRequests: ${maxRequests},
     lastAccessDate: "${today}"${premium ? ',\n    premium: true' : ''}${seller ? ',\n    seller: true' : ''}
-  }`;
+  },`;
       
       // Check if the API key already exists using a more robust approach
       const keyPattern = new RegExp(`"${apiKey}"\\s*:\\s*\\{[\\s\\S]*?\\}`, 'g');
