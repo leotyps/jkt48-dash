@@ -113,16 +113,9 @@ useEffect(() => {
       </Flex>
 
       {/* JKT48Connect Section */}
-   <Grid
-  templateColumns={{ base: '1fr', md: '1fr', lg: '1fr' }}
-  gap={4}
-  w="100%"
->
-  <Flex direction="column" gap={3} w="100%">
-    <VoiceChannelItem />
-  </Flex>
-</Grid>
-      
+  <Box w="100%">
+  <VoiceChannelItem />
+</Box>    
       {/* Servers Section */}
       <Flex direction="column" gap={1} mt={3}>
         <Heading size="md">{t.servers.title}</Heading>
@@ -410,93 +403,100 @@ function VoiceChannelItem() {
   };
 
   return (
-    <Flex 
-      direction="column" 
-      gap={4} 
-      mt={3}
-      w="100%" // Ensure full width on all screen sizes
-    >
-      {/* Status API Key */}
-      <Card 
-        rounded="2xl" 
-        variant="primary" 
-        p={{ base: 4, md: 6 }}
-        w="100%" // Ensure full width
+    <Box w="100%" mt={3}>
+      {/* Responsive layout - column on mobile, row on desktop */}
+      <Flex 
+        direction={{ base: 'column', md: 'row' }}
+        gap={4}
+        w="100%"
+        justify="space-between"
+        align="stretch"
       >
-        <CardHeader as={HStack}>
-          <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
-          <Text fontSize={{ base: 'md', md: 'lg' }}>Status API Key</Text>
-        </CardHeader>
-        <CardBody>
-          <Text
-            fontSize={{ base: 'sm', md: 'md' }}
-            color={apiStatus?.includes('valid') ? 'green.500' : 'red.500'}
-            fontWeight="medium"
-          >
-            {apiStatus || 'Memeriksa API Key...'}
-          </Text>
-        </CardBody>
-      </Card>
-
-      {/* API Key */}
-      <Card 
-        rounded="2xl" 
-        variant="primary" 
-        p={{ base: 4, md: 6 }}
-        w="100%" // Ensure full width
-      >
-        <CardHeader>
-          <HStack justify="space-between" align="center" w="100%">
-            <Text 
-              fontSize={{ base: 'md', md: 'lg' }} 
-              fontWeight="bold"
-              isTruncated // Ensures text doesn't overflow
-              maxW={{ base: "200px", md: "none" }} // Allow full width on desktop
+        {/* Status API Key */}
+        <Card 
+          rounded="2xl" 
+          variant="primary" 
+          p={{ base: 4, md: 6 }}
+          flex={{ base: "1", md: "1" }}
+          minH={{ md: "150px" }}
+        >
+          <CardHeader as={HStack}>
+            <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
+            <Text fontSize={{ base: 'md', md: 'lg' }}>Status API Key</Text>
+          </CardHeader>
+          <CardBody>
+            <Text
+              fontSize={{ base: 'sm', md: 'md' }}
+              color={apiStatus?.includes('valid') ? 'green.500' : 'red.500'}
+              fontWeight="medium"
             >
-              {isApiKeyVisible ? apiKey : '•'.repeat(apiKey.length)}
+              {apiStatus || 'Memeriksa API Key...'}
             </Text>
-            <Button
-              size="sm"
-              onClick={() => setIsApiKeyVisible(!isApiKeyVisible)}
-              variant="ghost"
-              p={0}
-              flexShrink={0} // Prevent button from shrinking
-            >
-              {isApiKeyVisible ? <MdVisibilityOff /> : <MdVisibility />}
-            </Button>
-          </HStack>
-        </CardHeader>
-        <CardBody>
-          {apiKey ? (
-            <Text fontSize={{ base: 'sm', md: 'md' }} color="TextSecondary">
-              API Key
-            </Text>
-          ) : (
-            <Text color="TextSecondary">API Key belum tersedia. Silakan tambahkan API Key di profil.</Text>
-          )}
-        </CardBody>
-      </Card>
+          </CardBody>
+        </Card>
 
-      {/* Saldo User */}
-      <Card 
-        rounded="2xl" 
-        variant="primary" 
-        p={{ base: 4, md: 6 }}
-        w="100%" // Ensure full width
-      >
-        <CardHeader as={HStack}>
-          <Icon as={MdAccountBalanceWallet} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
-          <Text fontSize={{ base: 'md', md: 'lg' }}>Saldo</Text>
-        </CardHeader>
-        <CardBody>
-          <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold">
-            {balance !== null ? `Rp ${balance.toLocaleString()}` : 'Memuat...'}
-          </Text>
-          <Text fontSize="sm" color="TextSecondary">
-            Saldo akun Anda yang tersisa
-          </Text>
-        </CardBody>
-      </Card>
-    </Flex>
+        {/* API Key */}
+        <Card 
+          rounded="2xl" 
+          variant="primary" 
+          p={{ base: 4, md: 6 }}
+          flex={{ base: "1", md: "1" }}
+          minH={{ md: "150px" }}
+        >
+          <CardHeader>
+            <HStack justify="space-between" align="center" w="100%">
+              <Text 
+                fontSize={{ base: 'md', md: 'lg' }} 
+                fontWeight="bold"
+                isTruncated
+                maxW={{ base: "200px", md: "300px" }}
+              >
+                {isApiKeyVisible ? apiKey : '•'.repeat(apiKey.length)}
+              </Text>
+              <Button
+                size="sm"
+                onClick={() => setIsApiKeyVisible(!isApiKeyVisible)}
+                variant="ghost"
+                p={0}
+                flexShrink={0}
+              >
+                {isApiKeyVisible ? <MdVisibilityOff /> : <MdVisibility />}
+              </Button>
+            </HStack>
+          </CardHeader>
+          <CardBody>
+            {apiKey ? (
+              <Text fontSize={{ base: 'sm', md: 'md' }} color="TextSecondary">
+                API Key
+              </Text>
+            ) : (
+              <Text color="TextSecondary">API Key belum tersedia. Silakan tambahkan API Key di profil.</Text>
+            )}
+          </CardBody>
+        </Card>
+
+        {/* Saldo User */}
+        <Card 
+          rounded="2xl" 
+          variant="primary" 
+          p={{ base: 4, md: 6 }}
+          flex={{ base: "1", md: "1" }}
+          minH={{ md: "150px" }}
+        >
+          <CardHeader as={HStack}>
+            <Icon as={MdAccountBalanceWallet} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
+            <Text fontSize={{ base: 'md', md: 'lg' }}>Saldo</Text>
+          </CardHeader>
+          <CardBody>
+            <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold">
+              {balance !== null ? `Rp ${balance.toLocaleString()}` : 'Memuat...'}
+            </Text>
+            <Text fontSize="sm" color="TextSecondary">
+              Saldo akun Anda yang tersisa
+            </Text>
+          </CardBody>
+        </Card>
+      </Flex>
+    </Box>
   );
 }
