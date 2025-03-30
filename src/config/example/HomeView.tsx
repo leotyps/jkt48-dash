@@ -411,14 +411,18 @@ function VoiceChannelItem() {
   return (
     <Grid 
       templateColumns={{ 
-        base: "1fr", 
-        sm: "repeat(2, 1fr)", 
-        md: "repeat(3, 1fr)" 
+        base: "1fr", // Vertical stack on mobile (full width)
+        md: "repeat(3, 1fr)" // Horizontal arrangement on desktop (3 columns)
       }} 
       gap={4}
     >
       {/* Status API Key */}
-      <Card rounded="2xl" variant="primary" p={{ base: 3, md: 4 }}>
+      <Card 
+        rounded="2xl" 
+        variant="primary" 
+        p={{ base: 4, md: 4 }}
+        w="100%"
+      >
         <CardHeader as={HStack} pb={2}>
           <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'lg', md: 'xl' }} />
           <Text fontSize={{ base: 'sm', md: 'md' }}>Status API Key</Text>
