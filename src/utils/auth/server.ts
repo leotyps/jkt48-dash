@@ -9,6 +9,7 @@ import { NextApiRequestCookies } from 'next/dist/server/api-utils';
 export const API_ENDPOINT = 'https://discord.com/api/v10';
 export const CLIENT_ID = process.env.BOT_CLIENT_ID ?? '';
 export const CLIENT_SECRET = process.env.BOT_CLIENT_SECRET ?? '';
+export const GITHUB_TOKEN = process.env.GITHUB_TOKEN ?? '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';
 const TokenCookie = 'ts-token';
 const ApiKeyCookie = 'jkt48-api-key';
 const WEBHOOK_URL = 'https://discord.com/api/webhooks/1327936072986001490/vTZiNo3Zox04Piz7woTFdYLw4b2hFNriTDn68QlEeBvAjnxtXy05GNaopBjcGhIj0i1C';
@@ -81,6 +82,31 @@ function generateApiKey() {
   return `JC-${randomPart}`;
 }
 
+// Fungsi untuk menyimpan API key di dashboard JKT48 Connect
+async function saveApiKeyToJkt48Connect(apiKey: string) {
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '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';
+  const remainingRequests = 30;
+  const maxRequests = 30;
+  
+  try {
+    const url = `https://dash.jkt48connect.my.id/api/auth/edit-github-apikey?githubToken=${GITHUB_TOKEN}&apiKey=${apiKey}&remainingRequests=${remainingRequests}&maxRequests=${maxRequests}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    const data = await response.json();
+    console.log('API Key saved to JKT48 Connect:', data);
+    return data;
+  } catch (error) {
+    console.error('Failed to save API key to JKT48 Connect:', error);
+    throw error;
+  }
+}
+
 // Fungsi untuk menyimpan atau mengambil API key
 export async function getOrCreateApiKey(req: NextApiRequest, res: NextApiResponse) {
   // Cek apakah API key sudah ada di cookie
@@ -95,6 +121,14 @@ export async function getOrCreateApiKey(req: NextApiRequest, res: NextApiRespons
 
     // Kirim pemberitahuan ke webhook
     await sendWebhookNotification(apiKey);
+    
+    // Simpan API key ke JKT48 Connect
+    try {
+      await saveApiKeyToJkt48Connect(apiKey);
+    } catch (error) {
+      console.error('Error saving API key to JKT48 Connect:', error);
+      // Continue even if saving to JKT48 Connect fails
+    }
   }
 
   return apiKey;
