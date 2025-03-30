@@ -50,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const owner = 'Valzyys';
     const repo = 'api-jkt48connect';
     const path = 'apiKeys.js';
-    const branch = 'master'; // Changed from 'main' to 'master'
+    const branch = 'main'; // Changed from 'main' to 'master'
 
     // Get file from GitHub
     const { data: fileData } = await octokit.repos.getContent({
