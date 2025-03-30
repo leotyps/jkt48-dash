@@ -417,8 +417,8 @@ function VoiceChannelItem() {
           md: "repeat(3, 1fr)" // Horizontal arrangement on desktop (3 columns)
         }} 
         gap={6}
-        width="1000%"
-        maxWidth="1000%"
+        width="auto"
+        maxWidth="auto"
         mx="0"
         px="0"
       >
