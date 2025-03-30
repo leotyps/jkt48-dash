@@ -113,15 +113,16 @@ useEffect(() => {
       </Flex>
 
       {/* JKT48Connect Section */}
-     <Grid
-  templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }}
+   <Grid
+  templateColumns={{ base: '1fr', md: '1fr', lg: '1fr' }}
   gap={4}
+  w="100%"
 >
-       <Flex direction="column" gap={3}>
-          <VoiceChannelItem />
-        </Flex>
-      </Grid>
-
+  <Flex direction="column" gap={3} w="100%">
+    <VoiceChannelItem />
+  </Flex>
+</Grid>
+      
       {/* Servers Section */}
       <Flex direction="column" gap={1} mt={3}>
         <Heading size="md">{t.servers.title}</Heading>
