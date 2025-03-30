@@ -418,7 +418,7 @@ function VoiceChannelItem() {
         }} 
         gap={4}
         width="100%"
-        maxWidth="100%"
+        maxWidth="1000%"
         mx="0"
         px="0"
       >
