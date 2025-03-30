@@ -409,14 +409,21 @@ function VoiceChannelItem() {
   };
 
   return (
-    <Flex direction="column" gap={4}>
+    <Grid 
+      templateColumns={{ 
+        base: "1fr", 
+        sm: "repeat(2, 1fr)", 
+        md: "repeat(3, 1fr)" 
+      }} 
+      gap={4}
+    >
       {/* Status API Key */}
-      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
-        <CardHeader as={HStack}>
-          <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
-          <Text fontSize={{ base: 'md', md: 'lg' }}>Status API Key</Text>
+      <Card rounded="2xl" variant="primary" p={{ base: 3, md: 4 }}>
+        <CardHeader as={HStack} pb={2}>
+          <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'lg', md: 'xl' }} />
+          <Text fontSize={{ base: 'sm', md: 'md' }}>Status API Key</Text>
         </CardHeader>
-        <CardBody>
+        <CardBody pt={0}>
           <Text
             fontSize={{ base: 'sm', md: 'md' }}
             color={apiStatus?.includes('valid') ? 'green.500' : 'red.500'}
@@ -428,11 +435,11 @@ function VoiceChannelItem() {
       </Card>
 
       {/* API Key */}
-      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
-        <CardHeader>
+      <Card rounded="2xl" variant="primary" p={{ base: 3, md: 4 }}>
+        <CardHeader pb={2}>
           <HStack justify="space-between" align="center">
-            <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
-              {isApiKeyVisible ? apiKey : '•'.repeat(apiKey.length)}
+            <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="bold" isTruncated>
+              {isApiKeyVisible ? apiKey : '•'.repeat(Math.min(apiKey.length, 15))}
             </Text>
             <Button
               size="sm"
@@ -444,32 +451,34 @@ function VoiceChannelItem() {
             </Button>
           </HStack>
         </CardHeader>
-        <CardBody>
+        <CardBody pt={0}>
           {apiKey ? (
-            <Text fontSize={{ base: 'sm', md: 'md' }} color="TextSecondary">
+            <Text fontSize={{ base: 'xs', md: 'sm' }} color="TextSecondary">
               API Key
             </Text>
           ) : (
-            <Text color="TextSecondary">API Key belum tersedia. Silakan tambahkan API Key di profil.</Text>
+            <Text fontSize={{ base: 'xs', md: 'sm' }} color="TextSecondary">
+              API Key belum tersedia
+            </Text>
           )}
         </CardBody>
       </Card>
 
       {/* Saldo User */}
-      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
-        <CardHeader as={HStack}>
-          <Icon as={MdAccountBalanceWallet} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
-          <Text fontSize={{ base: 'md', md: 'lg' }}>Saldo</Text>
+      <Card rounded="2xl" variant="primary" p={{ base: 3, md: 4 }}>
+        <CardHeader as={HStack} pb={2}>
+          <Icon as={MdAccountBalanceWallet} color="Brand" fontSize={{ base: 'lg', md: 'xl' }} />
+          <Text fontSize={{ base: 'sm', md: 'md' }}>Saldo</Text>
         </CardHeader>
-        <CardBody>
-          <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold">
+        <CardBody pt={0}>
+          <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
             {balance !== null ? `Rp ${balance.toLocaleString()}` : 'Memuat...'}
           </Text>
-          <Text fontSize="sm" color="TextSecondary">
-            Saldo akun Anda yang tersisa
+          <Text fontSize={{ base: 'xs', md: 'sm' }} color="TextSecondary">
+            Saldo tersisa
           </Text>
         </CardBody>
       </Card>
-    </Flex>
+    </Grid>
   );
 }
