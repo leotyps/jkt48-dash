@@ -409,9 +409,19 @@ function VoiceChannelItem() {
   };
 
   return (
-    <Flex direction="column" gap={1} mt={3}>
-        {/* Status API Key */}
-      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+    <Flex 
+      direction="column" 
+      gap={4} 
+      mt={3}
+      w="100%" // Ensure full width on all screen sizes
+    >
+      {/* Status API Key */}
+      <Card 
+        rounded="2xl" 
+        variant="primary" 
+        p={{ base: 4, md: 6 }}
+        w="100%" // Ensure full width
+      >
         <CardHeader as={HStack}>
           <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
           <Text fontSize={{ base: 'md', md: 'lg' }}>Status API Key</Text>
@@ -428,10 +438,20 @@ function VoiceChannelItem() {
       </Card>
 
       {/* API Key */}
-      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+      <Card 
+        rounded="2xl" 
+        variant="primary" 
+        p={{ base: 4, md: 6 }}
+        w="100%" // Ensure full width
+      >
         <CardHeader>
-          <HStack justify="space-between" align="center">
-            <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
+          <HStack justify="space-between" align="center" w="100%">
+            <Text 
+              fontSize={{ base: 'md', md: 'lg' }} 
+              fontWeight="bold"
+              isTruncated // Ensures text doesn't overflow
+              maxW={{ base: "200px", md: "none" }} // Allow full width on desktop
+            >
               {isApiKeyVisible ? apiKey : '•'.repeat(apiKey.length)}
             </Text>
             <Button
@@ -439,6 +459,7 @@ function VoiceChannelItem() {
               onClick={() => setIsApiKeyVisible(!isApiKeyVisible)}
               variant="ghost"
               p={0}
+              flexShrink={0} // Prevent button from shrinking
             >
               {isApiKeyVisible ? <MdVisibilityOff /> : <MdVisibility />}
             </Button>
@@ -456,7 +477,12 @@ function VoiceChannelItem() {
       </Card>
 
       {/* Saldo User */}
-      <Card rounded="2xl" variant="primary" p={{ base: 4, md: 6 }}>
+      <Card 
+        rounded="2xl" 
+        variant="primary" 
+        p={{ base: 4, md: 6 }}
+        w="100%" // Ensure full width
+      >
         <CardHeader as={HStack}>
           <Icon as={MdAccountBalanceWallet} color="Brand" fontSize={{ base: 'xl', md: '2xl' }} />
           <Text fontSize={{ base: 'md', md: 'lg' }}>Saldo</Text>
