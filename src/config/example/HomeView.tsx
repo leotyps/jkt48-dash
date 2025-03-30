@@ -409,80 +409,93 @@ function VoiceChannelItem() {
   };
 
   return (
-    <Grid 
-      templateColumns={{ 
-        base: "1fr", // Vertical stack on mobile (full width)
-        md: "repeat(3, 1fr)" // Horizontal arrangement on desktop (3 columns)
-      }} 
-      gap={4}
-    >
-      {/* Status API Key */}
-      <Card 
-        rounded="2xl" 
-        variant="primary" 
-        p={{ base: 4, md: 4 }}
-        w="100%"
+    <Box width="100%">
+      <Grid 
+        templateColumns={{ 
+          base: "1fr", // Full width on mobile
+          md: "repeat(3, 1fr)" // Three equal columns on desktop
+        }} 
+        gap={4}
+        width="100%"
       >
-        <CardHeader as={HStack} pb={2}>
-          <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'lg', md: 'xl' }} />
-          <Text fontSize={{ base: 'sm', md: 'md' }}>Status API Key</Text>
-        </CardHeader>
-        <CardBody pt={0}>
-          <Text
-            fontSize={{ base: 'sm', md: 'md' }}
-            color={apiStatus?.includes('valid') ? 'green.500' : 'red.500'}
-            fontWeight="medium"
-          >
-            {apiStatus || 'Memeriksa API Key...'}
-          </Text>
-        </CardBody>
-      </Card>
-
-      {/* API Key */}
-      <Card rounded="2xl" variant="primary" p={{ base: 3, md: 4 }}>
-        <CardHeader pb={2}>
-          <HStack justify="space-between" align="center">
-            <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="bold" isTruncated>
-              {isApiKeyVisible ? apiKey : '•'.repeat(Math.min(apiKey.length, 15))}
-            </Text>
-            <Button
-              size="sm"
-              onClick={() => setIsApiKeyVisible(!isApiKeyVisible)}
-              variant="ghost"
-              p={0}
+        {/* Status API Key */}
+        <Card 
+          rounded="2xl" 
+          variant="primary" 
+          p={4}
+          height="100%"
+        >
+          <CardHeader as={HStack} pb={2}>
+            <Icon as={MdVoiceChat} color="Brand" fontSize={{ base: 'lg', md: 'xl' }} />
+            <Text fontSize={{ base: 'sm', md: 'md' }}>Status API Key</Text>
+          </CardHeader>
+          <CardBody pt={0}>
+            <Text
+              fontSize={{ base: 'sm', md: 'md' }}
+              color={apiStatus?.includes('valid') ? 'green.500' : 'red.500'}
+              fontWeight="medium"
             >
-              {isApiKeyVisible ? <MdVisibilityOff /> : <MdVisibility />}
-            </Button>
-          </HStack>
-        </CardHeader>
-        <CardBody pt={0}>
-          {apiKey ? (
-            <Text fontSize={{ base: 'xs', md: 'sm' }} color="TextSecondary">
-              API Key
+              {apiStatus || 'Memeriksa API Key...'}
             </Text>
-          ) : (
-            <Text fontSize={{ base: 'xs', md: 'sm' }} color="TextSecondary">
-              API Key belum tersedia
-            </Text>
-          )}
-        </CardBody>
-      </Card>
+          </CardBody>
+        </Card>
 
-      {/* Saldo User */}
-      <Card rounded="2xl" variant="primary" p={{ base: 3, md: 4 }}>
-        <CardHeader as={HStack} pb={2}>
-          <Icon as={MdAccountBalanceWallet} color="Brand" fontSize={{ base: 'lg', md: 'xl' }} />
-          <Text fontSize={{ base: 'sm', md: 'md' }}>Saldo</Text>
-        </CardHeader>
-        <CardBody pt={0}>
-          <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
-            {balance !== null ? `Rp ${balance.toLocaleString()}` : 'Memuat...'}
-          </Text>
-          <Text fontSize={{ base: 'xs', md: 'sm' }} color="TextSecondary">
-            Saldo tersisa
-          </Text>
-        </CardBody>
-      </Card>
-    </Grid>
+        {/* API Key */}
+        <Card 
+          rounded="2xl" 
+          variant="primary" 
+          p={4}
+          height="100%"
+        >
+          <CardHeader pb={2}>
+            <HStack justify="space-between" align="center">
+              <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="bold" isTruncated>
+                {isApiKeyVisible ? apiKey : '•'.repeat(Math.min(apiKey.length, 15))}
+              </Text>
+              <Button
+                size="sm"
+                onClick={() => setIsApiKeyVisible(!isApiKeyVisible)}
+                variant="ghost"
+                p={0}
+              >
+                {isApiKeyVisible ? <MdVisibilityOff /> : <MdVisibility />}
+              </Button>
+            </HStack>
+          </CardHeader>
+          <CardBody pt={0}>
+            {apiKey ? (
+              <Text fontSize={{ base: 'xs', md: 'sm' }} color="TextSecondary">
+                API Key
+              </Text>
+            ) : (
+              <Text fontSize={{ base: 'xs', md: 'sm' }} color="TextSecondary">
+                API Key belum tersedia
+              </Text>
+            )}
+          </CardBody>
+        </Card>
+
+        {/* Saldo User */}
+        <Card 
+          rounded="2xl" 
+          variant="primary" 
+          p={4}
+          height="100%"
+        >
+          <CardHeader as={HStack} pb={2}>
+            <Icon as={MdAccountBalanceWallet} color="Brand" fontSize={{ base: 'lg', md: 'xl' }} />
+            <Text fontSize={{ base: 'sm', md: 'md' }}>Saldo</Text>
+          </CardHeader>
+          <CardBody pt={0}>
+            <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold">
+              {balance !== null ? `Rp ${balance.toLocaleString()}` : 'Memuat...'}
+            </Text>
+            <Text fontSize={{ base: 'xs', md: 'sm' }} color="TextSecondary">
+              Saldo tersisa
+            </Text>
+          </CardBody>
+        </Card>
+      </Grid>
+    </Box>
   );
 }
