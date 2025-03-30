@@ -416,8 +416,8 @@ function VoiceChannelItem() {
           base: "1fr", // Vertical stack on mobile (full width)
           md: "repeat(3, 1fr)" // Horizontal arrangement on desktop (3 columns)
         }} 
-        gap={4}
-        width="100%"
+        gap={6}
+        width="1000%"
         maxWidth="1000%"
         mx="0"
         px="0"
