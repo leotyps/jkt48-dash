@@ -46,11 +46,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     });
 
-    // Repository configuration - use master branch instead of main
+    // Repository configuration
     const owner = 'Valzyys';
     const repo = 'api-jkt48connect';
     const path = 'apiKeys.js';
-    const branch = 'main'; // Changed from 'main' to 'master'
+    const branch = 'main';
 
     // Get file from GitHub
     const { data: fileData } = await octokit.repos.getContent({
@@ -64,41 +64,86 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Decode content from base64
       const content = Buffer.from(fileData.content, 'base64').toString();
       
-      // Instead of trying to parse the JS directly, we'll use regex to find and update the apiKeys object
-      const apiKeysMatch = content.match(/const apiKeys = \{([\s\S]*?)\};/);
+      // Parse the entire file content more carefully
+      // First, find the beginning of the apiKeys object
+      const apiKeysStartIndex = content.indexOf('const apiKeys = {');
       
-      if (!apiKeysMatch) {
+      // Then find the end of the object (the last closing brace followed by semicolon)
+      const apiKeysEndIndex = content.indexOf('};', apiKeysStartIndex) + 2;
+      
+      if (apiKeysStartIndex === -1 || apiKeysEndIndex === 1) {
         return res.status(500).json({ error: 'Invalid apiKeys.js format' });
       }
       
-      // Manually parse the existing apiKeys object structure
-      const apiKeysContent = apiKeysMatch[0];
+      // Extract the entire apiKeys object definition
+      const apiKeysBlock = content.substring(apiKeysStartIndex, apiKeysEndIndex);
       
-      // Create a new entry for the apiKey
+      // Create a new entry with proper formatting
       const today = format(new Date(), 'yyyy-MM-dd');
-      const newApiKeyEntry = `
-      "${apiKey}": {
+      const newApiKeyEntry = `  "${apiKey}": {
     expiryDate: "${expiryDate}",
     remainingRequests: ${remainingRequests},
     maxRequests: ${maxRequests},
     lastAccessDate: "${today}"${premium ? ',\n    premium: true' : ''}${seller ? ',\n    seller: true' : ''}
-  },`;
+  }`;
       
-      // Check if the API key already exists
-      const existingApiKeyRegex = new RegExp(`"${apiKey}"\\s*:\\s*\\{[\\s\\S]*?\\}`, 'g');
-      let newContent;
+      // Check if the API key already exists using a more robust approach
+      const keyPattern = new RegExp(`"${apiKey}"\\s*:\\s*\\{[\\s\\S]*?\\}`, 'g');
+      const keyExists = keyPattern.test(apiKeysBlock);
       
-      if (existingApiKeyRegex.test(apiKeysContent)) {
-        // Update existing API key
-        newContent = content.replace(existingApiKeyRegex, newApiKeyEntry);
+      let updatedApiKeysBlock;
+      
+      if (keyExists) {
+        // Replace the existing key entry with the updated one
+        // This uses a more careful approach to find and replace the entire key entry
+        const keyStartPattern = new RegExp(`"${apiKey}"\\s*:`);
+        const keyStartMatch = apiKeysBlock.match(keyStartPattern);
+        
+        if (keyStartMatch && keyStartMatch.index !== undefined) {
+          const keyStartIndex = keyStartMatch.index;
+          const keyContentStart = apiKeysBlock.indexOf('{', keyStartIndex);
+          
+          // Find the matching closing brace
+          let braceCount = 1;
+          let keyEndIndex = keyContentStart + 1;
+          
+          while (braceCount > 0 && keyEndIndex < apiKeysBlock.length) {
+            if (apiKeysBlock[keyEndIndex] === '{') braceCount++;
+            if (apiKeysBlock[keyEndIndex] === '}') braceCount--;
+            keyEndIndex++;
+          }
+          
+          // Check if there's a comma after the closing brace
+          const hasCommaAfter = apiKeysBlock[keyEndIndex] === ',';
+          
+          // Replace the existing entry
+          updatedApiKeysBlock = 
+            apiKeysBlock.substring(0, keyStartIndex) + 
+            newApiKeyEntry + 
+            (hasCommaAfter ? ',' : '') + 
+            apiKeysBlock.substring(keyEndIndex + (hasCommaAfter ? 1 : 0));
+        } else {
+          return res.status(500).json({ error: 'Failed to update existing API key entry' });
+        }
       } else {
         // Add new API key at the end of the object before the closing brace
-        const lastBraceIndex = apiKeysContent.lastIndexOf('}');
-        newContent = content.substring(0, lastBraceIndex) + 
-                    (lastBraceIndex > 0 && content[lastBraceIndex-1] !== '{' ? ',\n' : '') + 
-                    newApiKeyEntry + 
-                    content.substring(lastBraceIndex);
+        const lastBraceIndex = apiKeysBlock.lastIndexOf('}');
+        
+        // Check if there are any existing entries (to determine if we need a comma)
+        const needsComma = apiKeysBlock.substring(apiKeysBlock.indexOf('{') + 1, lastBraceIndex).trim().length > 0;
+        
+        updatedApiKeysBlock = 
+          apiKeysBlock.substring(0, lastBraceIndex) + 
+          (needsComma ? ',\n' : '\n') + 
+          newApiKeyEntry + '\n' + 
+          apiKeysBlock.substring(lastBraceIndex);
       }
+      
+      // Reconstruct the full file content
+      const newContent = 
+        content.substring(0, apiKeysStartIndex) + 
+        updatedApiKeysBlock + 
+        content.substring(apiKeysEndIndex);
       
       // Commit changes to GitHub
       await octokit.repos.createOrUpdateFileContents({
@@ -129,7 +174,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
       return res.status(404).json({ error: 'File not found or is a directory' });
     }
-  }   catch (error: any) { // Type assertion for error
+  } catch (error: any) { // Type assertion for error
     console.error('Error updating API key:', error);
     
     // Provide more detailed error information
