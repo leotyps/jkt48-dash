@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Jika data tidak ditemukan
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'User not found' });
+        return res.status(200).json({ error: 'User not found' });
       }
 
       const user = result.rows[0];
