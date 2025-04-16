@@ -115,7 +115,7 @@ export default function HomeView() {
           <Button
             mt={3}
             as={Link}
-            href="https://wa.me/628xxxxxxxxx"
+            href="https://wa.me/447818592493"
             color="white"
             bg="whiteAlpha.200"
             _hover={{ bg: 'whiteAlpha.300' }}
