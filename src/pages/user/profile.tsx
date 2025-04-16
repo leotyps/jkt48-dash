@@ -311,7 +311,7 @@ const linkGmailAccount = async () => {
       <Flex direction="column">
           <Image
             alt="banner"
-            src="https://8030.us.kg/file/3gjp59rB7bs8.jpg"
+            src="https://files.catbox.moe/89cwj8.jpg"
             sx={{ aspectRatio: '1100 / 440' }}
             objectFit="cover"
             rounded="2xl"
