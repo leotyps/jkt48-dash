@@ -96,7 +96,7 @@ useEffect(() => {
           <Button
             mt={3}
             as={Link}
-            href={config.inviteUrl}
+            href='/user/invite'
             color="white"
             bg="whiteAlpha.200"
             _hover={{
