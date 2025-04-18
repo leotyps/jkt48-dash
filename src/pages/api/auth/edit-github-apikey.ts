@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { 
       githubToken, 
       apiKey, 
-      expiryDate = ""unli"", 
+      expiryDate = '"unli"', 
       remainingRequests = 250, 
       maxRequests = 250, 
       premium = false,
