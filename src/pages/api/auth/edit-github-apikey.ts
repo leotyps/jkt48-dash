@@ -81,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Create a new entry with proper formatting
       const today = format(new Date(), 'yyyy-MM-dd');
       const newApiKeyEntry = `  "${apiKey}": {
-    expiryDate: "${expiryDate}",
+    expiryDate: ${expiryDate},
     remainingRequests: ${remainingRequests},
     maxRequests: ${maxRequests},
     lastAccessDate: "${today}"${premium ? ',\n    premium: true' : ''}${seller ? ',\n    seller: true' : ''}
