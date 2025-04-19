@@ -247,7 +247,7 @@ const LoginPage: NextPageWithLayout = () => {
           </VStack>
 
           <HStack justify="center" w="full" pt={2}>
-            <Text fontSize="sm">Don't have an account?</Text>
+            <Text fontSize="sm">Don&apos;t have an account?</Text>
             <Link href="/register" passHref>
               <Text as="a" color="blue.500" fontWeight="semibold" fontSize="sm">
                 Register now
