@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const db = await connectToDatabase();
     const query = `
-      INSERT INTO pengguna (team_id, saldo, apikey)
+      INSERT INTO zenova (team_id, saldo, apikey)
       VALUES ($1, $2, $3)
       ON CONFLICT (team_id) DO NOTHING;
     `;
