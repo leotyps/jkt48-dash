@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Query untuk mengambil data berdasarkan team_id
     const query = `
       SELECT team_id, saldo, apikey, phone_number
-      FROM pengguna
+      FROM zenova
       WHERE team_id = $1;
     `;
     const values = [team_id];
