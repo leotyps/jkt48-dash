@@ -1,26 +1,40 @@
-// api/auth/get-user-data.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { connectToDatabase } from '@/utils/db'; // Koneksi ke database
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // Ambil parameter team_id dari query
-    const { team_id } = req.query;
+    // Ambil parameter dari query (team_id atau phone_number)
+    const { team_id, phone_number } = req.query;
 
-    if (!team_id) {
-      return res.status(400).json({ error: 'Missing required field: team_id' });
+    // Periksa apakah minimal salah satu parameter disediakan
+    if (!team_id && !phone_number) {
+      return res.status(400).json({ error: 'Missing required field: provide either team_id or phone_number' });
     }
 
     // Koneksi ke database
     const db = await connectToDatabase();
 
-    // Query untuk mengambil data berdasarkan team_id
-    const query = `
-      SELECT team_id, saldo, apikey, phone_number
-      FROM zenova
-      WHERE team_id = $1;
-    `;
-    const values = [team_id];
+    let query: string;
+    let values: any[];
+
+    // Tentukan query berdasarkan parameter yang diberikan
+    if (team_id) {
+      query = `
+        SELECT team_id, saldo, apikey, phone_number
+        FROM zenova
+        WHERE team_id = $1;
+      `;
+      values = [team_id];
+    } else {
+      query = `
+        SELECT team_id, saldo, apikey, phone_number
+        FROM zenova
+        WHERE phone_number = $1;
+      `;
+      values = [phone_number];
+    }
+
+    // Eksekusi query
     const result = await db.query(query, values);
 
     // Jika data tidak ditemukan
