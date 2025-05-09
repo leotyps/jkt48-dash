@@ -47,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // Repository configuration
-    const owner = 'Valzyys';
+    const owner = 'leotyps';
     const repo = 'api-jkt48connect';
     const path = 'apiKeys.js';
     const branch = 'main';
